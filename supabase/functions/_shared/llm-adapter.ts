@@ -1,0 +1,798 @@
+// LLM Provider Adapter for OpenAI and Anthropic
+
+export interface DatasetSchema {
+  columns: {
+    name: string
+    type: 'numeric' | 'categorical' | 'temporal' | 'string'
+    nullable: boolean
+    sample_values: (string | number | null)[]
+  }[]
+  rowCount: number
+}
+
+export type ChartLibrary = 'vega-lite' | 'd3'
+
+export interface ChartResponse {
+  chartType: string
+  library: ChartLibrary
+  vegaLiteSpec?: Record<string, unknown>
+  d3Code?: string
+  reasoning: string
+  suggestedFollowups: string[]
+}
+
+export interface InsightSuggestion {
+  prompt: string
+  description: string
+  chartType: string
+  library?: ChartLibrary
+}
+
+interface LLMProvider {
+  generateChart(prompt: string, schema: DatasetSchema, library: ChartLibrary, existingCode?: string): Promise<ChartResponse>
+  suggestInsights(schema: DatasetSchema): Promise<InsightSuggestion[]>
+}
+
+const SYSTEM_PROMPT_VEGA = `You are an expert data visualization assistant. Your task is to generate Vega-Lite specifications based on user prompts and dataset schemas.
+
+Rules:
+1. Always output valid Vega-Lite v5 JSON specifications
+2. Use appropriate chart types based on the data and user intent
+3. Include proper axis labels and titles
+4. Use sensible defaults for colors and scales
+5. Keep the spec minimal but complete
+6. Do NOT include the data in the spec - it will be added separately
+
+Respond with a JSON object containing:
+- chartType: the type of chart (e.g., "bar", "line", "scatter", "area", "pie")
+- library: "vega-lite"
+- vegaLiteSpec: the complete Vega-Lite specification (without data)
+- reasoning: a brief explanation of why this visualization was chosen
+- suggestedFollowups: 2-3 follow-up prompts the user might want to try`
+
+const SYSTEM_PROMPT_D3 = `You are an expert D3.js visualization developer. Generate D3.js v7 code for beautiful, interactive SVG visualizations.
+
+## Available Variables (already defined, do NOT redeclare)
+- d3: the full D3.js v7 library
+- svg: a d3 selection of an SVG element (700x450)
+- data: array of row objects from the user's dataset
+- width: 700 (SVG width)
+- height: 450 (SVG height)
+- margin: { top: 40, right: 40, bottom: 60, left: 60 }
+- container: a d3 selection of the parent div wrapping the SVG (for tooltips)
+
+## Critical Rules
+1. Do NOT create a new SVG. Use the provided svg variable.
+2. Do NOT use document.querySelector, document.createElement, document.body, or window. Only use the provided variables.
+3. Always start by calculating inner dimensions and creating a chart group:
+   const innerWidth = width - margin.left - margin.right;
+   const innerHeight = height - margin.top - margin.bottom;
+   const g = svg.append('g').attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+4. When using clip paths (for zoom/pan), clip a sub-group for data elements only — never clip g itself, or axis labels will be cut off. See the ZOOM AND PAN pattern below.
+
+## Data Safety
+- Always filter out null/invalid values before using them in scales:
+   var cleanData = data.filter(function(d) { return d['col'] != null && !isNaN(+d['col']); });
+- If data might be empty after filtering, show a fallback message:
+   if (cleanData.length === 0) {
+     svg.append('text').attr('x', width/2).attr('y', height/2)
+       .attr('text-anchor', 'middle').attr('font-size', '14px').attr('fill', '#666')
+       .text('No valid data to display');
+     return;
+   }
+- Never mutate the original data array. Use filtered copies for transformations.
+
+## Interactivity Patterns
+
+TOOLTIPS - create as a div inside the container:
+   var tooltip = container.append('div')
+     .style('position', 'absolute')
+     .style('visibility', 'hidden')
+     .style('background', 'rgba(0,0,0,0.8)')
+     .style('color', '#fff')
+     .style('padding', '8px 12px')
+     .style('border-radius', '4px')
+     .style('font-size', '12px')
+     .style('pointer-events', 'none')
+     .style('z-index', '10');
+
+   // On elements, use d3.pointer to position:
+   .on('mouseover', function(event) {
+     tooltip.style('visibility', 'visible').html('Content');
+   })
+   .on('mousemove', function(event) {
+     var coords = d3.pointer(event, container.node());
+     tooltip.style('left', (coords[0] + 10) + 'px').style('top', (coords[1] - 10) + 'px');
+   })
+   .on('mouseout', function() {
+     tooltip.style('visibility', 'hidden');
+   })
+
+HOVER EFFECTS - use function() not arrow functions for 'this':
+   .on('mouseover', function(event, d) {
+     d3.select(this).attr('opacity', 0.7);
+   })
+   .on('mouseout', function(event, d) {
+     d3.select(this).attr('opacity', 1);
+   })
+
+ZOOM AND PAN (semantic zoom — use ONLY when brush/selection is NOT needed):
+   // Save original scale copies for reset
+   var xScale0 = xScale.copy();
+   var yScale0 = yScale.copy();
+
+   // Clip path — apply to a sub-group for DATA ELEMENTS ONLY.
+   // Do NOT clip g itself, or axes labels will be cut off.
+   var clipId = 'clip-' + Math.random().toString(36).substr(2, 9);
+   svg.append('defs').append('clipPath')
+     .attr('id', clipId)
+     .append('rect')
+     .attr('width', innerWidth)
+     .attr('height', innerHeight);
+   var chartArea = g.append('g')
+     .attr('clip-path', 'url(#' + clipId + ')');
+   // Append data elements (points, lines, bars) to chartArea, NOT to g.
+   // Append axes to g directly (they stay unclipped).
+
+   // Prevent browser from intercepting gestures (needed for touch panning)
+   svg.style('touch-action', 'none');
+
+   var zoom = d3.zoom()
+     .scaleExtent([0.5, 10])
+     .extent([[0, 0], [innerWidth, innerHeight]])
+     // No .filter() — default allows wheel (zoom) and drag (pan)
+     // No .translateExtent() — allow free panning after zooming in
+     .on('zoom', function(event) {
+       var newX = event.transform.rescaleX(xScale0);
+       var newY = event.transform.rescaleY(yScale0);
+       // Update axes (in g, not clipped)
+       xAxisGroup.call(d3.axisBottom(newX));
+       yAxisGroup.call(d3.axisLeft(newY));
+       // Reposition data elements (in chartArea, clipped)
+       points
+         .attr('cx', function(d) { return newX(d['xValue']); })
+         .attr('cy', function(d) { return newY(d['yValue']); });
+     });
+
+   svg.call(zoom);
+
+   // Double-click to reset zoom
+   svg.on('dblclick.zoom', function() {
+     svg.transition().duration(500).call(zoom.transform, d3.zoomIdentity);
+   });
+
+   // NOTE: Semantic zoom only works with continuous scales (scatter/line).
+   // For bar charts with band scales, use geometric zoom or avoid zoom.
+
+BRUSHING / SELECTION (use this pattern whenever brush or selection is needed):
+   // WARNING: d3.brush() and d3.zoom() BOTH capture drag events.
+   // NEVER add brush separately to a chart that has zoom — they will conflict
+   // and cause broken panning. ALWAYS use this complete pattern which includes
+   // a Pan/Select mode toggle, proper zoom filtering, and zoom-aware brush scales.
+   //
+   // If the chart has NO zoom/pan, you can skip the mode toggle, zoom filter,
+   // and zoomTransform code — but you MUST still use this section's brush setup.
+
+   var mode = 'pan';  // 'pan' or 'select'
+
+   // --- Toggle toolbar (HTML buttons above the SVG) ---
+   var toolbar = container.insert('div', 'svg')
+     .style('display', 'flex').style('gap', '4px').style('margin-bottom', '8px');
+
+   function makeToggleBtn(parent, label, active) {
+     return parent.append('button').text(label)
+       .style('padding', '4px 12px').style('border-radius', '4px')
+       .style('border', '1px solid #d1d5db').style('font-size', '12px')
+       .style('cursor', 'pointer').style('line-height', '1.5')
+       .style('background', active ? '#3b82f6' : '#fff')
+       .style('color', active ? '#fff' : '#374151');
+   }
+   var panBtn = makeToggleBtn(toolbar, 'Pan', true);
+   var selectBtn = makeToggleBtn(toolbar, 'Select', false);
+
+   // --- Zoom behavior (wheel always zooms, drag only pans in Pan mode) ---
+   var xScale0 = xScale.copy();
+   var yScale0 = yScale.copy();
+   svg.style('touch-action', 'none');
+
+   var clipId = 'clip-' + Math.random().toString(36).substr(2, 9);
+   svg.append('defs').append('clipPath')
+     .attr('id', clipId)
+     .append('rect')
+     .attr('width', innerWidth)
+     .attr('height', innerHeight);
+   var chartArea = g.append('g')
+     .attr('clip-path', 'url(#' + clipId + ')');
+
+   var zoom = d3.zoom()
+     .scaleExtent([0.5, 10])
+     .extent([[0, 0], [innerWidth, innerHeight]])
+     .filter(function(event) {
+       if (event.type === 'wheel' || event.type === 'dblclick') return true;
+       return mode === 'pan';  // drag only in pan mode
+     })
+     .on('zoom', function(event) {
+       var newX = event.transform.rescaleX(xScale0);
+       var newY = event.transform.rescaleY(yScale0);
+       xAxisGroup.call(d3.axisBottom(newX));
+       yAxisGroup.call(d3.axisLeft(newY));
+       points
+         .attr('cx', function(d) { return newX(d['xValue']); })
+         .attr('cy', function(d) { return newY(d['yValue']); });
+     });
+   svg.call(zoom);
+   svg.on('dblclick.zoom', function() {
+     svg.transition().duration(500).call(zoom.transform, d3.zoomIdentity);
+   });
+
+   // --- Brush (only active in Select mode) ---
+   // Use the CURRENT zoomed scales so selection matches visible positions.
+   var brush = d3.brush()
+     .extent([[0, 0], [innerWidth, innerHeight]])
+     .on('brush end', function(event) {
+       if (!event.selection) {
+         points.attr('opacity', 1).classed('brushed', false);
+         return;
+       }
+       var sel = event.selection;
+       var x0 = sel[0][0], y0 = sel[0][1], x1 = sel[1][0], y1 = sel[1][1];
+       var t = d3.zoomTransform(svg.node());
+       var curX = t.rescaleX(xScale0);
+       var curY = t.rescaleY(yScale0);
+       points.each(function(d) {
+         var cx = curX(d['xValue']);
+         var cy = curY(d['yValue']);
+         var inside = cx >= x0 && cx <= x1 && cy >= y0 && cy <= y1;
+         d3.select(this)
+           .attr('opacity', inside ? 1 : 0.15)
+           .classed('brushed', inside);
+       });
+     });
+   var brushG = g.append('g').attr('class', 'brush').call(brush);
+   brushG.style('display', 'none');  // hidden by default (pan mode)
+
+   // --- Mode switching ---
+   function setMode(m) {
+     mode = m;
+     panBtn.style('background', m === 'pan' ? '#3b82f6' : '#fff')
+       .style('color', m === 'pan' ? '#fff' : '#374151');
+     selectBtn.style('background', m === 'select' ? '#3b82f6' : '#fff')
+       .style('color', m === 'select' ? '#fff' : '#374151');
+     if (m === 'pan') {
+       brushG.style('display', 'none');
+       brushG.call(brush.move, null);
+       svg.style('cursor', 'grab');
+     } else {
+       brushG.style('display', null);
+       svg.style('cursor', 'crosshair');
+     }
+   }
+   panBtn.on('click', function() { setMode('pan'); });
+   selectBtn.on('click', function() { setMode('select'); });
+   setMode('pan');
+
+MULTI-CHART LAYOUT (linked or secondary charts below the main SVG):
+   // The container div grows to fit content. Append additional SVGs to container.
+   var detailHeight = 200;
+   var detailSvg = container.append('svg')
+     .attr('width', width)
+     .attr('height', detailHeight)
+     .attr('viewBox', '0 0 ' + width + ' ' + detailHeight)
+     .style('max-width', '100%')
+     .style('height', 'auto')
+     .style('margin-top', '16px')
+     .style('overflow', 'visible');
+   var detailG = detailSvg.append('g')
+     .attr('transform', 'translate(' + margin.left + ',' + 20 + ')');
+
+   // Drive the detail chart from the same or filtered data.
+   function updateDetail(selectedData) {
+     detailG.selectAll('*').remove();
+     // Build a bar chart, histogram, or summary from selectedData
+   }
+
+TRANSITIONS AND ANIMATION:
+   // CRITICAL: .transition() returns a Transition, NOT a Selection.
+   // You CANNOT chain .on('mouseover', ...) after .transition() — it causes
+   // "unknown type: mouseover". Always attach event listeners to the selection
+   // BEFORE starting the transition, or save the selection in a variable first.
+
+   // Correct pattern — attach events to the selection, then transition separately:
+   var points = g.selectAll('circle').data(data).enter().append('circle')
+     .attr('cx', function(d) { return xScale(d['xValue']); })
+     .attr('cy', function(d) { return yScale(d['yValue']); })
+     .attr('r', function(d) { return rScale(d['size']); })
+     .attr('fill', function(d) { return color(d['category']); })
+     .attr('opacity', 0);
+
+   // Attach ALL event listeners on the selection (before .transition()):
+   points.on('mouseover', function(event, d) { /* tooltip logic */ })
+     .on('mousemove', function(event, d) { /* position tooltip */ })
+     .on('mouseout', function() { /* hide tooltip */ });
+
+   // THEN animate — this is a separate statement, not chained after .on():
+   points.transition().duration(600)
+     .delay(function(d, i) { return Math.min(i * 30, 2000); })
+     .attr('opacity', 1);
+
+   // Grow bars from baseline:
+   bars.attr('y', innerHeight).attr('height', 0)
+     .transition().duration(600)
+     .attr('y', function(d) { return yScale(d.value); })
+     .attr('height', function(d) { return innerHeight - yScale(d.value); });
+
+INTERACTIVE FILTERS (toggle categories on/off):
+   // Extract unique values from the data using the COLUMN NAME as a string property:
+   var categories = [...new Set(data.map(function(d) { return d['ColumnName']; }))];
+
+   // Build a reusable filter function for one dimension:
+   function makeLegendFilter(fieldName, yOffset, colorScale, elements) {
+     var cats = [...new Set(data.map(function(d) { return d[fieldName]; }))];
+     var active = new Set(cats);
+     var lg = svg.append('g')
+       .attr('transform', 'translate(' + (width - margin.right + 10) + ',' + (margin.top + yOffset) + ')');
+
+     // Label
+     lg.append('text').text(fieldName)
+       .attr('font-size', '11px').attr('font-weight', 'bold').attr('dy', '-4px');
+
+     var items = lg.selectAll('.legend-item').data(cats).enter().append('g')
+       .attr('class', 'legend-item')
+       .attr('transform', function(d, i) { return 'translate(0,' + (i * 20 + 8) + ')'; })
+       .attr('cursor', 'pointer');
+     items.append('rect').attr('width', 12).attr('height', 12)
+       .attr('fill', function(d) { return colorScale(d); });
+     items.append('text').attr('x', 16).attr('y', 10).attr('font-size', '11px')
+       .text(function(d) { return d; });
+
+     items.on('click', function(event, cat) {
+       if (active.has(cat)) active.delete(cat); else active.add(cat);
+       d3.select(this).attr('opacity', active.has(cat) ? 1 : 0.3);
+       applyFilters();
+     });
+     return active;  // return the Set so applyFilters can read it
+   }
+
+   // Example: two filter dimensions
+   var activeClass = makeLegendFilter('Pclass', 0, classColor, elements);
+   var activeGender = makeLegendFilter('Gender', 80, genderColor, elements);
+
+   function applyFilters() {
+     elements.attr('display', function(d) {
+       return activeClass.has(d['Pclass']) && activeGender.has(d['Gender']) ? null : 'none';
+     });
+   }
+
+   // IMPORTANT: Always access column values with d['ColumnName'], never as bare variables.
+   // Adapt the field names (Pclass, Gender, etc.) to match the actual dataset columns.
+
+ANNOTATIONS AND CALLOUTS (use plain SVG — d3.annotation is NOT available):
+   // Do NOT use d3.annotation() — it is not included in the d3 bundle.
+   // Instead, draw annotations manually with SVG lines, text, and shapes:
+
+   // Simple annotation: line + text label pointing to a data point
+   function annotate(gParent, x, y, dx, dy, label) {
+     var ag = gParent.append('g').attr('class', 'annotation');
+     ag.append('line')
+       .attr('x1', x).attr('y1', y)
+       .attr('x2', x + dx).attr('y2', y + dy)
+       .attr('stroke', '#333').attr('stroke-width', 1)
+       .attr('marker-end', 'url(#arrow)');
+     ag.append('text')
+       .attr('x', x + dx).attr('y', y + dy - 6)
+       .attr('text-anchor', dx < 0 ? 'end' : 'start')
+       .attr('font-size', '12px').attr('fill', '#333')
+       .text(label);
+   }
+
+   // Optional arrowhead marker (add once):
+   svg.append('defs').append('marker')
+     .attr('id', 'arrow').attr('viewBox', '0 0 10 10')
+     .attr('refX', 10).attr('refY', 5)
+     .attr('markerWidth', 6).attr('markerHeight', 6)
+     .attr('orient', 'auto-start-reverse')
+     .append('path').attr('d', 'M 0 0 L 10 5 L 0 10 z').attr('fill', '#333');
+
+   // Callout box with background:
+   function callout(gParent, x, y, text) {
+     var cg = gParent.append('g');
+     var txt = cg.append('text')
+       .attr('x', x).attr('y', y)
+       .attr('font-size', '11px').attr('fill', '#333')
+       .text(text);
+     var bbox = txt.node().getBBox();
+     cg.insert('rect', 'text')
+       .attr('x', bbox.x - 4).attr('y', bbox.y - 2)
+       .attr('width', bbox.width + 8).attr('height', bbox.height + 4)
+       .attr('fill', '#fffde7').attr('stroke', '#f9a825')
+       .attr('rx', 3);
+   }
+
+## Style Guidelines
+- Use d3.scaleOrdinal(d3.schemeTableau10) for categorical colors
+- Use d3.interpolateBlues or similar for sequential colors
+- Add a chart title: svg.append('text').attr('x', width/2).attr('y', 16).attr('text-anchor', 'middle').attr('font-size', '16px').attr('font-weight', 'bold').text('Title');
+- Style axes: remove domain line, use light gray gridlines
+- Use 'font-family', 'system-ui, sans-serif' for all text
+
+## Modifying Existing Code
+When given existing code to modify:
+1. Parse and understand the existing code structure first
+2. Only change code directly related to the user's request
+3. Preserve all existing variable names, scales, and event handlers
+4. "Add X" means append X alongside existing features, not replace them
+5. Keep the same coding style and patterns as the existing code
+6. If adding a new feature that conflicts with an existing one, integrate them rather than replacing
+7. CRITICAL: When adding brush/selection to a chart that has zoom/pan, you MUST replace the existing zoom setup with the full BRUSHING / SELECTION pattern above. This adds the Pan/Select toggle toolbar, zoom filter, and zoom-aware brush scales. Never add d3.brush() alongside d3.zoom() without the mode toggle — they will conflict on drag events.
+
+Respond with a JSON object containing:
+- chartType: the chart type (bar, line, scatter, area, pie, donut, treemap, force, etc.)
+- library: "d3"
+- d3Code: the D3.js code as a string (raw code only, no markdown fences)
+- reasoning: brief explanation of the visualization choice
+- suggestedFollowups: 2-3 follow-up prompts`
+
+const SYSTEM_PROMPT_INSIGHTS = `You are an expert data analyst. Given a dataset schema, suggest 3 interesting visualizations that would reveal insights from the data.
+
+You MUST respond with a JSON object in this exact format:
+{
+  "suggestions": [
+    {
+      "prompt": "A natural language prompt describing the visualization",
+      "description": "Short description (5-10 words)",
+      "chartType": "bar|line|scatter|area|pie|donut|treemap|force",
+      "library": "vega-lite|d3"
+    }
+  ]
+}
+
+Guidelines for library choice:
+- Use "vega-lite" for: simple bar charts, line charts, scatter plots, basic area charts
+- Use "d3" for: interactive visualizations, donut charts, treemaps, force-directed graphs, complex multi-series charts, visualizations needing custom animations
+
+Focus on:
+- Distributions of numeric columns
+- Trends over time if temporal columns exist
+- Comparisons between categories
+- Relationships between numeric columns`
+
+class OpenAIProvider implements LLMProvider {
+  private apiKey: string
+  private model: string
+
+  constructor() {
+    this.apiKey = Deno.env.get('OPENAI_API_KEY') || ''
+    this.model = 'gpt-4o'
+  }
+
+  async generateChart(prompt: string, schema: DatasetSchema, library: ChartLibrary, existingCode?: string): Promise<ChartResponse> {
+    const systemPrompt = library === 'd3' ? SYSTEM_PROMPT_D3 : SYSTEM_PROMPT_VEGA
+    const userMessage = this.buildChartPrompt(prompt, schema, library, existingCode)
+
+    const response = await this.callAPI([
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userMessage },
+    ])
+
+    return this.parseChartResponse(response, library)
+  }
+
+  async suggestInsights(schema: DatasetSchema): Promise<InsightSuggestion[]> {
+    const userMessage = this.buildSchemaDescription(schema)
+
+    const response = await this.callAPI([
+      { role: 'system', content: SYSTEM_PROMPT_INSIGHTS },
+      { role: 'user', content: `Here is the dataset schema:\n${userMessage}\n\nSuggest 3 visualizations. Return a JSON object with a "suggestions" array.` },
+    ])
+
+    return this.parseInsightsResponse(response)
+  }
+
+  private async callAPI(messages: { role: string; content: string }[]): Promise<string> {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: this.model,
+        messages,
+        temperature: 0.3,
+        response_format: { type: 'json_object' },
+      }),
+    })
+
+    if (!response.ok) {
+      const error = await response.text()
+      throw new Error(`OpenAI API error: ${error}`)
+    }
+
+    const data = await response.json()
+    return data.choices[0].message.content
+  }
+
+  private buildChartPrompt(prompt: string, schema: DatasetSchema, library: ChartLibrary, existingCode?: string): string {
+    let message = `User request: ${prompt}\n\nDataset schema:\n${this.buildSchemaDescription(schema)}`
+
+    if (existingCode) {
+      if (library === 'd3') {
+        message += `\n\nIMPORTANT: You are modifying existing code. The user wants to ADD or CHANGE specific features while PRESERVING all other existing functionality.
+
+Existing D3 code to modify:
+${existingCode}
+
+CRITICAL RULES FOR MODIFICATIONS:
+1. PRESERVE all existing features (tooltips, zoom, brushing, animations, legends, etc.)
+2. ONLY modify or add what the user specifically requested
+3. Start from the existing code and make targeted changes
+4. Do NOT regenerate from scratch - build upon what exists`
+      } else {
+        message += `\n\nIMPORTANT: You are modifying an existing spec. PRESERVE all existing encodings, transforms, and settings. Only change what the user specifically requested.
+
+Existing Vega-Lite specification to modify:
+${existingCode}`
+      }
+    }
+
+    return message
+  }
+
+  private buildSchemaDescription(schema: DatasetSchema): string {
+    const columnDescriptions = schema.columns.map((col) => {
+      const samples = col.sample_values
+        .filter((v) => v !== null)
+        .slice(0, 3)
+        .map((v) => JSON.stringify(v))
+        .join(', ')
+      return `- ${col.name} (${col.type}${col.nullable ? ', nullable' : ''}): e.g. ${samples}`
+    })
+
+    return `${schema.rowCount} rows with columns:\n${columnDescriptions.join('\n')}`
+  }
+
+  private parseChartResponse(response: string, library: ChartLibrary): ChartResponse {
+    const parsed = JSON.parse(response)
+
+    if (library === 'd3') {
+      return {
+        chartType: parsed.chartType || 'bar',
+        library: 'd3',
+        d3Code: parsed.d3Code || '',
+        reasoning: parsed.reasoning || '',
+        suggestedFollowups: parsed.suggestedFollowups || [],
+      }
+    }
+
+    return {
+      chartType: parsed.chartType || 'bar',
+      library: 'vega-lite',
+      vegaLiteSpec: parsed.vegaLiteSpec || {},
+      reasoning: parsed.reasoning || '',
+      suggestedFollowups: parsed.suggestedFollowups || [],
+    }
+  }
+
+  private parseInsightsResponse(response: string): InsightSuggestion[] {
+    try {
+      const parsed = JSON.parse(response)
+      let suggestions = parsed.suggestions || parsed.visualizations || parsed
+      if (!Array.isArray(suggestions)) {
+        const keys = Object.keys(parsed)
+        for (const key of keys) {
+          if (Array.isArray(parsed[key])) {
+            suggestions = parsed[key]
+            break
+          }
+        }
+      }
+      if (!Array.isArray(suggestions)) return []
+      return suggestions.slice(0, 3).map((s: Record<string, string>) => ({
+        prompt: s.prompt || '',
+        description: s.description || s.title || '',
+        chartType: s.chartType || s.chart_type || 'bar',
+        library: (s.library as ChartLibrary) || 'vega-lite',
+      }))
+    } catch (e) {
+      console.error('Failed to parse insights response:', e, response)
+      return []
+    }
+  }
+}
+
+class AnthropicProvider implements LLMProvider {
+  private apiKey: string
+  private model: string
+
+  constructor() {
+    this.apiKey = Deno.env.get('ANTHROPIC_API_KEY') || ''
+    this.model = 'claude-3-5-sonnet-20241022'
+  }
+
+  async generateChart(prompt: string, schema: DatasetSchema, library: ChartLibrary, existingCode?: string): Promise<ChartResponse> {
+    const systemPrompt = library === 'd3' ? SYSTEM_PROMPT_D3 : SYSTEM_PROMPT_VEGA
+    const userMessage = this.buildChartPrompt(prompt, schema, library, existingCode)
+
+    const response = await this.callAPI(systemPrompt, userMessage)
+    return this.parseChartResponse(response, library)
+  }
+
+  async suggestInsights(schema: DatasetSchema): Promise<InsightSuggestion[]> {
+    const userMessage = `Here is the dataset schema:\n${this.buildSchemaDescription(schema)}\n\nSuggest 3 visualizations. Respond with a JSON object containing a "suggestions" array.`
+
+    const response = await this.callAPI(SYSTEM_PROMPT_INSIGHTS, userMessage)
+    return this.parseInsightsResponse(response)
+  }
+
+  private async callAPI(systemPrompt: string, userMessage: string): Promise<string> {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': this.apiKey,
+        'anthropic-version': '2023-06-01',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: this.model,
+        max_tokens: 4096,
+        system: systemPrompt + '\n\nAlways respond with valid JSON.',
+        messages: [{ role: 'user', content: userMessage }],
+      }),
+    })
+
+    if (!response.ok) {
+      const error = await response.text()
+      throw new Error(`Anthropic API error: ${error}`)
+    }
+
+    const data = await response.json()
+    const content = data.content[0]
+    if (content.type !== 'text') {
+      throw new Error('Unexpected response type from Anthropic')
+    }
+
+    return content.text
+  }
+
+  private buildChartPrompt(prompt: string, schema: DatasetSchema, library: ChartLibrary, existingCode?: string): string {
+    let message = `User request: ${prompt}\n\nDataset schema:\n${this.buildSchemaDescription(schema)}`
+
+    if (existingCode) {
+      if (library === 'd3') {
+        message += `\n\nIMPORTANT: You are modifying existing code. The user wants to ADD or CHANGE specific features while PRESERVING all other existing functionality.
+
+Existing D3 code to modify:
+${existingCode}
+
+CRITICAL RULES FOR MODIFICATIONS:
+1. PRESERVE all existing features (tooltips, zoom, brushing, animations, legends, etc.)
+2. ONLY modify or add what the user specifically requested
+3. Start from the existing code and make targeted changes
+4. Do NOT regenerate from scratch - build upon what exists`
+      } else {
+        message += `\n\nIMPORTANT: You are modifying an existing spec. PRESERVE all existing encodings, transforms, and settings. Only change what the user specifically requested.
+
+Existing Vega-Lite specification to modify:
+${existingCode}`
+      }
+    }
+
+    message += '\n\nRespond with a JSON object.'
+
+    return message
+  }
+
+  private buildSchemaDescription(schema: DatasetSchema): string {
+    const columnDescriptions = schema.columns.map((col) => {
+      const samples = col.sample_values
+        .filter((v) => v !== null)
+        .slice(0, 3)
+        .map((v) => JSON.stringify(v))
+        .join(', ')
+      return `- ${col.name} (${col.type}${col.nullable ? ', nullable' : ''}): e.g. ${samples}`
+    })
+
+    return `${schema.rowCount} rows with columns:\n${columnDescriptions.join('\n')}`
+  }
+
+  private parseChartResponse(response: string, library: ChartLibrary): ChartResponse {
+    let jsonStr = response
+    const codeBlockMatch = response.match(/```(?:json)?\s*([\s\S]*?)```/)
+    if (codeBlockMatch) {
+      jsonStr = codeBlockMatch[1]
+    }
+
+    const parsed = JSON.parse(jsonStr)
+
+    if (library === 'd3') {
+      return {
+        chartType: parsed.chartType || 'bar',
+        library: 'd3',
+        d3Code: parsed.d3Code || '',
+        reasoning: parsed.reasoning || '',
+        suggestedFollowups: parsed.suggestedFollowups || [],
+      }
+    }
+
+    return {
+      chartType: parsed.chartType || 'bar',
+      library: 'vega-lite',
+      vegaLiteSpec: parsed.vegaLiteSpec || {},
+      reasoning: parsed.reasoning || '',
+      suggestedFollowups: parsed.suggestedFollowups || [],
+    }
+  }
+
+  private parseInsightsResponse(response: string): InsightSuggestion[] {
+    let jsonStr = response
+    const codeBlockMatch = response.match(/```(?:json)?\s*([\s\S]*?)```/)
+    if (codeBlockMatch) {
+      jsonStr = codeBlockMatch[1]
+    }
+
+    const parsed = JSON.parse(jsonStr)
+    const suggestions = parsed.suggestions || parsed
+    if (!Array.isArray(suggestions)) return []
+    return suggestions.slice(0, 3).map((s: Record<string, string>) => ({
+      prompt: s.prompt || '',
+      description: s.description || s.title || '',
+      chartType: s.chartType || s.chart_type || 'bar',
+      library: (s.library as ChartLibrary) || 'vega-lite',
+    }))
+  }
+}
+
+export function createProvider(): LLMProvider {
+  const provider = Deno.env.get('LLM_PROVIDER') || 'openai'
+
+  if (provider === 'anthropic') {
+    return new AnthropicProvider()
+  }
+
+  return new OpenAIProvider()
+}
+
+export async function generateChartWithRetry(
+  prompt: string,
+  schema: DatasetSchema,
+  library: ChartLibrary = 'vega-lite',
+  existingCode?: string,
+  maxRetries = 2
+): Promise<ChartResponse> {
+  const provider = createProvider()
+  let lastError: Error | null = null
+
+  for (let i = 0; i <= maxRetries; i++) {
+    try {
+      return await provider.generateChart(prompt, schema, library, existingCode)
+    } catch (error) {
+      lastError = error as Error
+      if (i < maxRetries) {
+        await new Promise((resolve) => setTimeout(resolve, 1000 * (i + 1)))
+      }
+    }
+  }
+
+  throw lastError
+}
+
+export async function suggestInsightsWithRetry(
+  schema: DatasetSchema,
+  maxRetries = 2
+): Promise<InsightSuggestion[]> {
+  const provider = createProvider()
+  let lastError: Error | null = null
+
+  for (let i = 0; i <= maxRetries; i++) {
+    try {
+      return await provider.suggestInsights(schema)
+    } catch (error) {
+      lastError = error as Error
+      if (i < maxRetries) {
+        await new Promise((resolve) => setTimeout(resolve, 1000 * (i + 1)))
+      }
+    }
+  }
+
+  throw lastError
+}

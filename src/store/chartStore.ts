@@ -1,0 +1,207 @@
+import { create } from 'zustand'
+import { supabase } from '../lib/supabase'
+import { Chart, ChartLibrary, VegaLiteSpec, ConversationMessage, ChartEditHistory, DatasetSchema, ChartGenerationResponse } from '../types'
+
+interface GenerateChartOptions {
+  projectId: string
+  prompt: string
+  schema: DatasetSchema
+  data: unknown[]
+  library: ChartLibrary
+  existingCode?: string
+}
+
+interface ChartState {
+  charts: Chart[]
+  currentChart: Chart | null
+  editHistories: Map<string, ChartEditHistory>
+  loading: boolean
+  generating: boolean
+  error: string | null
+  fetchCharts: (projectId: string) => Promise<void>
+  generateChart: (options: GenerateChartOptions) => Promise<Chart | null>
+  updateChart: (id: string, updates: Partial<Chart>) => Promise<void>
+  deleteChart: (id: string) => Promise<void>
+  setCurrentChart: (chart: Chart | null) => void
+  addToEditHistory: (chartId: string, message: ConversationMessage) => void
+  getEditHistory: (chartId: string) => ConversationMessage[]
+}
+
+export const useChartStore = create<ChartState>((set, get) => ({
+  charts: [],
+  currentChart: null,
+  editHistories: new Map(),
+  loading: false,
+  generating: false,
+  error: null,
+
+  fetchCharts: async (projectId: string) => {
+    set({ loading: true, error: null })
+    try {
+      const { data, error } = await supabase
+        .from('charts')
+        .select('*')
+        .eq('project_id', projectId)
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+      set({ charts: (data || []).map(normalizeChart) })
+    } catch (error) {
+      set({ error: (error as Error).message })
+    } finally {
+      set({ loading: false })
+    }
+  },
+
+  generateChart: async ({ projectId, prompt, schema, data, library, existingCode }: GenerateChartOptions) => {
+    set({ generating: true, error: null })
+    try {
+      const { data: responseData, error: fnError } = await supabase.functions.invoke('generate-chart', {
+        body: {
+          prompt,
+          schema,
+          library,
+          existingCode: existingCode || null,
+        },
+      })
+
+      if (fnError) throw fnError
+
+      const response = responseData as ChartGenerationResponse
+      const isD3 = response.library === 'd3' || library === 'd3'
+
+      // Build insert payload based on library
+      const insertPayload: Record<string, unknown> = {
+        project_id: projectId,
+        prompt,
+        chart_library: isD3 ? 'd3' : 'vega-lite',
+        explanation: response.reasoning,
+      }
+
+      if (isD3) {
+        insertPayload.d3_code = response.d3Code || ''
+        insertPayload.vega_spec_json = null
+      } else {
+        const specWithData: VegaLiteSpec = {
+          ...response.vegaLiteSpec,
+          data: { values: data },
+        }
+        insertPayload.vega_spec_json = specWithData
+        insertPayload.d3_code = null
+      }
+
+      const { data: chartData, error } = await supabase
+        .from('charts')
+        .insert(insertPayload)
+        .select()
+        .single()
+
+      if (error) throw error
+
+      const chart = normalizeChart(chartData)
+
+      get().addToEditHistory(chart.id, {
+        role: 'user',
+        content: prompt,
+        timestamp: new Date(),
+      })
+      get().addToEditHistory(chart.id, {
+        role: 'assistant',
+        content: response.reasoning,
+        spec: chart.vega_spec_json || undefined,
+        timestamp: new Date(),
+      })
+
+      set({
+        charts: [chart, ...get().charts],
+        currentChart: chart,
+      })
+      return chart
+    } catch (error) {
+      set({ error: (error as Error).message })
+      return null
+    } finally {
+      set({ generating: false })
+    }
+  },
+
+  updateChart: async (id: string, updates: Partial<Chart>) => {
+    set({ loading: true, error: null })
+    try {
+      const { error } = await supabase
+        .from('charts')
+        .update(updates)
+        .eq('id', id)
+
+      if (error) throw error
+
+      set({
+        charts: get().charts.map((c) =>
+          c.id === id ? { ...c, ...updates } : c
+        ),
+        currentChart: get().currentChart?.id === id
+          ? { ...get().currentChart!, ...updates }
+          : get().currentChart,
+      })
+    } catch (error) {
+      set({ error: (error as Error).message })
+    } finally {
+      set({ loading: false })
+    }
+  },
+
+  deleteChart: async (id: string) => {
+    set({ loading: true, error: null })
+    try {
+      const { error } = await supabase
+        .from('charts')
+        .delete()
+        .eq('id', id)
+
+      if (error) throw error
+
+      const editHistories = new Map(get().editHistories)
+      editHistories.delete(id)
+
+      set({
+        charts: get().charts.filter((c) => c.id !== id),
+        currentChart: get().currentChart?.id === id ? null : get().currentChart,
+        editHistories,
+      })
+    } catch (error) {
+      set({ error: (error as Error).message })
+    } finally {
+      set({ loading: false })
+    }
+  },
+
+  setCurrentChart: (chart: Chart | null) => {
+    set({ currentChart: chart })
+  },
+
+  addToEditHistory: (chartId: string, message: ConversationMessage) => {
+    const editHistories = new Map(get().editHistories)
+    const history = editHistories.get(chartId) || { chartId, messages: [] }
+    history.messages.push(message)
+    editHistories.set(chartId, history)
+    set({ editHistories })
+  },
+
+  getEditHistory: (chartId: string) => {
+    return get().editHistories.get(chartId)?.messages || []
+  },
+}))
+
+// Normalize chart data from DB (handles missing columns for older rows)
+function normalizeChart(row: Record<string, unknown>): Chart {
+  return {
+    id: row.id as string,
+    project_id: row.project_id as string,
+    prompt: row.prompt as string,
+    chart_library: (row.chart_library as ChartLibrary) || 'vega-lite',
+    vega_spec_json: (row.vega_spec_json as VegaLiteSpec) || null,
+    d3_code: (row.d3_code as string) || null,
+    explanation: (row.explanation as string) || null,
+    created_at: row.created_at as string,
+  }
+}

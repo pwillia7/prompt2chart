@@ -1,0 +1,27 @@
+import { ReactNode } from 'react'
+import { Navigate, useLocation } from 'react-router-dom'
+import { useAuthStore } from '../../store/authStore'
+import { Spinner } from '../ui/Spinner'
+
+interface AuthGuardProps {
+  children: ReactNode
+}
+
+export function AuthGuard({ children }: AuthGuardProps) {
+  const { user, initialized } = useAuthStore()
+  const location = useLocation()
+
+  if (!initialized) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Spinner size="lg" />
+      </div>
+    )
+  }
+
+  if (!user) {
+    return <Navigate to="/login" state={{ from: location }} replace />
+  }
+
+  return <>{children}</>
+}
