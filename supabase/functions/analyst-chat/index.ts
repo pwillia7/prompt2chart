@@ -1,6 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { corsHeaders } from '../_shared/cors.ts'
-import { analystChatWithRetry, ChatMessage, DatasetSchema, ChartLibrary } from '../_shared/llm-adapter.ts'
+import { analystChatWithRetry, ChatMessage, DatasetSchema, ChartLibrary, AllSchemaEntry } from '../_shared/llm-adapter.ts'
 
 interface AnalystChatRequest {
   message: string
@@ -9,9 +9,10 @@ interface AnalystChatRequest {
   chartCode?: string
   vegaSpec?: string
   conversationHistory: { role: 'user' | 'assistant'; content: string }[]
+  allSchemas?: AllSchemaEntry[]
 }
 
-function buildSystemPrompt(schema: DatasetSchema, chartLibrary: ChartLibrary, chartCode?: string, vegaSpec?: string): string {
+function buildSystemPrompt(schema: DatasetSchema, chartLibrary: ChartLibrary, chartCode?: string, vegaSpec?: string, allSchemas?: AllSchemaEntry[]): string {
   const cols = schema.columns.map(c => `${c.name} (${c.type})`).join(', ')
 
   let prompt = `You are a senior data analyst. The user is looking at a ${chartLibrary === 'd3' ? 'D3.js' : 'Vega-Lite'} chart built from their dataset.
@@ -26,6 +27,18 @@ Dataset: ${schema.rowCount} rows with columns: ${cols}
     prompt += `Current Vega-Lite spec:\n${vegaSpec}\n\n`
   }
 
+  if (allSchemas && allSchemas.length > 1) {
+    const others = allSchemas.filter(s => s.schema !== schema)
+    if (others.length > 0) {
+      prompt += `Other datasets available in this project:\n`
+      for (const s of others) {
+        const sCols = s.schema.columns.map(c => `${c.name} (${c.type})`).join(', ')
+        prompt += `- "${s.fileName}" (datasetId: ${s.datasetId}): ${s.schema.rowCount} rows with columns: ${sCols}\n`
+      }
+      prompt += `\n`
+    }
+  }
+
   prompt += `Answer questions about patterns, suggest improvements, explain statistical concepts. Be concise — use short paragraphs and bullet lists. Reference actual column names.`
 
   return prompt
@@ -37,7 +50,7 @@ serve(async (req) => {
   }
 
   try {
-    const { message, schema, chartLibrary, chartCode, vegaSpec, conversationHistory } = await req.json() as AnalystChatRequest
+    const { message, schema, chartLibrary, chartCode, vegaSpec, conversationHistory, allSchemas } = await req.json() as AnalystChatRequest
 
     if (!message || !schema) {
       return new Response(
@@ -46,7 +59,7 @@ serve(async (req) => {
       )
     }
 
-    const systemPrompt = buildSystemPrompt(schema, chartLibrary, chartCode, vegaSpec)
+    const systemPrompt = buildSystemPrompt(schema, chartLibrary, chartCode, vegaSpec, allSchemas)
 
     const messages: ChatMessage[] = [
       ...conversationHistory.map(m => ({ role: m.role, content: m.content })),

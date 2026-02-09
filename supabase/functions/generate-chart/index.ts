@@ -1,12 +1,13 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { corsHeaders } from '../_shared/cors.ts'
-import { generateChartWithRetry, DatasetSchema, ChartLibrary } from '../_shared/llm-adapter.ts'
+import { generateChartWithRetry, DatasetSchema, ChartLibrary, AllSchemaEntry } from '../_shared/llm-adapter.ts'
 
 interface GenerateChartRequest {
   prompt: string
   schema: DatasetSchema
   library?: ChartLibrary
   existingCode?: string | null
+  allSchemas?: AllSchemaEntry[]
 }
 
 serve(async (req) => {
@@ -15,7 +16,7 @@ serve(async (req) => {
   }
 
   try {
-    const { prompt, schema, library, existingCode } = await req.json() as GenerateChartRequest
+    const { prompt, schema, library, existingCode, allSchemas } = await req.json() as GenerateChartRequest
 
     if (!prompt || !schema) {
       return new Response(
@@ -29,6 +30,7 @@ serve(async (req) => {
       schema,
       library || 'vega-lite',
       existingCode || undefined,
+      allSchemas,
     )
 
     return new Response(

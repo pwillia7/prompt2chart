@@ -1,13 +1,14 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { supabase } from '../../lib/supabase'
-import { useChartStore } from '../../store/chartStore'
+import { useChartStore, AllSchemaEntry } from '../../store/chartStore'
 import type { Chart, DatasetSchema } from '../../types'
 
 interface AnalystNotesProps {
   explanation: string
   chart?: Chart | null
   schema?: DatasetSchema
+  allSchemas?: AllSchemaEntry[]
   onSuggestionClick?: (prompt: string) => void
 }
 
@@ -83,7 +84,7 @@ function PulsingDots() {
   )
 }
 
-export function AnalystNotes({ explanation, chart, schema, onSuggestionClick }: AnalystNotesProps) {
+export function AnalystNotes({ explanation, chart, schema, allSchemas, onSuggestionClick }: AnalystNotesProps) {
   const notes = parseNotes(explanation)
   const { getAnalystChat, setAnalystChat } = useChartStore()
   const messages = chart ? getAnalystChat(chart.id) : []
@@ -127,6 +128,7 @@ export function AnalystNotes({ explanation, chart, schema, onSuggestionClick }: 
             ? JSON.stringify((() => { const { data: _, ...rest } = chart.vega_spec_json!; return rest })())
             : undefined,
           conversationHistory,
+          allSchemas,
         },
       })
 

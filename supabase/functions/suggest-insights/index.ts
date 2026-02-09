@@ -1,9 +1,10 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { corsHeaders } from '../_shared/cors.ts'
-import { suggestInsightsWithRetry, DatasetSchema } from '../_shared/llm-adapter.ts'
+import { suggestInsightsWithRetry, DatasetSchema, AllSchemaEntry } from '../_shared/llm-adapter.ts'
 
 interface SuggestInsightsRequest {
   schema: DatasetSchema
+  allSchemas?: AllSchemaEntry[]
 }
 
 serve(async (req) => {
@@ -13,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    const { schema } = await req.json() as SuggestInsightsRequest
+    const { schema, allSchemas } = await req.json() as SuggestInsightsRequest
 
     if (!schema || !schema.columns) {
       return new Response(
@@ -22,7 +23,7 @@ serve(async (req) => {
       )
     }
 
-    const suggestions = await suggestInsightsWithRetry(schema)
+    const suggestions = await suggestInsightsWithRetry(schema, allSchemas)
 
     return new Response(
       JSON.stringify({ suggestions }),

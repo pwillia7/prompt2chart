@@ -2,12 +2,20 @@ import { create } from 'zustand'
 import { supabase } from '../lib/supabase'
 import { Chart, ChartLibrary, VegaLiteSpec, ConversationMessage, ChartEditHistory, DatasetSchema, ChartGenerationResponse } from '../types'
 
+export interface AllSchemaEntry {
+  datasetId: string
+  fileName: string
+  schema: DatasetSchema
+}
+
 interface GenerateChartOptions {
   projectId: string
+  datasetId: string
   prompt: string
   schema: DatasetSchema
   library: ChartLibrary
   existingCode?: string
+  allSchemas?: AllSchemaEntry[]
 }
 
 export interface AnalystChatMsg {
@@ -61,7 +69,7 @@ export const useChartStore = create<ChartState>((set, get) => ({
     }
   },
 
-  generateChart: async ({ projectId, prompt, schema, library, existingCode }: GenerateChartOptions) => {
+  generateChart: async ({ projectId, datasetId, prompt, schema, library, existingCode, allSchemas }: GenerateChartOptions) => {
     set({ generating: true, error: null })
     try {
       const { data: responseData, error: fnError } = await supabase.functions.invoke('generate-chart', {
@@ -70,6 +78,7 @@ export const useChartStore = create<ChartState>((set, get) => ({
           schema,
           library,
           existingCode: existingCode || null,
+          allSchemas: allSchemas || undefined,
         },
       })
 
@@ -81,6 +90,7 @@ export const useChartStore = create<ChartState>((set, get) => ({
       // Build insert payload based on library
       const insertPayload: Record<string, unknown> = {
         project_id: projectId,
+        dataset_id: datasetId,
         prompt,
         chart_library: isD3 ? 'd3' : 'vega-lite',
         explanation: response.reasoning,
@@ -211,6 +221,7 @@ function normalizeChart(row: Record<string, unknown>): Chart {
   return {
     id: row.id as string,
     project_id: row.project_id as string,
+    dataset_id: (row.dataset_id as string) || null,
     prompt: row.prompt as string,
     chart_library: (row.chart_library as ChartLibrary) || 'vega-lite',
     vega_spec_json: (row.vega_spec_json as VegaLiteSpec) || null,

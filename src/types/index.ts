@@ -37,6 +37,7 @@ export type ChartLibrary = 'vega-lite' | 'd3'
 export interface Chart {
   id: string
   project_id: string
+  dataset_id: string | null
   prompt: string
   chart_library: ChartLibrary
   vega_spec_json: VegaLiteSpec | null

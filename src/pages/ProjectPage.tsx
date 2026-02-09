@@ -17,7 +17,7 @@ import { useDatasetStore } from '../store/datasetStore'
 import { useChartStore } from '../store/chartStore'
 import { trackUsage } from '../lib/usageTracker'
 import { sampleData } from '../lib/dataSampler'
-import { ChartLibrary } from '../types'
+import { Chart, ChartLibrary } from '../types'
 
 export function ProjectPage() {
   const { projectId } = useParams<{ projectId: string }>()
@@ -32,6 +32,15 @@ export function ProjectPage() {
   const { charts, currentChart, generating, generateChart, fetchCharts, setCurrentChart, error: chartError } = useChartStore()
 
   const renderData = useMemo(() => parsedData ? sampleData(parsedData) : null, [parsedData])
+
+  const allSchemas = useMemo(() =>
+    datasets.map(ds => ({
+      datasetId: ds.id,
+      fileName: ds.file_path.split('/').pop() || ds.file_path,
+      schema: ds.schema_json,
+    })),
+    [datasets]
+  )
 
   useEffect(() => {
     if (projectId) {
@@ -48,6 +57,17 @@ export function ProjectPage() {
       loadDatasetData(dataset)
     }
   }, [datasets, currentDataset, setCurrentDataset, loadDatasetData])
+
+  const handleSelectChart = (chart: Chart) => {
+    setCurrentChart(chart)
+    if (chart.dataset_id && chart.dataset_id !== currentDataset?.id) {
+      const ds = datasets.find(d => d.id === chart.dataset_id)
+      if (ds) {
+        setCurrentDataset(ds)
+        loadDatasetData(ds)
+      }
+    }
+  }
 
   const handleGenerateChart = async (prompt: string) => {
     if (!projectId || !currentDataset || !parsedData) return
@@ -68,10 +88,12 @@ export function ProjectPage() {
 
     await generateChart({
       projectId,
+      datasetId: currentDataset.id,
       prompt,
       schema: currentDataset.schema_json,
       library,
       existingCode,
+      allSchemas,
     })
   }
 
@@ -357,6 +379,7 @@ export function ProjectPage() {
                     </div>
                     <InsightSuggestions
                       schema={currentDataset.schema_json}
+                      allSchemas={allSchemas}
                       onSelectSuggestion={handleSuggestionSelect}
                       disabled={generating}
                     />
@@ -387,6 +410,7 @@ export function ProjectPage() {
                 explanation={currentChart.explanation}
                 chart={currentChart}
                 schema={currentDataset?.schema_json}
+                allSchemas={allSchemas}
                 onSuggestionClick={handleGenerateChart}
               />
             )}
@@ -399,7 +423,7 @@ export function ProjectPage() {
                   {charts.map((chart) => (
                     <button
                       key={chart.id}
-                      onClick={() => setCurrentChart(chart)}
+                      onClick={() => handleSelectChart(chart)}
                       className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
                         currentChart?.id === chart.id
                           ? 'bg-primary-50 text-primary-700'

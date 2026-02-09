@@ -1,16 +1,18 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
+import { AllSchemaEntry } from '../../store/chartStore'
 import { ChartLibrary, DatasetSchema, InsightSuggestion } from '../../types'
 import { Button } from '../ui/Button'
 import { Spinner } from '../ui/Spinner'
 
 interface InsightSuggestionsProps {
   schema: DatasetSchema
+  allSchemas?: AllSchemaEntry[]
   onSelectSuggestion: (prompt: string, library?: ChartLibrary) => void
   disabled?: boolean
 }
 
-export function InsightSuggestions({ schema, onSelectSuggestion, disabled }: InsightSuggestionsProps) {
+export function InsightSuggestions({ schema, allSchemas, onSelectSuggestion, disabled }: InsightSuggestionsProps) {
   const [suggestions, setSuggestions] = useState<InsightSuggestion[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -22,7 +24,7 @@ export function InsightSuggestions({ schema, onSelectSuggestion, disabled }: Ins
 
       try {
         const { data, error: fnError } = await supabase.functions.invoke('suggest-insights', {
-          body: { schema },
+          body: { schema, allSchemas },
         })
 
         if (fnError) throw fnError

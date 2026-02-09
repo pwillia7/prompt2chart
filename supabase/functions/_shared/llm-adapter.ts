@@ -28,15 +28,32 @@ export interface InsightSuggestion {
   library?: ChartLibrary
 }
 
+export interface AllSchemaEntry {
+  datasetId: string
+  fileName: string
+  schema: DatasetSchema
+}
+
 export interface ChatMessage {
   role: 'user' | 'assistant'
   content: string
 }
 
 interface LLMProvider {
-  generateChart(prompt: string, schema: DatasetSchema, library: ChartLibrary, existingCode?: string): Promise<ChartResponse>
-  suggestInsights(schema: DatasetSchema): Promise<InsightSuggestion[]>
+  generateChart(prompt: string, schema: DatasetSchema, library: ChartLibrary, existingCode?: string, allSchemas?: AllSchemaEntry[]): Promise<ChartResponse>
+  suggestInsights(schema: DatasetSchema, allSchemas?: AllSchemaEntry[]): Promise<InsightSuggestion[]>
   analystChat(systemPrompt: string, messages: ChatMessage[]): Promise<string>
+}
+
+function formatOtherSchemas(currentSchema: DatasetSchema, allSchemas?: AllSchemaEntry[]): string {
+  if (!allSchemas || allSchemas.length <= 1) return ''
+  const others = allSchemas.filter(s => s.schema !== currentSchema)
+  if (others.length === 0) return ''
+  const lines = others.map(s => {
+    const cols = s.schema.columns.map(c => `${c.name} (${c.type})`).join(', ')
+    return `- "${s.fileName}" (datasetId: ${s.datasetId}): ${s.schema.rowCount} rows with columns: ${cols}`
+  })
+  return `\n\nOther datasets available in this project:\n${lines.join('\n')}`
 }
 
 const SYSTEM_PROMPT_VEGA = `You are an expert data visualization assistant. Your task is to generate Vega-Lite specifications based on user prompts and dataset schemas.
@@ -507,9 +524,9 @@ class OpenAIProvider implements LLMProvider {
     this.model = 'gpt-4o'
   }
 
-  async generateChart(prompt: string, schema: DatasetSchema, library: ChartLibrary, existingCode?: string): Promise<ChartResponse> {
+  async generateChart(prompt: string, schema: DatasetSchema, library: ChartLibrary, existingCode?: string, allSchemas?: AllSchemaEntry[]): Promise<ChartResponse> {
     const systemPrompt = library === 'd3' ? SYSTEM_PROMPT_D3 : SYSTEM_PROMPT_VEGA
-    const userMessage = this.buildChartPrompt(prompt, schema, library, existingCode)
+    const userMessage = this.buildChartPrompt(prompt, schema, library, existingCode, allSchemas)
 
     const response = await this.callAPI([
       { role: 'system', content: systemPrompt },
@@ -519,12 +536,14 @@ class OpenAIProvider implements LLMProvider {
     return this.parseChartResponse(response, library)
   }
 
-  async suggestInsights(schema: DatasetSchema): Promise<InsightSuggestion[]> {
-    const userMessage = this.buildSchemaDescription(schema)
+  async suggestInsights(schema: DatasetSchema, allSchemas?: AllSchemaEntry[]): Promise<InsightSuggestion[]> {
+    let userMessage = `Here is the dataset schema:\n${this.buildSchemaDescription(schema)}`
+    userMessage += formatOtherSchemas(schema, allSchemas)
+    userMessage += `\n\nSuggest 5 visualizations with a mix of vega-lite and d3 libraries. Return a JSON object with a "suggestions" array.`
 
     const response = await this.callAPI([
       { role: 'system', content: SYSTEM_PROMPT_INSIGHTS },
-      { role: 'user', content: `Here is the dataset schema:\n${userMessage}\n\nSuggest 5 visualizations with a mix of vega-lite and d3 libraries. Return a JSON object with a "suggestions" array.` },
+      { role: 'user', content: userMessage },
     ])
 
     return this.parseInsightsResponse(response)
@@ -565,8 +584,9 @@ class OpenAIProvider implements LLMProvider {
     return data.choices[0].message.content
   }
 
-  private buildChartPrompt(prompt: string, schema: DatasetSchema, library: ChartLibrary, existingCode?: string): string {
+  private buildChartPrompt(prompt: string, schema: DatasetSchema, library: ChartLibrary, existingCode?: string, allSchemas?: AllSchemaEntry[]): string {
     let message = `User request: ${prompt}\n\nDataset schema:\n${this.buildSchemaDescription(schema)}`
+    message += formatOtherSchemas(schema, allSchemas)
 
     if (existingCode) {
       if (library === 'd3') {
@@ -662,16 +682,18 @@ class AnthropicProvider implements LLMProvider {
     this.model = 'claude-3-5-sonnet-20241022'
   }
 
-  async generateChart(prompt: string, schema: DatasetSchema, library: ChartLibrary, existingCode?: string): Promise<ChartResponse> {
+  async generateChart(prompt: string, schema: DatasetSchema, library: ChartLibrary, existingCode?: string, allSchemas?: AllSchemaEntry[]): Promise<ChartResponse> {
     const systemPrompt = library === 'd3' ? SYSTEM_PROMPT_D3 : SYSTEM_PROMPT_VEGA
-    const userMessage = this.buildChartPrompt(prompt, schema, library, existingCode)
+    const userMessage = this.buildChartPrompt(prompt, schema, library, existingCode, allSchemas)
 
     const response = await this.callAPI(systemPrompt, userMessage)
     return this.parseChartResponse(response, library)
   }
 
-  async suggestInsights(schema: DatasetSchema): Promise<InsightSuggestion[]> {
-    const userMessage = `Here is the dataset schema:\n${this.buildSchemaDescription(schema)}\n\nSuggest 5 visualizations with a mix of vega-lite and d3 libraries. Respond with a JSON object containing a "suggestions" array.`
+  async suggestInsights(schema: DatasetSchema, allSchemas?: AllSchemaEntry[]): Promise<InsightSuggestion[]> {
+    let userMessage = `Here is the dataset schema:\n${this.buildSchemaDescription(schema)}`
+    userMessage += formatOtherSchemas(schema, allSchemas)
+    userMessage += `\n\nSuggest 5 visualizations with a mix of vega-lite and d3 libraries. Respond with a JSON object containing a "suggestions" array.`
 
     const response = await this.callAPI(SYSTEM_PROMPT_INSIGHTS, userMessage)
     return this.parseInsightsResponse(response)
@@ -741,8 +763,9 @@ class AnthropicProvider implements LLMProvider {
     return content.text
   }
 
-  private buildChartPrompt(prompt: string, schema: DatasetSchema, library: ChartLibrary, existingCode?: string): string {
+  private buildChartPrompt(prompt: string, schema: DatasetSchema, library: ChartLibrary, existingCode?: string, allSchemas?: AllSchemaEntry[]): string {
     let message = `User request: ${prompt}\n\nDataset schema:\n${this.buildSchemaDescription(schema)}`
+    message += formatOtherSchemas(schema, allSchemas)
 
     if (existingCode) {
       if (library === 'd3') {
@@ -844,6 +867,7 @@ export async function generateChartWithRetry(
   schema: DatasetSchema,
   library: ChartLibrary = 'vega-lite',
   existingCode?: string,
+  allSchemas?: AllSchemaEntry[],
   maxRetries = 2
 ): Promise<ChartResponse> {
   const provider = createProvider()
@@ -851,7 +875,7 @@ export async function generateChartWithRetry(
 
   for (let i = 0; i <= maxRetries; i++) {
     try {
-      return await provider.generateChart(prompt, schema, library, existingCode)
+      return await provider.generateChart(prompt, schema, library, existingCode, allSchemas)
     } catch (error) {
       lastError = error as Error
       if (i < maxRetries) {
@@ -865,6 +889,7 @@ export async function generateChartWithRetry(
 
 export async function suggestInsightsWithRetry(
   schema: DatasetSchema,
+  allSchemas?: AllSchemaEntry[],
   maxRetries = 2
 ): Promise<InsightSuggestion[]> {
   const provider = createProvider()
@@ -872,7 +897,7 @@ export async function suggestInsightsWithRetry(
 
   for (let i = 0; i <= maxRetries; i++) {
     try {
-      return await provider.suggestInsights(schema)
+      return await provider.suggestInsights(schema, allSchemas)
     } catch (error) {
       lastError = error as Error
       if (i < maxRetries) {
