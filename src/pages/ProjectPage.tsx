@@ -376,7 +376,11 @@ export function ProjectPage() {
           {/* Right sidebar */}
           <div className="space-y-6">
             {currentChart?.explanation && (
-              <AnalystNotes explanation={currentChart.explanation} />
+              <AnalystNotes
+                explanation={currentChart.explanation}
+                chart={currentChart}
+                schema={currentDataset?.schema_json}
+              />
             )}
             <div className="bg-white rounded-lg border border-gray-200 p-4">
               <h3 className="text-sm font-medium text-gray-900 mb-3">Chart History</h3>

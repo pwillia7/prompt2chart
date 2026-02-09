@@ -28,9 +28,15 @@ export interface InsightSuggestion {
   library?: ChartLibrary
 }
 
+export interface ChatMessage {
+  role: 'user' | 'assistant'
+  content: string
+}
+
 interface LLMProvider {
   generateChart(prompt: string, schema: DatasetSchema, library: ChartLibrary, existingCode?: string): Promise<ChartResponse>
   suggestInsights(schema: DatasetSchema): Promise<InsightSuggestion[]>
+  analystChat(systemPrompt: string, messages: ChatMessage[]): Promise<string>
 }
 
 const SYSTEM_PROMPT_VEGA = `You are an expert data visualization assistant. Your task is to generate Vega-Lite specifications based on user prompts and dataset schemas.
@@ -53,11 +59,11 @@ Respond with a JSON object containing:
 ## REASONING FORMAT
 The "reasoning" field must be a JSON STRING (not a nested object) containing:
 {
-  "chartInsights": ["2-3 observations about what the chart reveals — patterns, outliers, trends, or comparisons visible in the visualization. Reference specific axes, colors, or groupings used."],
-  "dataInsights": ["2-3 deeper observations about the underlying data — distributions, correlations, anomalies, or notable values. Reference actual column names and data characteristics."],
-  "suggestions": ["2-3 concrete next steps: chart improvements to try, alternative views that would reveal more, or follow-up analyses. Phrase as prompts the user could type."]
+  "chartInsights": ["max-12-word observation", "max-12-word observation"],
+  "dataInsights": ["max-12-word observation", "max-12-word observation"],
+  "suggestions": ["short actionable prompt", "short actionable prompt"]
 }
-Write as a senior data analyst advising a colleague. Be specific to the actual data columns and values — never generic.`
+EXACTLY 2 bullets per section. Use short, punchy fragments — not full sentences. Max 12 words each. Be specific to actual column names — never generic.`
 
 const SYSTEM_PROMPT_D3 = `You are an expert D3.js visualization developer. Generate D3.js v7 code for beautiful, interactive SVG visualizations.
 
@@ -460,11 +466,11 @@ Respond with a JSON object containing:
 ## REASONING FORMAT
 The "reasoning" field must be a JSON STRING (not a nested object) containing:
 {
-  "chartInsights": ["2-3 observations about what the chart reveals — patterns, outliers, trends, or comparisons visible in the visualization. Reference specific axes, colors, or groupings used."],
-  "dataInsights": ["2-3 deeper observations about the underlying data — distributions, correlations, anomalies, or notable values. Reference actual column names and data characteristics."],
-  "suggestions": ["2-3 concrete next steps: chart improvements to try, alternative views that would reveal more, or follow-up analyses. Phrase as prompts the user could type."]
+  "chartInsights": ["max-12-word observation", "max-12-word observation"],
+  "dataInsights": ["max-12-word observation", "max-12-word observation"],
+  "suggestions": ["short actionable prompt", "short actionable prompt"]
 }
-Write as a senior data analyst advising a colleague. Be specific to the actual data columns and values — never generic.`
+EXACTLY 2 bullets per section. Use short, punchy fragments — not full sentences. Max 12 words each. Be specific to actual column names — never generic.`
 
 const SYSTEM_PROMPT_INSIGHTS = `You are an expert data analyst. Given a dataset schema, suggest 5 interesting visualizations that would reveal insights from the data.
 
@@ -524,19 +530,30 @@ class OpenAIProvider implements LLMProvider {
     return this.parseInsightsResponse(response)
   }
 
-  private async callAPI(messages: { role: string; content: string }[]): Promise<string> {
+  async analystChat(systemPrompt: string, messages: ChatMessage[]): Promise<string> {
+    const apiMessages = [
+      { role: 'system', content: systemPrompt },
+      ...messages.map(m => ({ role: m.role, content: m.content })),
+    ]
+    return this.callAPI(apiMessages, false)
+  }
+
+  private async callAPI(messages: { role: string; content: string }[], jsonMode = true): Promise<string> {
+    const body: Record<string, unknown> = {
+      model: this.model,
+      messages,
+      temperature: 0.3,
+    }
+    if (jsonMode) {
+      body.response_format = { type: 'json_object' }
+    }
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${this.apiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        model: this.model,
-        messages,
-        temperature: 0.3,
-        response_format: { type: 'json_object' },
-      }),
+      body: JSON.stringify(body),
     })
 
     if (!response.ok) {
@@ -658,6 +675,40 @@ class AnthropicProvider implements LLMProvider {
 
     const response = await this.callAPI(SYSTEM_PROMPT_INSIGHTS, userMessage)
     return this.parseInsightsResponse(response)
+  }
+
+  async analystChat(systemPrompt: string, messages: ChatMessage[]): Promise<string> {
+    return this.callAPIMessages(systemPrompt, messages)
+  }
+
+  private async callAPIMessages(systemPrompt: string, messages: ChatMessage[]): Promise<string> {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': this.apiKey,
+        'anthropic-version': '2023-06-01',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: this.model,
+        max_tokens: 2048,
+        system: systemPrompt,
+        messages: messages.map(m => ({ role: m.role, content: m.content })),
+      }),
+    })
+
+    if (!response.ok) {
+      const error = await response.text()
+      throw new Error(`Anthropic API error: ${error}`)
+    }
+
+    const data = await response.json()
+    const content = data.content[0]
+    if (content.type !== 'text') {
+      throw new Error('Unexpected response type from Anthropic')
+    }
+
+    return content.text
   }
 
   private async callAPI(systemPrompt: string, userMessage: string): Promise<string> {
@@ -831,4 +882,26 @@ export async function suggestInsightsWithRetry(
   }
 
   throw lastError
+}
+
+export async function analystChatWithRetry(
+  systemPrompt: string,
+  messages: ChatMessage[],
+  maxRetries = 2
+): Promise<string> {
+  const provider = createProvider()
+  let lastError: Error | null = null
+
+  for (let i = 0; i <= maxRetries; i++) {
+    try {
+      return await provider.analystChat(systemPrompt, messages)
+    } catch (error) {
+      lastError = error as Error
+      if (i < maxRetries) {
+        await new Promise((resolve) => setTimeout(resolve, 1000 * (i + 1)))
+      }
+    }
+  }
+
+  throw lastError!
 }

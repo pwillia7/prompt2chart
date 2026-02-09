@@ -1,13 +1,22 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import { supabase } from '../../lib/supabase'
+import type { Chart, DatasetSchema } from '../../types'
 
 interface AnalystNotesProps {
   explanation: string
+  chart?: Chart | null
+  schema?: DatasetSchema
 }
 
 interface ParsedNotes {
   chartInsights: string[]
   dataInsights: string[]
   suggestions: string[]
+}
+
+interface ChatMsg {
+  role: 'user' | 'analyst'
+  content: string
 }
 
 function parseNotes(raw: string): ParsedNotes | null {
@@ -65,8 +74,82 @@ function BulletList({ items }: { items: string[] }) {
   )
 }
 
-export function AnalystNotes({ explanation }: AnalystNotesProps) {
+function PulsingDots() {
+  return (
+    <div className="flex gap-1 py-2 px-1">
+      <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-pulse" />
+      <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-pulse [animation-delay:150ms]" />
+      <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-pulse [animation-delay:300ms]" />
+    </div>
+  )
+}
+
+export function AnalystNotes({ explanation, chart, schema }: AnalystNotesProps) {
   const notes = parseNotes(explanation)
+  const [messages, setMessages] = useState<ChatMsg[]>([])
+  const [input, setInput] = useState('')
+  const [loading, setLoading] = useState(false)
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const prevChartId = useRef<string | null>(null)
+
+  // Reset chat when chart changes
+  useEffect(() => {
+    if (chart?.id !== prevChartId.current) {
+      setMessages([])
+      setInput('')
+      prevChartId.current = chart?.id ?? null
+    }
+  }, [chart?.id])
+
+  // Auto-scroll to bottom on new messages
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    }
+  }, [messages, loading])
+
+  const handleSend = async () => {
+    const text = input.trim()
+    if (!text || loading || !chart || !schema) return
+
+    const userMsg: ChatMsg = { role: 'user', content: text }
+    setMessages(prev => [...prev, userMsg])
+    setInput('')
+    setLoading(true)
+
+    try {
+      const conversationHistory = messages.map(m => ({
+        role: m.role === 'analyst' ? 'assistant' as const : 'user' as const,
+        content: m.content,
+      }))
+
+      const { data, error } = await supabase.functions.invoke('analyst-chat', {
+        body: {
+          message: text,
+          schema,
+          chartLibrary: chart.chart_library,
+          chartCode: chart.chart_library === 'd3' ? chart.d3_code : undefined,
+          vegaSpec: chart.vega_spec_json ? JSON.stringify(chart.vega_spec_json) : undefined,
+          conversationHistory,
+        },
+      })
+
+      if (error) throw error
+
+      setMessages(prev => [...prev, { role: 'analyst', content: data.reply }])
+    } catch (err) {
+      setMessages(prev => [...prev, { role: 'analyst', content: `Error: ${(err as Error).message}` }])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleSend()
+    }
+  }
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-4">
@@ -118,6 +201,69 @@ export function AnalystNotes({ explanation }: AnalystNotesProps) {
           >
             <BulletList items={notes.suggestions} />
           </Section>
+        </div>
+      )}
+
+      {/* Chat interface */}
+      {chart && (
+        <div className="mt-4 border-t border-gray-100 pt-3">
+          <div className="flex items-center gap-2 mb-2">
+            <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Ask the Analyst</span>
+          </div>
+
+          {messages.length > 0 && (
+            <div ref={scrollRef} className="max-h-60 overflow-y-auto space-y-2 mb-2">
+              {messages.map((msg, i) => (
+                <div
+                  key={i}
+                  className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-[85%] rounded-lg px-3 py-2 text-sm leading-snug ${
+                      msg.role === 'user'
+                        ? 'bg-gray-100 text-gray-800'
+                        : 'bg-blue-50 text-gray-700'
+                    }`}
+                  >
+                    {msg.content.split('\n').map((line, j) => (
+                      <p key={j} className={j > 0 ? 'mt-1' : ''}>{line}</p>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              {loading && (
+                <div className="flex justify-start">
+                  <div className="bg-blue-50 rounded-lg px-3">
+                    <PulsingDots />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={schema ? "Ask about patterns, outliers, next steps..." : "Loading dataset..."}
+              className="flex-1 text-sm px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400"
+              disabled={loading || !schema}
+            />
+            <button
+              onClick={handleSend}
+              disabled={loading || !input.trim() || !schema}
+              className="px-3 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              </svg>
+            </button>
+          </div>
         </div>
       )}
     </div>
