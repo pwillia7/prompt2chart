@@ -6,7 +6,6 @@ interface GenerateChartOptions {
   projectId: string
   prompt: string
   schema: DatasetSchema
-  data: unknown[]
   library: ChartLibrary
   existingCode?: string
 }
@@ -62,7 +61,7 @@ export const useChartStore = create<ChartState>((set, get) => ({
     }
   },
 
-  generateChart: async ({ projectId, prompt, schema, data, library, existingCode }: GenerateChartOptions) => {
+  generateChart: async ({ projectId, prompt, schema, library, existingCode }: GenerateChartOptions) => {
     set({ generating: true, error: null })
     try {
       const { data: responseData, error: fnError } = await supabase.functions.invoke('generate-chart', {
@@ -91,11 +90,7 @@ export const useChartStore = create<ChartState>((set, get) => ({
         insertPayload.d3_code = response.d3Code || ''
         insertPayload.vega_spec_json = null
       } else {
-        const specWithData: VegaLiteSpec = {
-          ...response.vegaLiteSpec,
-          data: { values: data },
-        }
-        insertPayload.vega_spec_json = specWithData
+        insertPayload.vega_spec_json = response.vegaLiteSpec ?? null
         insertPayload.d3_code = null
       }
 

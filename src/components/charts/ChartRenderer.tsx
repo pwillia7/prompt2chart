@@ -12,10 +12,11 @@ export interface VegaChartHandle {
 
 interface ChartRendererProps {
   spec: VegaLiteSpec
+  data?: unknown[]
   className?: string
 }
 
-export const ChartRenderer = forwardRef<VegaChartHandle, ChartRendererProps>(function ChartRenderer({ spec, className = '' }, ref) {
+export const ChartRenderer = forwardRef<VegaChartHandle, ChartRendererProps>(function ChartRenderer({ spec, data, className = '' }, ref) {
   const containerRef = useRef<HTMLDivElement>(null)
   const viewRef = useRef<View | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -39,8 +40,14 @@ export const ChartRenderer = forwardRef<VegaChartHandle, ChartRendererProps>(fun
       if (!containerRef.current || !isMounted) return
 
       try {
+        // Merge data into spec if spec doesn't already have it (backward compat)
+        let renderSpec = spec
+        if (data && (!spec.data || !('values' in spec.data) || !spec.data.values?.length)) {
+          renderSpec = { ...spec, data: { values: data } }
+        }
+
         // Add defaults to spec
-        const enhancedSpec = addDefaultsToSpec(spec)
+        const enhancedSpec = addDefaultsToSpec(renderSpec)
 
         // Try Vega-Lite first
         const result = await embed(containerRef.current, enhancedSpec as VisualizationSpec, {
@@ -95,7 +102,7 @@ export const ChartRenderer = forwardRef<VegaChartHandle, ChartRendererProps>(fun
     return () => {
       isMounted = false
     }
-  }, [spec])
+  }, [spec, data])
 
   return (
     <div className={`relative ${className}`}>

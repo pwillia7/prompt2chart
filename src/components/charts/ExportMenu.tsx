@@ -108,7 +108,11 @@ export function ExportMenu({ chart, d3Handle, vegaHandle, data }: ExportMenuProp
             break
           }
           case 'html': {
-            const html = buildStandaloneHtmlVegaLite(chart.vega_spec_json as VegaLiteSpec)
+            const htmlSpec = chart.vega_spec_json as VegaLiteSpec
+            const exportSpec = htmlSpec.data && 'values' in htmlSpec.data && htmlSpec.data.values?.length
+              ? htmlSpec
+              : { ...htmlSpec, data: { values: data ?? [] } }
+            const html = buildStandaloneHtmlVegaLite(exportSpec)
             downloadHtml(html, 'chart')
             setToast('HTML downloaded')
             break

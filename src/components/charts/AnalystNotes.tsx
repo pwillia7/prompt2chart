@@ -123,7 +123,9 @@ export function AnalystNotes({ explanation, chart, schema, onSuggestionClick }: 
           schema,
           chartLibrary: chart.chart_library,
           chartCode: chart.chart_library === 'd3' ? chart.d3_code : undefined,
-          vegaSpec: chart.vega_spec_json ? JSON.stringify(chart.vega_spec_json) : undefined,
+          vegaSpec: chart.vega_spec_json
+            ? JSON.stringify((() => { const { data: _, ...rest } = chart.vega_spec_json!; return rest })())
+            : undefined,
           conversationHistory,
         },
       })

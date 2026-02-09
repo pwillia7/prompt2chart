@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Layout } from '../components/layout/Layout'
 import { DatasetUploader } from '../components/datasets/DatasetUploader'
@@ -16,6 +16,7 @@ import { useProjectStore } from '../store/projectStore'
 import { useDatasetStore } from '../store/datasetStore'
 import { useChartStore } from '../store/chartStore'
 import { trackUsage } from '../lib/usageTracker'
+import { sampleData } from '../lib/dataSampler'
 import { ChartLibrary } from '../types'
 
 export function ProjectPage() {
@@ -29,6 +30,8 @@ export function ProjectPage() {
   const { currentProject, fetchProject, loading: projectLoading } = useProjectStore()
   const { datasets, currentDataset, parsedData, fetchDatasets, loadDatasetData, setCurrentDataset } = useDatasetStore()
   const { charts, currentChart, generating, generateChart, fetchCharts, setCurrentChart, error: chartError } = useChartStore()
+
+  const renderData = useMemo(() => parsedData ? sampleData(parsedData) : null, [parsedData])
 
   useEffect(() => {
     if (projectId) {
@@ -67,7 +70,6 @@ export function ProjectPage() {
       projectId,
       prompt,
       schema: currentDataset.schema_json,
-      data: parsedData,
       library,
       existingCode,
     })
@@ -235,14 +237,19 @@ export function ProjectPage() {
                       </Button>
                     </div>
                   </div>
-                  {currentChart.chart_library === 'd3' && currentChart.d3_code && parsedData ? (
-                    <D3ChartRenderer ref={d3Ref} code={currentChart.d3_code} data={parsedData} />
+                  {currentChart.chart_library === 'd3' && currentChart.d3_code && renderData ? (
+                    <D3ChartRenderer ref={d3Ref} code={currentChart.d3_code} data={renderData} />
                   ) : currentChart.vega_spec_json ? (
-                    <ChartRenderer ref={vegaRef} spec={currentChart.vega_spec_json} />
+                    <ChartRenderer ref={vegaRef} spec={currentChart.vega_spec_json} data={renderData ?? undefined} />
                   ) : (
                     <div className="p-8 text-center text-gray-500">
                       Unable to render chart: missing data
                     </div>
+                  )}
+                  {parsedData && renderData && parsedData.length > renderData.length && (
+                    <p className="mt-2 text-xs text-gray-500 text-center">
+                      Showing {renderData.length.toLocaleString()} of {parsedData.length.toLocaleString()} rows (sampled for performance)
+                    </p>
                   )}
                 </div>
               </>
