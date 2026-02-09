@@ -53,10 +53,9 @@ Respond with a JSON object containing:
 ## REASONING FORMAT
 The "reasoning" field must be a JSON STRING (not a nested object) containing:
 {
-  "insight": "One key takeaway from this visualization in 1-2 sentences. Focus on what the data reveals, not how the chart works.",
-  "readability": ["2-3 tips on how to interpret this specific chart — what the axes/colors/sizes mean, what patterns to look for"],
-  "questions": ["2-3 analytical questions this chart raises that the user should investigate further in the data"],
-  "nextSteps": ["2-3 concrete chart modifications or new views to try, phrased as prompts the user could type"]
+  "chartInsights": ["2-3 observations about what the chart reveals — patterns, outliers, trends, or comparisons visible in the visualization. Reference specific axes, colors, or groupings used."],
+  "dataInsights": ["2-3 deeper observations about the underlying data — distributions, correlations, anomalies, or notable values. Reference actual column names and data characteristics."],
+  "suggestions": ["2-3 concrete next steps: chart improvements to try, alternative views that would reveal more, or follow-up analyses. Phrase as prompts the user could type."]
 }
 Write as a senior data analyst advising a colleague. Be specific to the actual data columns and values — never generic.`
 
@@ -461,10 +460,9 @@ Respond with a JSON object containing:
 ## REASONING FORMAT
 The "reasoning" field must be a JSON STRING (not a nested object) containing:
 {
-  "insight": "One key takeaway from this visualization in 1-2 sentences. Focus on what the data reveals, not how the chart works.",
-  "readability": ["2-3 tips on how to interpret this specific chart — what the axes/colors/sizes mean, what patterns to look for"],
-  "questions": ["2-3 analytical questions this chart raises that the user should investigate further in the data"],
-  "nextSteps": ["2-3 concrete chart modifications or new views to try, phrased as prompts the user could type"]
+  "chartInsights": ["2-3 observations about what the chart reveals — patterns, outliers, trends, or comparisons visible in the visualization. Reference specific axes, colors, or groupings used."],
+  "dataInsights": ["2-3 deeper observations about the underlying data — distributions, correlations, anomalies, or notable values. Reference actual column names and data characteristics."],
+  "suggestions": ["2-3 concrete next steps: chart improvements to try, alternative views that would reveal more, or follow-up analyses. Phrase as prompts the user could type."]
 }
 Write as a senior data analyst advising a colleague. Be specific to the actual data columns and values — never generic.`
 

@@ -5,30 +5,21 @@ interface AnalystNotesProps {
 }
 
 interface ParsedNotes {
-  insight: string
-  readability: string[]
-  questions: string[]
-  nextSteps: string[]
+  chartInsights: string[]
+  dataInsights: string[]
+  suggestions: string[]
 }
 
 function parseNotes(raw: string): ParsedNotes | null {
   try {
     const parsed = JSON.parse(raw)
-    if (parsed.insight && parsed.readability && parsed.questions && parsed.nextSteps) {
+    if (parsed.chartInsights && parsed.dataInsights && parsed.suggestions) {
       return parsed as ParsedNotes
     }
   } catch {
     // not JSON — fall through
   }
   return null
-}
-
-function FallbackNotes({ text }: { text: string }) {
-  return (
-    <div className="px-3 py-2">
-      <p className="text-sm text-gray-600 leading-relaxed">{text}</p>
-    </div>
-  )
 }
 
 function Section({ icon, label, color, children, defaultOpen = true }: {
@@ -61,9 +52,9 @@ function Section({ icon, label, color, children, defaultOpen = true }: {
   )
 }
 
-function BulletList({ items, className = '' }: { items: string[], className?: string }) {
+function BulletList({ items }: { items: string[] }) {
   return (
-    <ul className={`space-y-1.5 ${className}`}>
+    <ul className="space-y-1.5">
       {items.map((item, i) => (
         <li key={i} className="flex items-start gap-2 text-sm text-gray-600 leading-snug">
           <span className="flex-shrink-0 mt-1.5 w-1 h-1 rounded-full bg-gray-400" />
@@ -87,50 +78,45 @@ export function AnalystNotes({ explanation }: AnalystNotesProps) {
       </div>
 
       {!notes ? (
-        <FallbackNotes text={explanation} />
+        <div className="px-3 py-2">
+          <p className="text-sm text-gray-600 leading-relaxed">{explanation}</p>
+        </div>
       ) : (
-        <div className="space-y-3">
-          {/* Key Insight — always visible, highlighted */}
-          <div className="px-3 py-2.5 bg-amber-50 border border-amber-100 rounded-lg">
-            <p className="text-sm text-amber-900 leading-relaxed font-medium">{notes.insight}</p>
-          </div>
-
+        <div className="space-y-2">
           <Section
-            label="How to Read This Chart"
+            label="Chart Insights"
             color="bg-blue-100 text-blue-600"
             icon={
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             }
           >
-            <BulletList items={notes.readability} />
+            <BulletList items={notes.chartInsights} />
           </Section>
 
           <Section
-            label="Questions to Explore"
+            label="Dataset Insights"
             color="bg-violet-100 text-violet-600"
             icon={
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
               </svg>
             }
           >
-            <BulletList items={notes.questions} />
+            <BulletList items={notes.dataInsights} />
           </Section>
 
           <Section
-            label="Suggested Next Steps"
+            label="Suggestions"
             color="bg-emerald-100 text-emerald-600"
-            defaultOpen={false}
             icon={
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
               </svg>
             }
           >
-            <BulletList items={notes.nextSteps} />
+            <BulletList items={notes.suggestions} />
           </Section>
         </div>
       )}
