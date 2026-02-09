@@ -69,6 +69,7 @@ const SYSTEM_PROMPT_D3 = `You are an expert D3.js visualization developer. Gener
    const innerHeight = height - margin.top - margin.bottom;
    const g = svg.append('g').attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 4. When using clip paths (for zoom/pan), clip a sub-group for data elements only — never clip g itself, or axis labels will be cut off. See the ZOOM AND PAN pattern below.
+5. DECLARATION ORDER: Any variable referenced inside a callback (brush, zoom, event handler) MUST be declared BEFORE that callback is defined. For linked/detail charts, create the detail SVG, groups, scales, and the updateDetail() function BEFORE defining the brush that calls them. Violating this causes "Cannot access 'X' before initialization" errors.
 
 ## Data Safety
 - Always filter out null/invalid values before using them in scales:
@@ -272,6 +273,19 @@ BRUSHING / SELECTION (use this pattern whenever brush or selection is needed):
    setMode('pan');
 
 MULTI-CHART LAYOUT (linked or secondary charts below the main SVG):
+   // CRITICAL ORDERING RULE: When combining brushing/selection with a linked
+   // detail chart, you MUST create the detail SVG and its groups BEFORE defining
+   // the brush callback that references them. Otherwise you get:
+   //   "Cannot access 'detailG' before initialization"
+   // because const/let variables cannot be used before their declaration.
+   //
+   // Correct order:
+   //   1. Create scales & axes for the main chart
+   //   2. Create the detail SVG, detailG, detail scales (below)
+   //   3. Define updateDetail() function
+   //   4. Create the brush (whose callback calls updateDetail)
+   //   5. Draw data elements in the main chart
+
    // The container div grows to fit content. Append additional SVGs to container.
    var detailHeight = 200;
    var detailSvg = container.append('svg')
@@ -290,6 +304,8 @@ MULTI-CHART LAYOUT (linked or secondary charts below the main SVG):
      detailG.selectAll('*').remove();
      // Build a bar chart, histogram, or summary from selectedData
    }
+
+   // NOW define the brush that calls updateDetail — after detailG exists.
 
 TRANSITIONS AND ANIMATION:
    // CRITICAL: .transition() returns a Transition, NOT a Selection.
