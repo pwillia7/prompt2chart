@@ -11,10 +11,16 @@ interface GenerateChartOptions {
   existingCode?: string
 }
 
+export interface AnalystChatMsg {
+  role: 'user' | 'analyst'
+  content: string
+}
+
 interface ChartState {
   charts: Chart[]
   currentChart: Chart | null
   editHistories: Map<string, ChartEditHistory>
+  analystChats: Map<string, AnalystChatMsg[]>
   loading: boolean
   generating: boolean
   error: string | null
@@ -25,12 +31,15 @@ interface ChartState {
   setCurrentChart: (chart: Chart | null) => void
   addToEditHistory: (chartId: string, message: ConversationMessage) => void
   getEditHistory: (chartId: string) => ConversationMessage[]
+  getAnalystChat: (chartId: string) => AnalystChatMsg[]
+  setAnalystChat: (chartId: string, messages: AnalystChatMsg[]) => void
 }
 
 export const useChartStore = create<ChartState>((set, get) => ({
   charts: [],
   currentChart: null,
   editHistories: new Map(),
+  analystChats: new Map(),
   loading: false,
   generating: false,
   error: null,
@@ -189,6 +198,16 @@ export const useChartStore = create<ChartState>((set, get) => ({
 
   getEditHistory: (chartId: string) => {
     return get().editHistories.get(chartId)?.messages || []
+  },
+
+  getAnalystChat: (chartId: string) => {
+    return get().analystChats.get(chartId) || []
+  },
+
+  setAnalystChat: (chartId: string, messages: AnalystChatMsg[]) => {
+    const analystChats = new Map(get().analystChats)
+    analystChats.set(chartId, messages)
+    set({ analystChats })
   },
 }))
 

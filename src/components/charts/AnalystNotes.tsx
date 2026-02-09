@@ -1,5 +1,7 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
+import ReactMarkdown from 'react-markdown'
 import { supabase } from '../../lib/supabase'
+import { useChartStore } from '../../store/chartStore'
 import type { Chart, DatasetSchema } from '../../types'
 
 interface AnalystNotesProps {
@@ -14,10 +16,6 @@ interface ParsedNotes {
   suggestions: string[]
 }
 
-interface ChatMsg {
-  role: 'user' | 'analyst'
-  content: string
-}
 
 function parseNotes(raw: string): ParsedNotes | null {
   try {
@@ -86,39 +84,34 @@ function PulsingDots() {
 
 export function AnalystNotes({ explanation, chart, schema }: AnalystNotesProps) {
   const notes = parseNotes(explanation)
-  const [messages, setMessages] = useState<ChatMsg[]>([])
+  const { getAnalystChat, setAnalystChat } = useChartStore()
+  const messages = chart ? getAnalystChat(chart.id) : []
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
-  const prevChartId = useRef<string | null>(null)
-
-  // Reset chat when chart changes
-  useEffect(() => {
-    if (chart?.id !== prevChartId.current) {
-      setMessages([])
-      setInput('')
-      prevChartId.current = chart?.id ?? null
-    }
-  }, [chart?.id])
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
-  }, [messages, loading])
+  }, [messages.length, loading])
+
+  const updateMessages = useCallback((chartId: string, updater: (prev: typeof messages) => typeof messages) => {
+    setAnalystChat(chartId, updater(getAnalystChat(chartId)))
+  }, [getAnalystChat, setAnalystChat])
 
   const handleSend = async () => {
     const text = input.trim()
     if (!text || loading || !chart || !schema) return
 
-    const userMsg: ChatMsg = { role: 'user', content: text }
-    setMessages(prev => [...prev, userMsg])
+    updateMessages(chart.id, prev => [...prev, { role: 'user', content: text }])
     setInput('')
     setLoading(true)
 
     try {
-      const conversationHistory = messages.map(m => ({
+      const currentMessages = getAnalystChat(chart.id)
+      const conversationHistory = currentMessages.map(m => ({
         role: m.role === 'analyst' ? 'assistant' as const : 'user' as const,
         content: m.content,
       }))
@@ -136,9 +129,9 @@ export function AnalystNotes({ explanation, chart, schema }: AnalystNotesProps) 
 
       if (error) throw error
 
-      setMessages(prev => [...prev, { role: 'analyst', content: data.reply }])
+      updateMessages(chart.id, prev => [...prev, { role: 'analyst', content: data.reply }])
     } catch (err) {
-      setMessages(prev => [...prev, { role: 'analyst', content: `Error: ${(err as Error).message}` }])
+      updateMessages(chart.id, prev => [...prev, { role: 'analyst', content: `Error: ${(err as Error).message}` }])
     } finally {
       setLoading(false)
     }
@@ -228,9 +221,13 @@ export function AnalystNotes({ explanation, chart, schema }: AnalystNotesProps) 
                         : 'bg-blue-50 text-gray-700'
                     }`}
                   >
-                    {msg.content.split('\n').map((line, j) => (
-                      <p key={j} className={j > 0 ? 'mt-1' : ''}>{line}</p>
-                    ))}
+                    {msg.role === 'analyst' ? (
+                      <div className="prose-chat">
+                        <ReactMarkdown>{msg.content}</ReactMarkdown>
+                      </div>
+                    ) : (
+                      <span>{msg.content}</span>
+                    )}
                   </div>
                 </div>
               ))}
