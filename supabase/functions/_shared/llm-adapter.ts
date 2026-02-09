@@ -47,8 +47,18 @@ Respond with a JSON object containing:
 - chartType: the type of chart (e.g., "bar", "line", "scatter", "area", "pie")
 - library: "vega-lite"
 - vegaLiteSpec: the complete Vega-Lite specification (without data)
-- reasoning: a brief explanation of why this visualization was chosen
-- suggestedFollowups: 2-3 follow-up prompts the user might want to try`
+- reasoning: a JSON object (as a string) with analyst notes — see REASONING FORMAT below
+- suggestedFollowups: 2-3 follow-up prompts the user might want to try
+
+## REASONING FORMAT
+The "reasoning" field must be a JSON STRING (not a nested object) containing:
+{
+  "insight": "One key takeaway from this visualization in 1-2 sentences. Focus on what the data reveals, not how the chart works.",
+  "readability": ["2-3 tips on how to interpret this specific chart — what the axes/colors/sizes mean, what patterns to look for"],
+  "questions": ["2-3 analytical questions this chart raises that the user should investigate further in the data"],
+  "nextSteps": ["2-3 concrete chart modifications or new views to try, phrased as prompts the user could type"]
+}
+Write as a senior data analyst advising a colleague. Be specific to the actual data columns and values — never generic.`
 
 const SYSTEM_PROMPT_D3 = `You are an expert D3.js visualization developer. Generate D3.js v7 code for beautiful, interactive SVG visualizations.
 
@@ -445,8 +455,18 @@ Respond with a JSON object containing:
 - chartType: the chart type (bar, line, scatter, area, pie, donut, treemap, force, etc.)
 - library: "d3"
 - d3Code: the D3.js code as a string (raw code only, no markdown fences)
-- reasoning: brief explanation of the visualization choice
-- suggestedFollowups: 2-3 follow-up prompts`
+- reasoning: a JSON object (as a string) with analyst notes — see REASONING FORMAT below
+- suggestedFollowups: 2-3 follow-up prompts
+
+## REASONING FORMAT
+The "reasoning" field must be a JSON STRING (not a nested object) containing:
+{
+  "insight": "One key takeaway from this visualization in 1-2 sentences. Focus on what the data reveals, not how the chart works.",
+  "readability": ["2-3 tips on how to interpret this specific chart — what the axes/colors/sizes mean, what patterns to look for"],
+  "questions": ["2-3 analytical questions this chart raises that the user should investigate further in the data"],
+  "nextSteps": ["2-3 concrete chart modifications or new views to try, phrased as prompts the user could type"]
+}
+Write as a senior data analyst advising a colleague. Be specific to the actual data columns and values — never generic.`
 
 const SYSTEM_PROMPT_INSIGHTS = `You are an expert data analyst. Given a dataset schema, suggest 3 interesting visualizations that would reveal insights from the data.
 

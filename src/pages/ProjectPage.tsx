@@ -7,7 +7,7 @@ import { DataPreview } from '../components/datasets/DataPreview'
 import { ChartRenderer, VegaChartHandle } from '../components/charts/ChartRenderer'
 import { D3ChartRenderer, D3ChartHandle } from '../components/charts/D3ChartRenderer'
 import { ChartPromptInput } from '../components/charts/ChartPromptInput'
-import { ChartExplanation } from '../components/charts/ChartExplanation'
+import { AnalystNotes } from '../components/charts/AnalystNotes'
 import { InsightSuggestions } from '../components/charts/InsightSuggestions'
 import { ExportMenu } from '../components/charts/ExportMenu'
 import { Button } from '../components/ui/Button'
@@ -245,9 +245,6 @@ export function ProjectPage() {
                     </div>
                   )}
                 </div>
-                {currentChart.explanation && (
-                  <ChartExplanation explanation={currentChart.explanation} />
-                )}
               </>
             )}
 
@@ -376,8 +373,11 @@ export function ProjectPage() {
             )}
           </div>
 
-          {/* Chart history sidebar */}
+          {/* Right sidebar */}
           <div className="space-y-6">
+            {currentChart?.explanation && (
+              <AnalystNotes explanation={currentChart.explanation} />
+            )}
             <div className="bg-white rounded-lg border border-gray-200 p-4">
               <h3 className="text-sm font-medium text-gray-900 mb-3">Chart History</h3>
               {charts.length === 0 ? (
