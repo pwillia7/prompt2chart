@@ -466,7 +466,7 @@ The "reasoning" field must be a JSON STRING (not a nested object) containing:
 }
 Write as a senior data analyst advising a colleague. Be specific to the actual data columns and values — never generic.`
 
-const SYSTEM_PROMPT_INSIGHTS = `You are an expert data analyst. Given a dataset schema, suggest 3 interesting visualizations that would reveal insights from the data.
+const SYSTEM_PROMPT_INSIGHTS = `You are an expert data analyst. Given a dataset schema, suggest 5 interesting visualizations that would reveal insights from the data.
 
 You MUST respond with a JSON object in this exact format:
 {
@@ -480,9 +480,11 @@ You MUST respond with a JSON object in this exact format:
   ]
 }
 
+CRITICAL: You must include a MIX of both libraries — at least 2 "vega-lite" AND at least 2 "d3" suggestions. The 5th can be either.
+
 Guidelines for library choice:
 - Use "vega-lite" for: simple bar charts, line charts, scatter plots, basic area charts
-- Use "d3" for: interactive visualizations, donut charts, treemaps, force-directed graphs, complex multi-series charts, visualizations needing custom animations
+- Use "d3" for: interactive visualizations, donut charts, treemaps, force-directed graphs, complex multi-series charts, visualizations needing custom animations or brushing
 
 Focus on:
 - Distributions of numeric columns
@@ -516,7 +518,7 @@ class OpenAIProvider implements LLMProvider {
 
     const response = await this.callAPI([
       { role: 'system', content: SYSTEM_PROMPT_INSIGHTS },
-      { role: 'user', content: `Here is the dataset schema:\n${userMessage}\n\nSuggest 3 visualizations. Return a JSON object with a "suggestions" array.` },
+      { role: 'user', content: `Here is the dataset schema:\n${userMessage}\n\nSuggest 5 visualizations with a mix of vega-lite and d3 libraries. Return a JSON object with a "suggestions" array.` },
     ])
 
     return this.parseInsightsResponse(response)
@@ -621,7 +623,7 @@ ${existingCode}`
         }
       }
       if (!Array.isArray(suggestions)) return []
-      return suggestions.slice(0, 3).map((s: Record<string, string>) => ({
+      return suggestions.slice(0, 5).map((s: Record<string, string>) => ({
         prompt: s.prompt || '',
         description: s.description || s.title || '',
         chartType: s.chartType || s.chart_type || 'bar',
@@ -652,7 +654,7 @@ class AnthropicProvider implements LLMProvider {
   }
 
   async suggestInsights(schema: DatasetSchema): Promise<InsightSuggestion[]> {
-    const userMessage = `Here is the dataset schema:\n${this.buildSchemaDescription(schema)}\n\nSuggest 3 visualizations. Respond with a JSON object containing a "suggestions" array.`
+    const userMessage = `Here is the dataset schema:\n${this.buildSchemaDescription(schema)}\n\nSuggest 5 visualizations with a mix of vega-lite and d3 libraries. Respond with a JSON object containing a "suggestions" array.`
 
     const response = await this.callAPI(SYSTEM_PROMPT_INSIGHTS, userMessage)
     return this.parseInsightsResponse(response)
@@ -767,7 +769,7 @@ ${existingCode}`
     const parsed = JSON.parse(jsonStr)
     const suggestions = parsed.suggestions || parsed
     if (!Array.isArray(suggestions)) return []
-    return suggestions.slice(0, 3).map((s: Record<string, string>) => ({
+    return suggestions.slice(0, 5).map((s: Record<string, string>) => ({
       prompt: s.prompt || '',
       description: s.description || s.title || '',
       chartType: s.chartType || s.chart_type || 'bar',
