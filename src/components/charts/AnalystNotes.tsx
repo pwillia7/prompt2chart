@@ -8,6 +8,7 @@ interface AnalystNotesProps {
   explanation: string
   chart?: Chart | null
   schema?: DatasetSchema
+  onSuggestionClick?: (prompt: string) => void
 }
 
 interface ParsedNotes {
@@ -82,7 +83,7 @@ function PulsingDots() {
   )
 }
 
-export function AnalystNotes({ explanation, chart, schema }: AnalystNotesProps) {
+export function AnalystNotes({ explanation, chart, schema, onSuggestionClick }: AnalystNotesProps) {
   const notes = parseNotes(explanation)
   const { getAnalystChat, setAnalystChat } = useChartStore()
   const messages = chart ? getAnalystChat(chart.id) : []
@@ -192,7 +193,21 @@ export function AnalystNotes({ explanation, chart, schema }: AnalystNotesProps) 
               </svg>
             }
           >
-            <BulletList items={notes.suggestions} />
+            {onSuggestionClick ? (
+              <div className="flex flex-wrap gap-1.5">
+                {notes.suggestions.map((item, i) => (
+                  <button
+                    key={i}
+                    onClick={() => onSuggestionClick(item)}
+                    className="text-left text-sm text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1 rounded-md transition-colors cursor-pointer leading-snug"
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <BulletList items={notes.suggestions} />
+            )}
           </Section>
         </div>
       )}

@@ -380,6 +380,7 @@ export function ProjectPage() {
                 explanation={currentChart.explanation}
                 chart={currentChart}
                 schema={currentDataset?.schema_json}
+                onSuggestionClick={handleGenerateChart}
               />
             )}
             <div className="bg-white rounded-lg border border-gray-200 p-4">
