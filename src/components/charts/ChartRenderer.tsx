@@ -1,19 +1,31 @@
-import { useEffect, useRef, useState } from 'react'
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import embed, { VisualizationSpec } from 'vega-embed'
+import type { View } from 'vega'
 import { VegaLiteSpec } from '../../types'
 import { addDefaultsToSpec, compileToVega } from '../../lib/vegaHelpers'
 import { Spinner } from '../ui/Spinner'
+
+export interface VegaChartHandle {
+  getView(): View | null
+  getContainerEl(): HTMLDivElement | null
+}
 
 interface ChartRendererProps {
   spec: VegaLiteSpec
   className?: string
 }
 
-export function ChartRenderer({ spec, className = '' }: ChartRendererProps) {
+export const ChartRenderer = forwardRef<VegaChartHandle, ChartRendererProps>(function ChartRenderer({ spec, className = '' }, ref) {
   const containerRef = useRef<HTMLDivElement>(null)
+  const viewRef = useRef<View | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [usedFallback, setUsedFallback] = useState(false)
+
+  useImperativeHandle(ref, () => ({
+    getView: () => viewRef.current,
+    getContainerEl: () => containerRef.current,
+  }))
 
   useEffect(() => {
     if (!containerRef.current || !spec) return
@@ -31,7 +43,7 @@ export function ChartRenderer({ spec, className = '' }: ChartRendererProps) {
         const enhancedSpec = addDefaultsToSpec(spec)
 
         // Try Vega-Lite first
-        await embed(containerRef.current, enhancedSpec as VisualizationSpec, {
+        const result = await embed(containerRef.current, enhancedSpec as VisualizationSpec, {
           actions: {
             export: { svg: true, png: true },
             source: false,
@@ -40,6 +52,7 @@ export function ChartRenderer({ spec, className = '' }: ChartRendererProps) {
           },
           renderer: 'canvas',
         })
+        viewRef.current = result.view
 
         if (isMounted) {
           setLoading(false)
@@ -52,7 +65,7 @@ export function ChartRenderer({ spec, className = '' }: ChartRendererProps) {
           const vegaSpec = compileToVega(spec)
           if (!vegaSpec) throw vlError
 
-          await embed(containerRef.current!, vegaSpec as VisualizationSpec, {
+          const fallbackResult = await embed(containerRef.current!, vegaSpec as VisualizationSpec, {
             actions: {
               export: { svg: true, png: true },
               source: false,
@@ -62,6 +75,7 @@ export function ChartRenderer({ spec, className = '' }: ChartRendererProps) {
             renderer: 'canvas',
             mode: 'vega',
           })
+          viewRef.current = fallbackResult.view
 
           if (isMounted) {
             setUsedFallback(true)
@@ -116,4 +130,4 @@ export function ChartRenderer({ spec, className = '' }: ChartRendererProps) {
       )}
     </div>
   )
-}
+})

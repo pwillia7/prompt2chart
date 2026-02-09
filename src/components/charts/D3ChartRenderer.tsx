@@ -1,6 +1,11 @@
-import { useEffect, useRef, useState } from 'react'
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import * as d3 from 'd3'
 import { Spinner } from '../ui/Spinner'
+
+export interface D3ChartHandle {
+  getContainerEl(): HTMLDivElement | null
+  getSvgEl(): SVGSVGElement | null
+}
 
 interface D3ChartRendererProps {
   code: string
@@ -8,10 +13,15 @@ interface D3ChartRendererProps {
   className?: string
 }
 
-export function D3ChartRenderer({ code, data, className = '' }: D3ChartRendererProps) {
+export const D3ChartRenderer = forwardRef<D3ChartHandle, D3ChartRendererProps>(function D3ChartRenderer({ code, data, className = '' }, ref) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+
+  useImperativeHandle(ref, () => ({
+    getContainerEl: () => containerRef.current,
+    getSvgEl: () => containerRef.current?.querySelector('svg') ?? null,
+  }))
 
   useEffect(() => {
     if (!containerRef.current || !code) return
@@ -121,4 +131,4 @@ export function D3ChartRenderer({ code, data, className = '' }: D3ChartRendererP
       />
     </div>
   )
-}
+})

@@ -1,14 +1,15 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Layout } from '../components/layout/Layout'
 import { DatasetUploader } from '../components/datasets/DatasetUploader'
 import { SchemaDisplay } from '../components/datasets/SchemaDisplay'
 import { DataPreview } from '../components/datasets/DataPreview'
-import { ChartRenderer } from '../components/charts/ChartRenderer'
-import { D3ChartRenderer } from '../components/charts/D3ChartRenderer'
+import { ChartRenderer, VegaChartHandle } from '../components/charts/ChartRenderer'
+import { D3ChartRenderer, D3ChartHandle } from '../components/charts/D3ChartRenderer'
 import { ChartPromptInput } from '../components/charts/ChartPromptInput'
 import { ChartExplanation } from '../components/charts/ChartExplanation'
 import { InsightSuggestions } from '../components/charts/InsightSuggestions'
+import { ExportMenu } from '../components/charts/ExportMenu'
 import { Button } from '../components/ui/Button'
 import { Spinner } from '../components/ui/Spinner'
 import { useProjectStore } from '../store/projectStore'
@@ -22,6 +23,8 @@ export function ProjectPage() {
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<'data' | 'charts'>('data')
   const [selectedLibrary, setSelectedLibrary] = useState<ChartLibrary>('d3')
+  const d3Ref = useRef<D3ChartHandle>(null)
+  const vegaRef = useRef<VegaChartHandle>(null)
 
   const { currentProject, fetchProject, loading: projectLoading } = useProjectStore()
   const { datasets, currentDataset, parsedData, fetchDatasets, loadDatasetData, setCurrentDataset } = useDatasetStore()
@@ -216,18 +219,26 @@ export function ProjectPage() {
                         {currentChart.chart_library === 'd3' ? 'D3.js' : 'Vega-Lite'}
                       </span>
                     </div>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={handleStartNewChart}
-                    >
-                      New Chart
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <ExportMenu
+                        chart={currentChart}
+                        d3Handle={d3Ref.current}
+                        vegaHandle={vegaRef.current}
+                        data={parsedData}
+                      />
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={handleStartNewChart}
+                      >
+                        New Chart
+                      </Button>
+                    </div>
                   </div>
                   {currentChart.chart_library === 'd3' && currentChart.d3_code && parsedData ? (
-                    <D3ChartRenderer code={currentChart.d3_code} data={parsedData} />
+                    <D3ChartRenderer ref={d3Ref} code={currentChart.d3_code} data={parsedData} />
                   ) : currentChart.vega_spec_json ? (
-                    <ChartRenderer spec={currentChart.vega_spec_json} />
+                    <ChartRenderer ref={vegaRef} spec={currentChart.vega_spec_json} />
                   ) : (
                     <div className="p-8 text-center text-gray-500">
                       Unable to render chart: missing data
