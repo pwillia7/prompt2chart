@@ -217,6 +217,15 @@ enabled = true
 policy = "oneshot"
 inspector_port = 8083
 
+# Disable JWT verification on edge functions so they work with both
+# legacy JWT keys and new sb_publishable_* keys (Supabase CLI v2.51+).
+# These functions are LLM proxies and don't need auth verification.
+[functions.generate-chart]
+verify_jwt = false
+
+[functions.suggest-insights]
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327
