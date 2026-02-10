@@ -159,11 +159,13 @@ export function ProjectPage() {
 
   useEffect(() => {
     if (projectId) {
+      setCurrentDataset(null)
+      setCurrentChart(null)
       fetchProject(projectId)
       fetchDatasets(projectId)
       fetchCharts(projectId)
     }
-  }, [projectId, fetchProject, fetchDatasets, fetchCharts])
+  }, [projectId, fetchProject, fetchDatasets, fetchCharts, setCurrentDataset, setCurrentChart])
 
   useEffect(() => {
     if (datasets.length > 0 && !currentDataset) {

@@ -1,5 +1,7 @@
-import { useState, FormEvent } from 'react'
+import { useState, FormEvent, KeyboardEvent } from 'react'
 import { Button } from '../ui/Button'
+
+const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform)
 
 interface ChartPromptInputProps {
   onSubmit: (prompt: string) => void
@@ -25,11 +27,19 @@ export function ChartPromptInput({
     setPrompt('')
   }
 
+  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault()
+      handleSubmit(e as unknown as FormEvent)
+    }
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       <textarea
         value={prompt}
         onChange={(e) => setPrompt(e.target.value)}
+        onKeyDown={handleKeyDown}
         placeholder={placeholder}
         disabled={disabled || loading}
         rows={3}
@@ -37,7 +47,8 @@ export function ChartPromptInput({
           focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500
           disabled:bg-gray-100 disabled:cursor-not-allowed resize-none"
       />
-      <div className="flex justify-end">
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-gray-400">{isMac ? '⌘' : 'Ctrl+'}Enter to submit</span>
         <Button
           type="submit"
           loading={loading}
