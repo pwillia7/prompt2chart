@@ -38,7 +38,7 @@ export const useDatasetStore = create<DatasetState>((set, get) => ({
   },
 
   fetchDatasets: async (projectId: string) => {
-    set({ loading: true, error: null, datasets: [], currentDataset: null, parsedData: null, suggestionCache: new Map() })
+    set({ loading: true, error: null, datasets: [], currentDataset: null, parsedData: null })
     try {
       const { data, error } = await supabase
         .from('datasets')
@@ -116,10 +116,13 @@ export const useDatasetStore = create<DatasetState>((set, get) => ({
 
       if (error) throw error
 
+      const cache = new Map(get().suggestionCache)
+      cache.delete(id)
       set({
         datasets: get().datasets.filter((d) => d.id !== id),
         currentDataset: get().currentDataset?.id === id ? null : get().currentDataset,
         parsedData: get().currentDataset?.id === id ? null : get().parsedData,
+        suggestionCache: cache,
       })
     } catch (error) {
       set({ error: (error as Error).message })
