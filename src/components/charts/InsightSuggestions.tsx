@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { AllSchemaEntry } from '../../store/chartStore'
 import { ChartLibrary, DatasetSchema, InsightSuggestion } from '../../types'
 import { Button } from '../ui/Button'
 import { Spinner } from '../ui/Spinner'
+
+const INITIAL_VISIBLE = 3
 
 interface InsightSuggestionsProps {
   schema: DatasetSchema
@@ -16,8 +18,19 @@ export function InsightSuggestions({ schema, allSchemas, onSelectSuggestion, dis
   const [suggestions, setSuggestions] = useState<InsightSuggestion[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [expanded, setExpanded] = useState(false)
+  const fetchedKeyRef = useRef<string | null>(null)
+
+  // Stable string key so useEffect only fires when schema content actually changes
+  const schemaKey = useMemo(() => JSON.stringify(schema), [schema])
 
   useEffect(() => {
+    if (fetchedKeyRef.current === schemaKey) return
+    if (schema.columns.length === 0) return
+
+    let cancelled = false
+    fetchedKeyRef.current = schemaKey
+
     async function fetchSuggestions() {
       setLoading(true)
       setError(null)
@@ -28,20 +41,25 @@ export function InsightSuggestions({ schema, allSchemas, onSelectSuggestion, dis
         })
 
         if (fnError) throw fnError
-        setSuggestions(data.suggestions || [])
+        if (!cancelled) {
+          setSuggestions(data.suggestions || [])
+          setExpanded(false)
+        }
       } catch (err) {
-        setError((err as Error).message)
+        if (!cancelled) setError((err as Error).message)
       } finally {
-        setLoading(false)
+        if (!cancelled) setLoading(false)
       }
     }
 
-    if (schema.columns.length > 0) {
-      fetchSuggestions()
-    }
-  }, [schema])
+    fetchSuggestions()
+    return () => { cancelled = true }
+  }, [schemaKey, schema, allSchemas])
 
-  if (loading) {
+  const visibleSuggestions = expanded ? suggestions : suggestions.slice(0, INITIAL_VISIBLE)
+  const hasMore = suggestions.length > INITIAL_VISIBLE
+
+  if (loading && suggestions.length === 0) {
     return (
       <div className="flex items-center gap-2 text-sm text-gray-500">
         <Spinner size="sm" />
@@ -66,7 +84,7 @@ export function InsightSuggestions({ schema, allSchemas, onSelectSuggestion, dis
     <div className="space-y-3">
       <h4 className="text-sm font-medium text-gray-700">Suggested Visualizations</h4>
       <div className="flex flex-wrap gap-2">
-        {suggestions.map((suggestion, idx) => (
+        {visibleSuggestions.map((suggestion, idx) => (
           <Button
             key={idx}
             variant="secondary"
@@ -90,6 +108,14 @@ export function InsightSuggestions({ schema, allSchemas, onSelectSuggestion, dis
             </span>
           </Button>
         ))}
+        {hasMore && !expanded && (
+          <button
+            onClick={() => setExpanded(true)}
+            className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1"
+          >
+            Show {suggestions.length - INITIAL_VISIBLE} more...
+          </button>
+        )}
       </div>
     </div>
   )
