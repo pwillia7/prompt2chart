@@ -107,6 +107,8 @@ const SYSTEM_PROMPT_D3 = `You are an expert D3.js visualization developer. Gener
    Do NOT leave the main SVG at 450px and add more charts below it.
 7. LEGENDS: Never place legends inside the SVG — they overflow the viewBox and get clipped.
    Always create legends as HTML elements appended to the container div. See the LEGENDS section.
+8. TOOLTIPS: If you use a tooltip variable in event handlers, you MUST create it BEFORE those
+   handlers. Define tooltip at the top of your code, right after creating scales and axes.
 
 ## Data Safety
 - Always filter out null/invalid values before using them in scales:
@@ -388,91 +390,27 @@ TRANSITIONS AND ANIMATION:
      .attr('y', function(d) { return yScale(d.value); })
      .attr('height', function(d) { return innerHeight - yScale(d.value); });
 
-LEGENDS AND INTERACTIVE FILTERS (always HTML in container — never SVG):
-   // SVG legends overflow the viewBox and get clipped. Always use HTML in the container div.
-
-   // --- Simple color legend (non-interactive, display-only) ---
-   var categories = [...new Set(data.map(function(d) { return d['ColumnName']; }))];
-
+LEGENDS (always HTML in container — never SVG, which overflows the viewBox):
+   // Simple color legend — flex-wrap div below the chart:
    var legend = container.append('div')
-     .style('display', 'flex')
-     .style('flex-wrap', 'wrap')
-     .style('justify-content', 'center')
-     .style('gap', '12px')
-     .style('padding', '8px 0')
-     .style('font-family', 'system-ui, sans-serif')
-     .style('font-size', '12px');
-
+     .style('display', 'flex').style('flex-wrap', 'wrap')
+     .style('justify-content', 'center').style('gap', '12px')
+     .style('padding', '8px 0').style('font-size', '12px');
    categories.forEach(function(cat) {
      var item = legend.append('div')
-       .style('display', 'flex')
-       .style('align-items', 'center')
-       .style('gap', '4px');
-     item.append('div')
-       .style('width', '12px').style('height', '12px')
-       .style('border-radius', '2px')
-       .style('flex-shrink', '0')
-       .style('background', colorScale(cat));
+       .style('display', 'flex').style('align-items', 'center').style('gap', '4px');
+     item.append('div').style('width', '12px').style('height', '12px')
+       .style('border-radius', '2px').style('background', colorScale(cat));
      item.append('span').text(cat);
    });
 
-   // --- Interactive toggleable legend (click to show/hide categories) ---
-   // Build a reusable filter function for one dimension:
-   function makeLegendFilter(fieldName, colorScale, elements) {
-     var cats = [...new Set(data.map(function(d) { return d[fieldName]; }))];
-     var active = new Set(cats);
-
-     var lg = container.append('div')
-       .style('padding', '6px 0')
-       .style('font-family', 'system-ui, sans-serif')
-       .style('font-size', '12px');
-
-     lg.append('div')
-       .style('font-weight', 'bold')
-       .style('margin-bottom', '4px')
-       .text(fieldName);
-
-     var items = lg.append('div')
-       .style('display', 'flex')
-       .style('flex-wrap', 'wrap')
-       .style('gap', '8px');
-
-     cats.forEach(function(cat) {
-       var item = items.append('div')
-         .style('display', 'flex')
-         .style('align-items', 'center')
-         .style('gap', '4px')
-         .style('cursor', 'pointer')
-         .style('user-select', 'none');
-       item.append('div')
-         .style('width', '12px').style('height', '12px')
-         .style('border-radius', '2px')
-         .style('flex-shrink', '0')
-         .style('background', colorScale(cat));
-       item.append('span').text(cat);
-
-       item.on('click', function() {
-         if (active.has(cat)) active.delete(cat); else active.add(cat);
-         item.style('opacity', active.has(cat) ? '1' : '0.3');
-         applyFilters();
-       });
-     });
-
-     return active;  // return the Set so applyFilters can read it
-   }
-
-   // Example: two filter dimensions
-   var activeClass = makeLegendFilter('Pclass', classColor, elements);
-   var activeGender = makeLegendFilter('Gender', genderColor, elements);
-
-   function applyFilters() {
-     elements.attr('display', function(d) {
-       return activeClass.has(d['Pclass']) && activeGender.has(d['Gender']) ? null : 'none';
-     });
-   }
-
-   // IMPORTANT: Always access column values with d['ColumnName'], never as bare variables.
-   // Adapt the field names (Pclass, Gender, etc.) to match the actual dataset columns.
+   // Interactive toggleable legend — click to show/hide:
+   // Same HTML pattern, but add .style('cursor', 'pointer') and a click handler:
+   item.on('click', function() {
+     if (active.has(cat)) active.delete(cat); else active.add(cat);
+     item.style('opacity', active.has(cat) ? '1' : '0.3');
+     elements.attr('display', function(d) { return active.has(d['Col']) ? null : 'none'; });
+   });
 
 ANNOTATIONS AND CALLOUTS (use plain SVG — d3.annotation is NOT available):
    // Do NOT use d3.annotation() — it is not included in the d3 bundle.
