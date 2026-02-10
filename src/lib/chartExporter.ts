@@ -75,15 +75,18 @@ function inlineStyles(el: Element) {
 }
 
 export function d3SvgToString(svgEl: SVGSVGElement): string {
+  // Read the SVG's background color before cloning (CSS background-color
+  // doesn't serialize into SVG markup, so we capture it as a rect fill).
+  const bgColor = getComputedStyle(svgEl).backgroundColor || 'white'
   const clone = svgEl.cloneNode(true) as SVGSVGElement
   inlineStyles(clone)
   clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
   clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
-  // Add white background rect as first child
+  // Add background rect as first child using the SVG's actual background color
   const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect')
   bg.setAttribute('width', '100%')
   bg.setAttribute('height', '100%')
-  bg.setAttribute('fill', 'white')
+  bg.setAttribute('fill', bgColor === 'rgba(0, 0, 0, 0)' ? 'white' : bgColor)
   clone.insertBefore(bg, clone.firstChild)
   return new XMLSerializer().serializeToString(clone)
 }
@@ -94,6 +97,7 @@ export function d3SvgToString(svgEl: SVGSVGElement): string {
 
 export function d3SvgToPng(svgEl: SVGSVGElement, scale = 2): Promise<Blob> {
   return new Promise((resolve, reject) => {
+    const bgColor = getComputedStyle(svgEl).backgroundColor || 'white'
     const svgString = d3SvgToString(svgEl)
     const width = svgEl.viewBox.baseVal.width || svgEl.clientWidth || 700
     const height = svgEl.viewBox.baseVal.height || svgEl.clientHeight || 450
@@ -106,7 +110,7 @@ export function d3SvgToPng(svgEl: SVGSVGElement, scale = 2): Promise<Blob> {
 
     const img = new Image()
     img.onload = () => {
-      ctx.fillStyle = 'white'
+      ctx.fillStyle = bgColor === 'rgba(0, 0, 0, 0)' ? 'white' : bgColor
       ctx.fillRect(0, 0, width, height)
       ctx.drawImage(img, 0, 0, width, height)
       canvas.toBlob(
