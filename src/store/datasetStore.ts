@@ -24,7 +24,7 @@ export const useDatasetStore = create<DatasetState>((set, get) => ({
   error: null,
 
   fetchDatasets: async (projectId: string) => {
-    set({ loading: true, error: null })
+    set({ loading: true, error: null, datasets: [], currentDataset: null, parsedData: null })
     try {
       const { data, error } = await supabase
         .from('datasets')
