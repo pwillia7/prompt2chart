@@ -13,6 +13,8 @@ import {
   copyToClipboard,
   buildStandaloneHtmlD3,
   buildStandaloneHtmlVegaLite,
+  openD3InCodePen,
+  openVegaLiteInCodePen,
 } from '../../lib/chartExporter'
 
 interface ExportMenuProps {
@@ -48,23 +50,23 @@ export function ExportMenu({ chart, d3Handle, vegaHandle, data }: ExportMenuProp
 
   const isD3 = chart.chart_library === 'd3'
 
-  async function handleExport(action: 'png' | 'svg' | 'code' | 'html') {
+  async function handleExport(action: 'png' | 'svg' | 'code' | 'html' | 'codepen') {
     setOpen(false)
     try {
       if (isD3) {
         const svgEl = d3Handle?.getSvgEl()
-        if (!svgEl) throw new Error('Chart SVG not found')
+        if (action !== 'codepen' && !svgEl) throw new Error('Chart SVG not found')
         const containerEl = d3Handle?.getContainerEl() ?? undefined
 
         switch (action) {
           case 'png': {
-            const blob = await d3SvgToPng(svgEl, containerEl)
+            const blob = await d3SvgToPng(svgEl!, containerEl)
             downloadPng(blob, 'chart')
             setToast('PNG downloaded')
             break
           }
           case 'svg': {
-            const str = d3SvgToString(svgEl, containerEl)
+            const str = d3SvgToString(svgEl!, containerEl)
             downloadSvg(str, 'chart')
             setToast('SVG downloaded')
             break
@@ -78,6 +80,11 @@ export function ExportMenu({ chart, d3Handle, vegaHandle, data }: ExportMenuProp
             const html = buildStandaloneHtmlD3(chart.d3_code ?? '', data ?? [])
             downloadHtml(html, 'chart')
             setToast('HTML downloaded')
+            break
+          }
+          case 'codepen': {
+            openD3InCodePen(chart.d3_code ?? '', data ?? [], chart.prompt)
+            setToast('Opening CodePen...')
             break
           }
         }
@@ -116,6 +123,15 @@ export function ExportMenu({ chart, d3Handle, vegaHandle, data }: ExportMenuProp
             const html = buildStandaloneHtmlVegaLite(exportSpec)
             downloadHtml(html, 'chart')
             setToast('HTML downloaded')
+            break
+          }
+          case 'codepen': {
+            const cpSpec = chart.vega_spec_json as VegaLiteSpec
+            const exportSpec = cpSpec.data && 'values' in cpSpec.data && cpSpec.data.values?.length
+              ? cpSpec
+              : { ...cpSpec, data: { values: data ?? [] } }
+            openVegaLiteInCodePen(exportSpec, chart.prompt)
+            setToast('Opening CodePen...')
             break
           }
         }
@@ -184,6 +200,15 @@ export function ExportMenu({ chart, d3Handle, vegaHandle, data }: ExportMenuProp
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
             </svg>
             Download HTML
+          </button>
+          <button
+            onClick={() => handleExport('codepen')}
+            className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+          >
+            <svg className="w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8.21 12L6.88 12.89V11.11L8.21 12zm2.79 1.84V16l-3.48-2.32 1.46-.97 2.02 1.13zm.5-3.68L8.56 8.5l2.94-1.96v2.18l-2.02 1.13 1.52 1.01v.3zM12 10.74L10.27 12 12 13.26 13.73 12 12 10.74zM22 12c0 5.52-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2s10 4.48 10 10zm-3.5-1.3l-.01-.02-5.99-4V6.5L12 6.34l-.5.16v.18l-5.99 4-.01.02-.5.33v2.94l.5.33.01.02 5.99 4v.18l.5.16.5-.16v-.18l5.99-4 .01-.02.5-.33V11.03l-.5-.33zm-5.5 5.12V18l3.48-2.32-1.46-.97-2.02 1.11zm3.32-3.93L17.78 12l-1.46-.89v1.78l-1.5.04z" />
+            </svg>
+            Edit in CodePen
           </button>
         </div>
       )}

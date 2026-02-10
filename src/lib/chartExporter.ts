@@ -357,3 +357,46 @@ export function buildStandaloneHtmlVegaLite(spec: VegaLiteSpec): string {
 export function downloadHtml(html: string, name = 'chart') {
   downloadString(html, `${name}.html`, 'text/html')
 }
+
+// ---------------------------------------------------------------------------
+// CodePen Prefill (POST to https://codepen.io/pen/define)
+// ---------------------------------------------------------------------------
+
+function postToCodePen(data: Record<string, unknown>) {
+  const form = document.createElement('form')
+  form.action = 'https://codepen.io/pen/define'
+  form.method = 'POST'
+  form.target = '_blank'
+  const input = document.createElement('input')
+  input.type = 'hidden'
+  input.name = 'data'
+  input.value = JSON.stringify(data)
+  form.appendChild(input)
+  document.body.appendChild(form)
+  form.submit()
+  document.body.removeChild(form)
+}
+
+export function openD3InCodePen(d3Code: string, data: unknown[], title = 'D3 Chart') {
+  const dataJson = JSON.stringify(data)
+  postToCodePen({
+    title,
+    html: '<div id="container"></div>',
+    css: 'body { margin: 0; display: flex; justify-content: center; padding: 20px; font-family: sans-serif; background: white; }\n#container { position: relative; }',
+    js: `var data = ${dataJson};\nvar container = d3.select('#container');\nvar width = 700;\nvar height = 450;\nvar margin = { top: 40, right: 40, bottom: 60, left: 60 };\nvar svg = container.append('svg')\n  .attr('width', width)\n  .attr('height', height)\n  .attr('viewBox', '0 0 ' + width + ' ' + height)\n  .style('max-width', '100%')\n  .style('height', 'auto')\n  .style('overflow', 'visible')\n  .style('touch-action', 'none');\n\n${d3Code}`,
+    js_external: 'https://cdn.jsdelivr.net/npm/d3@7',
+    editors: '001',
+  })
+}
+
+export function openVegaLiteInCodePen(spec: VegaLiteSpec, title = 'Vega-Lite Chart') {
+  const specJson = JSON.stringify(spec, null, 2)
+  postToCodePen({
+    title,
+    html: '<div id="vis"></div>',
+    css: 'body { margin: 0; display: flex; justify-content: center; padding: 20px; font-family: sans-serif; background: white; }',
+    js: `var spec = ${specJson};\nvegaEmbed('#vis', spec, { renderer: 'canvas' });`,
+    js_external: 'https://cdn.jsdelivr.net/npm/vega@5;https://cdn.jsdelivr.net/npm/vega-lite@5;https://cdn.jsdelivr.net/npm/vega-embed@6',
+    editors: '001',
+  })
+}
