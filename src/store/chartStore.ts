@@ -16,6 +16,7 @@ interface GenerateChartOptions {
   library: ChartLibrary
   existingCode?: string
   allSchemas?: AllSchemaEntry[]
+  parentChartId?: string | null
 }
 
 export interface AnalystChatMsg {
@@ -69,7 +70,7 @@ export const useChartStore = create<ChartState>((set, get) => ({
     }
   },
 
-  generateChart: async ({ projectId, datasetId, prompt, schema, library, existingCode, allSchemas }: GenerateChartOptions) => {
+  generateChart: async ({ projectId, datasetId, prompt, schema, library, existingCode, allSchemas, parentChartId }: GenerateChartOptions) => {
     set({ generating: true, error: null })
     try {
       const { data: responseData, error: fnError } = await supabase.functions.invoke('generate-chart', {
@@ -94,6 +95,7 @@ export const useChartStore = create<ChartState>((set, get) => ({
         prompt,
         chart_library: isD3 ? 'd3' : 'vega-lite',
         explanation: response.reasoning,
+        parent_chart_id: parentChartId || null,
       }
 
       if (isD3) {
@@ -227,6 +229,7 @@ function normalizeChart(row: Record<string, unknown>): Chart {
     vega_spec_json: (row.vega_spec_json as VegaLiteSpec) || null,
     d3_code: (row.d3_code as string) || null,
     explanation: (row.explanation as string) || null,
+    parent_chart_id: (row.parent_chart_id as string) || null,
     created_at: row.created_at as string,
   }
 }

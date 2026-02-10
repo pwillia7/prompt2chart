@@ -43,6 +43,7 @@ export interface Chart {
   vega_spec_json: VegaLiteSpec | null
   d3_code: string | null
   explanation: string | null
+  parent_chart_id: string | null
   created_at: string
 }
 

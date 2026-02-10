@@ -19,6 +19,111 @@ import { trackUsage } from '../lib/usageTracker'
 import { sampleData } from '../lib/dataSampler'
 import { Chart, ChartLibrary } from '../types'
 
+interface ChartTreeNode {
+  chart: Chart
+  children: ChartTreeNode[]
+}
+
+function buildChartTree(charts: Chart[]): ChartTreeNode[] {
+  const nodeMap = new Map<string, ChartTreeNode>()
+  for (const chart of charts) {
+    nodeMap.set(chart.id, { chart, children: [] })
+  }
+  const roots: ChartTreeNode[] = []
+  for (const chart of charts) {
+    const node = nodeMap.get(chart.id)!
+    const parentId = chart.parent_chart_id
+    if (parentId && nodeMap.has(parentId)) {
+      nodeMap.get(parentId)!.children.push(node)
+    } else {
+      roots.push(node)
+    }
+  }
+  // Roots newest-first (matches current behavior), children oldest-first (chronological refinement)
+  roots.sort((a, b) => new Date(b.chart.created_at).getTime() - new Date(a.chart.created_at).getTime())
+  for (const node of nodeMap.values()) {
+    node.children.sort((a, b) => new Date(a.chart.created_at).getTime() - new Date(b.chart.created_at).getTime())
+  }
+  return roots
+}
+
+function ChartTreeItem({
+  node,
+  depth,
+  currentChartId,
+  collapsedNodes,
+  onSelect,
+  onToggleCollapse,
+}: {
+  node: ChartTreeNode
+  depth: number
+  currentChartId: string | undefined
+  collapsedNodes: Set<string>
+  onSelect: (chart: Chart) => void
+  onToggleCollapse: (chartId: string) => void
+}) {
+  const chart = node.chart
+  const hasChildren = node.children.length > 0
+  const isCollapsed = collapsedNodes.has(chart.id)
+
+  return (
+    <>
+      <button
+        onClick={() => onSelect(chart)}
+        className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
+          currentChartId === chart.id
+            ? 'bg-primary-50 text-primary-700'
+            : 'hover:bg-gray-50'
+        }`}
+        style={{ paddingLeft: `${12 + depth * 16}px` }}
+      >
+        <div className="flex items-center gap-1.5">
+          {hasChildren ? (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onToggleCollapse(chart.id)
+              }}
+              className="flex-shrink-0 w-4 h-4 flex items-center justify-center text-gray-400 hover:text-gray-600"
+            >
+              <svg
+                className={`w-3 h-3 transition-transform ${isCollapsed ? '' : 'rotate-90'}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          ) : depth > 0 ? (
+            <span className="flex-shrink-0 w-4 h-4 flex items-center justify-center text-gray-300 text-xs">&raquo;</span>
+          ) : (
+            <span className="flex-shrink-0 w-4 h-4" />
+          )}
+          <span className={`flex-shrink-0 w-2 h-2 rounded-full ${
+            chart.chart_library === 'd3' ? 'bg-orange-400' : 'bg-blue-400'
+          }`} />
+          <span className="font-medium text-sm truncate">{chart.prompt}</span>
+        </div>
+        <div className="text-xs text-gray-500" style={{ marginLeft: '1.625rem' }}>
+          {new Date(chart.created_at).toLocaleString()}
+        </div>
+      </button>
+      {hasChildren && !isCollapsed && node.children.map((child) => (
+        <ChartTreeItem
+          key={child.chart.id}
+          node={child}
+          depth={depth + 1}
+          currentChartId={currentChartId}
+          collapsedNodes={collapsedNodes}
+          onSelect={onSelect}
+          onToggleCollapse={onToggleCollapse}
+        />
+      ))}
+    </>
+  )
+}
+
 export function ProjectPage() {
   const { projectId } = useParams<{ projectId: string }>()
   const navigate = useNavigate()
@@ -32,6 +137,16 @@ export function ProjectPage() {
   const { charts, currentChart, generating, generateChart, fetchCharts, setCurrentChart, error: chartError } = useChartStore()
 
   const renderData = useMemo(() => parsedData ? sampleData(parsedData) : null, [parsedData])
+  const chartTree = useMemo(() => buildChartTree(charts), [charts])
+  const [collapsedNodes, setCollapsedNodes] = useState<Set<string>>(new Set())
+  const toggleCollapse = (chartId: string) => {
+    setCollapsedNodes(prev => {
+      const next = new Set(prev)
+      if (next.has(chartId)) next.delete(chartId)
+      else next.add(chartId)
+      return next
+    })
+  }
 
   const allSchemas = useMemo(() =>
     datasets.map(ds => ({
@@ -94,6 +209,7 @@ export function ProjectPage() {
       library,
       existingCode,
       allSchemas,
+      parentChartId: currentChart?.id ?? null,
     })
   }
 
@@ -419,27 +535,17 @@ export function ProjectPage() {
               {charts.length === 0 ? (
                 <p className="text-sm text-gray-500">No charts yet</p>
               ) : (
-                <div className="space-y-2">
-                  {charts.map((chart) => (
-                    <button
-                      key={chart.id}
-                      onClick={() => handleSelectChart(chart)}
-                      className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
-                        currentChart?.id === chart.id
-                          ? 'bg-primary-50 text-primary-700'
-                          : 'hover:bg-gray-50'
-                      }`}
-                    >
-                      <div className="flex items-center gap-1.5">
-                        <span className={`flex-shrink-0 w-2 h-2 rounded-full ${
-                          chart.chart_library === 'd3' ? 'bg-orange-400' : 'bg-blue-400'
-                        }`} />
-                        <span className="font-medium text-sm truncate">{chart.prompt}</span>
-                      </div>
-                      <div className="text-xs text-gray-500 ml-3.5">
-                        {new Date(chart.created_at).toLocaleString()}
-                      </div>
-                    </button>
+                <div className="space-y-1">
+                  {chartTree.map((node) => (
+                    <ChartTreeItem
+                      key={node.chart.id}
+                      node={node}
+                      depth={0}
+                      currentChartId={currentChart?.id}
+                      collapsedNodes={collapsedNodes}
+                      onSelect={handleSelectChart}
+                      onToggleCollapse={toggleCollapse}
+                    />
                   ))}
                 </div>
               )}
