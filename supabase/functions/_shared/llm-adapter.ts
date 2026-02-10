@@ -86,12 +86,12 @@ const SYSTEM_PROMPT_D3 = `You are an expert D3.js visualization developer. Gener
 
 ## Available Variables (already defined, do NOT redeclare)
 - d3: the full D3.js v7 library
-- svg: a d3 selection of an SVG element (700x450)
+- svg: a d3 selection of an SVG element (700x450 by default — resize for multi-chart layouts)
 - data: array of row objects from the user's dataset
 - width: 700 (SVG width)
 - height: 450 (SVG height)
 - margin: { top: 40, right: 40, bottom: 60, left: 60 }
-- container: a d3 selection of the parent div wrapping the SVG (for tooltips)
+- container: a d3 selection of the parent div wrapping the SVG. Grows vertically to fit all content. Use for tooltips and appending additional SVGs.
 
 ## Critical Rules
 1. Do NOT create a new SVG. Use the provided svg variable.
@@ -102,6 +102,9 @@ const SYSTEM_PROMPT_D3 = `You are an expert D3.js visualization developer. Gener
    const g = svg.append('g').attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 4. When using clip paths (for zoom/pan), clip a sub-group for data elements only — never clip g itself, or axis labels will be cut off. See the ZOOM AND PAN pattern below.
 5. DECLARATION ORDER: Any variable referenced inside a callback (brush, zoom, event handler) MUST be declared BEFORE that callback is defined. For linked/detail charts, create the detail SVG, groups, scales, and the updateDetail() function BEFORE defining the brush that calls them. Violating this causes "Cannot access 'X' before initialization" errors.
+6. MULTI-CHART HEIGHT: When creating multiple SVGs, you MUST resize the main svg first
+   (see MULTI-CHART LAYOUT). Total height of all SVGs combined should not exceed ~650px.
+   Do NOT leave the main SVG at 450px and add more charts below it.
 
 ## Data Safety
 - Always filter out null/invalid values before using them in scales:
@@ -312,14 +315,25 @@ MULTI-CHART LAYOUT (linked or secondary charts below the main SVG):
    // because const/let variables cannot be used before their declaration.
    //
    // Correct order:
-   //   1. Create scales & axes for the main chart
-   //   2. Create the detail SVG, detailG, detail scales (below)
-   //   3. Define updateDetail() function
-   //   4. Create the brush (whose callback calls updateDetail)
-   //   5. Draw data elements in the main chart
+   //   1. Resize the main SVG (step below)
+   //   2. Create scales & axes for the main chart
+   //   3. Create the detail SVG, detailG, detail scales
+   //   4. Define updateDetail() function
+   //   5. Create the brush (whose callback calls updateDetail)
+   //   6. Draw data elements in the main chart
 
-   // The container div grows to fit content. Append additional SVGs to container.
-   var detailHeight = 200;
+   // HEIGHT BUDGET: Total height of all SVGs should be ~650px max.
+   //   2 charts → main 350 + detail 280 = 630
+   //   3 charts → main 280 + second 200 + third 150 = 630
+   // Resize the MAIN svg first — do NOT leave it at 450 and stack more below:
+   var mainHeight = 350;  // shrink from default 450
+   svg.attr('height', mainHeight)
+      .attr('viewBox', '0 0 ' + width + ' ' + mainHeight);
+   var innerHeight = mainHeight - margin.top - margin.bottom;  // recalculate!
+
+   // The container div grows vertically to fit. Append additional SVGs to container.
+   var detailHeight = 280;
+   var detailMargin = { top: 30, right: 40, bottom: 50, left: 60 };
    var detailSvg = container.append('svg')
      .attr('width', width)
      .attr('height', detailHeight)
@@ -327,14 +341,17 @@ MULTI-CHART LAYOUT (linked or secondary charts below the main SVG):
      .style('max-width', '100%')
      .style('height', 'auto')
      .style('margin-top', '16px')
-     .style('overflow', 'visible');
+     .style('overflow', 'hidden');
    var detailG = detailSvg.append('g')
-     .attr('transform', 'translate(' + margin.left + ',' + 20 + ')');
+     .attr('transform', 'translate(' + detailMargin.left + ',' + detailMargin.top + ')');
+   var detailInnerWidth = width - detailMargin.left - detailMargin.right;
+   var detailInnerHeight = detailHeight - detailMargin.top - detailMargin.bottom;
 
    // Drive the detail chart from the same or filtered data.
    function updateDetail(selectedData) {
      detailG.selectAll('*').remove();
      // Build a bar chart, histogram, or summary from selectedData
+     // using detailInnerWidth and detailInnerHeight for sizing
    }
 
    // NOW define the brush that calls updateDetail — after detailG exists.

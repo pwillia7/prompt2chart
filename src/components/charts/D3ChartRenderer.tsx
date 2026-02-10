@@ -56,7 +56,7 @@ export const D3ChartRenderer = forwardRef<D3ChartHandle, D3ChartRendererProps>(f
         .attr('viewBox', '0 0 ' + width + ' ' + height)
         .style('max-width', '100%')
         .style('height', 'auto')
-        .style('overflow', 'visible')
+        .style('overflow', 'hidden')
         .style('touch-action', 'none')
 
       // Build the function body with string concat to avoid
@@ -126,7 +126,7 @@ export const D3ChartRenderer = forwardRef<D3ChartHandle, D3ChartRendererProps>(f
 
       <div
         ref={containerRef}
-        className={`min-h-[460px] max-w-full overflow-auto ${error ? 'hidden' : ''}`}
+        className={`min-h-[300px] max-w-full overflow-x-auto ${error ? 'hidden' : ''}`}
         style={{ position: 'relative' }}
       />
     </div>
