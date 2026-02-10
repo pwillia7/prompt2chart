@@ -495,6 +495,11 @@ export function ProjectPage() {
                         </button>
                       </div>
                     </div>
+                    <div className="text-xs text-gray-400 flex gap-3">
+                      <span>Examples:</span>
+                      <a href="https://vega.github.io/vega-lite/examples/" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-600 underline">Vega-Lite Gallery</a>
+                      <a href="https://observablehq.com/@d3/gallery" target="_blank" rel="noopener noreferrer" className="text-orange-500 hover:text-orange-600 underline">D3.js Gallery</a>
+                    </div>
                     <InsightSuggestions
                       schema={currentDataset.schema_json}
                       allSchemas={allSchemas}
