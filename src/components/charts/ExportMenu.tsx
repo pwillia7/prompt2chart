@@ -54,16 +54,17 @@ export function ExportMenu({ chart, d3Handle, vegaHandle, data }: ExportMenuProp
       if (isD3) {
         const svgEl = d3Handle?.getSvgEl()
         if (!svgEl) throw new Error('Chart SVG not found')
+        const containerEl = d3Handle?.getContainerEl() ?? undefined
 
         switch (action) {
           case 'png': {
-            const blob = await d3SvgToPng(svgEl)
+            const blob = await d3SvgToPng(svgEl, containerEl)
             downloadPng(blob, 'chart')
             setToast('PNG downloaded')
             break
           }
           case 'svg': {
-            const str = d3SvgToString(svgEl)
+            const str = d3SvgToString(svgEl, containerEl)
             downloadSvg(str, 'chart')
             setToast('SVG downloaded')
             break

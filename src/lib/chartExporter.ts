@@ -74,12 +74,126 @@ function inlineStyles(el: Element) {
   }
 }
 
-export function d3SvgToString(svgEl: SVGSVGElement): string {
+// ---------------------------------------------------------------------------
+// HTML legend → SVG conversion for exports
+// ---------------------------------------------------------------------------
+
+/** Measure how much extra viewBox height HTML legends need below the SVG. */
+function getHtmlLegendExtraHeight(
+  containerEl: HTMLDivElement,
+  svgEl: SVGSVGElement,
+): number {
+  const svgRect = svgEl.getBoundingClientRect()
+  if (svgRect.height === 0) return 0
+  const vb = svgEl.viewBox.baseVal
+  const scaleY = vb.height / svgRect.height
+
+  let maxBottom = vb.height
+  for (const child of containerEl.children) {
+    if (child === svgEl) continue
+    const style = getComputedStyle(child as HTMLElement)
+    if (style.position === 'absolute' || style.position === 'fixed' || style.display === 'none') continue
+    const bottom = ((child as HTMLElement).getBoundingClientRect().bottom - svgRect.top) * scaleY
+    if (bottom > maxBottom) maxBottom = bottom
+  }
+  return Math.max(0, Math.ceil(maxBottom - vb.height) + 8)
+}
+
+/** Convert HTML legend elements in the container to SVG and append to clone. */
+function appendHtmlLegendsToSvg(
+  clone: SVGSVGElement,
+  containerEl: HTMLDivElement,
+  svgEl: SVGSVGElement,
+): void {
+  const svgRect = svgEl.getBoundingClientRect()
+  if (svgRect.width === 0 || svgRect.height === 0) return
+
+  const vb = svgEl.viewBox.baseVal
+  const scaleX = vb.width / svgRect.width
+  const scaleY = vb.height / svgRect.height
+
+  const group = document.createElementNS('http://www.w3.org/2000/svg', 'g')
+
+  function processEl(el: HTMLElement) {
+    const rect = el.getBoundingClientRect()
+    if (rect.width === 0 || rect.height === 0) return
+
+    const style = getComputedStyle(el)
+    if (style.display === 'none' || style.visibility === 'hidden') return
+
+    const x = (rect.left - svgRect.left) * scaleX
+    const y = (rect.top - svgRect.top) * scaleY
+    const w = rect.width * scaleX
+    const h = rect.height * scaleY
+
+    // Render background color (color swatches)
+    const bg = style.backgroundColor
+    if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') {
+      const r = document.createElementNS('http://www.w3.org/2000/svg', 'rect')
+      r.setAttribute('x', String(x))
+      r.setAttribute('y', String(y))
+      r.setAttribute('width', String(w))
+      r.setAttribute('height', String(h))
+      r.setAttribute('fill', bg)
+      const br = parseFloat(style.borderRadius)
+      if (br > 0) r.setAttribute('rx', String(br * scaleX))
+      const op = parseFloat(style.opacity)
+      if (op < 1) r.setAttribute('opacity', String(op))
+      group.appendChild(r)
+    }
+
+    // Render text (leaf nodes only)
+    if (el.childNodes.length > 0 && el.children.length === 0 && el.textContent?.trim()) {
+      const t = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+      t.setAttribute('x', String(x))
+      t.setAttribute('y', String(y + h * 0.78))
+      t.setAttribute('font-size', String(parseFloat(style.fontSize) * scaleX))
+      t.setAttribute('fill', style.color || '#333')
+      t.setAttribute('font-family', style.fontFamily || 'system-ui, sans-serif')
+      if (style.fontWeight && style.fontWeight !== 'normal' && style.fontWeight !== '400') {
+        t.setAttribute('font-weight', style.fontWeight)
+      }
+      const op = parseFloat(style.opacity)
+      if (op < 1) t.setAttribute('opacity', String(op))
+      t.textContent = el.textContent.trim()
+      group.appendChild(t)
+    }
+
+    for (const child of el.children) {
+      processEl(child as HTMLElement)
+    }
+  }
+
+  for (const child of containerEl.children) {
+    if (child === svgEl) continue
+    const style = getComputedStyle(child as HTMLElement)
+    if (style.position === 'absolute' || style.position === 'fixed' || style.display === 'none') continue
+    processEl(child as HTMLElement)
+  }
+
+  if (group.children.length > 0) {
+    clone.appendChild(group)
+  }
+}
+
+export function d3SvgToString(svgEl: SVGSVGElement, containerEl?: HTMLDivElement): string {
   // Read the SVG's background color before cloning (CSS background-color
   // doesn't serialize into SVG markup, so we capture it as a rect fill).
   const bgColor = getComputedStyle(svgEl).backgroundColor || 'white'
   const clone = svgEl.cloneNode(true) as SVGSVGElement
   inlineStyles(clone)
+
+  // Expand viewBox to fit HTML legends
+  if (containerEl) {
+    const extra = getHtmlLegendExtraHeight(containerEl, svgEl)
+    if (extra > 0) {
+      const vb = svgEl.viewBox.baseVal
+      clone.setAttribute('viewBox', `0 0 ${vb.width} ${vb.height + extra}`)
+      clone.setAttribute('height', String(vb.height + extra))
+    }
+    appendHtmlLegendsToSvg(clone, containerEl, svgEl)
+  }
+
   clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
   clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
   // Add background rect as first child using the SVG's actual background color
@@ -95,12 +209,13 @@ export function d3SvgToString(svgEl: SVGSVGElement): string {
 // D3 SVG → PNG
 // ---------------------------------------------------------------------------
 
-export function d3SvgToPng(svgEl: SVGSVGElement, scale = 2): Promise<Blob> {
+export function d3SvgToPng(svgEl: SVGSVGElement, containerEl?: HTMLDivElement, scale = 2): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const bgColor = getComputedStyle(svgEl).backgroundColor || 'white'
-    const svgString = d3SvgToString(svgEl)
+    const extra = containerEl ? getHtmlLegendExtraHeight(containerEl, svgEl) : 0
+    const svgString = d3SvgToString(svgEl, containerEl)
     const width = svgEl.viewBox.baseVal.width || svgEl.clientWidth || 700
-    const height = svgEl.viewBox.baseVal.height || svgEl.clientHeight || 450
+    const height = (svgEl.viewBox.baseVal.height || svgEl.clientHeight || 450) + extra
 
     const canvas = document.createElement('canvas')
     canvas.width = width * scale

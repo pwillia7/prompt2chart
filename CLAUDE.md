@@ -124,7 +124,7 @@ All TailwindCSS, no custom CSS files. Custom `primary` color scale (sky blue). C
 
 ## Export
 
-Charts export to PNG, SVG, HTML, and raw code. PNG/SVG exports capture only the SVG element — HTML legends won't appear in those formats. HTML export captures the full container and works correctly.
+Charts export to PNG, SVG, HTML, and raw code. PNG/SVG exports convert HTML legends to SVG elements (measuring positions from the live DOM) and expand the viewBox to fit. HTML export captures the full container natively.
 
 ## Gotchas
 
