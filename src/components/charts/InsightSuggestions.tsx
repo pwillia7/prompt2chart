@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { AllSchemaEntry } from '../../store/chartStore'
+import { useDatasetStore } from '../../store/datasetStore'
 import { ChartLibrary, DatasetSchema, InsightSuggestion } from '../../types'
 import { Button } from '../ui/Button'
 import { Spinner } from '../ui/Spinner'
@@ -8,24 +9,26 @@ import { Spinner } from '../ui/Spinner'
 const INITIAL_VISIBLE = 3
 
 interface InsightSuggestionsProps {
+  datasetId: string
   schema: DatasetSchema
   allSchemas?: AllSchemaEntry[]
   onSelectSuggestion: (prompt: string, library?: ChartLibrary) => void
   disabled?: boolean
 }
 
-export function InsightSuggestions({ schema, allSchemas, onSelectSuggestion, disabled }: InsightSuggestionsProps) {
-  const [suggestions, setSuggestions] = useState<InsightSuggestion[]>([])
+export function InsightSuggestions({ datasetId, schema, allSchemas, onSelectSuggestion, disabled }: InsightSuggestionsProps) {
+  const { getCachedSuggestions, cacheSuggestions } = useDatasetStore()
+  const [suggestions, setSuggestions] = useState<InsightSuggestion[]>(() => getCachedSuggestions(datasetId) || [])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [expanded, setExpanded] = useState(false)
-  const fetchedKeyRef = useRef<string | null>(null)
-
-  // Stable string key so useEffect only fires when schema content actually changes
-  const schemaKey = useMemo(() => JSON.stringify(schema), [schema])
 
   useEffect(() => {
-    if (fetchedKeyRef.current === schemaKey) return
+    const cached = getCachedSuggestions(datasetId)
+    if (cached) {
+      setSuggestions(cached)
+      return
+    }
     if (schema.columns.length === 0) return
 
     let cancelled = false
@@ -41,8 +44,9 @@ export function InsightSuggestions({ schema, allSchemas, onSelectSuggestion, dis
 
         if (fnError) throw fnError
         if (!cancelled) {
-          fetchedKeyRef.current = schemaKey
-          setSuggestions(data.suggestions || [])
+          const results = data.suggestions || []
+          cacheSuggestions(datasetId, results)
+          setSuggestions(results)
           setExpanded(false)
         }
       } catch (err) {
@@ -54,7 +58,7 @@ export function InsightSuggestions({ schema, allSchemas, onSelectSuggestion, dis
 
     fetchSuggestions()
     return () => { cancelled = true }
-  }, [schemaKey, schema, allSchemas])
+  }, [datasetId])
 
   const visibleSuggestions = expanded ? suggestions : suggestions.slice(0, INITIAL_VISIBLE)
   const hasMore = suggestions.length > INITIAL_VISIBLE

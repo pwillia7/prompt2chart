@@ -501,6 +501,7 @@ export function ProjectPage() {
                       <a href="https://observablehq.com/@d3/gallery" target="_blank" rel="noopener noreferrer" className="text-orange-500 hover:text-orange-600 underline">D3.js Gallery</a>
                     </div>
                     <InsightSuggestions
+                      datasetId={currentDataset.id}
                       schema={currentDataset.schema_json}
                       allSchemas={allSchemas}
                       onSelectSuggestion={handleSuggestionSelect}

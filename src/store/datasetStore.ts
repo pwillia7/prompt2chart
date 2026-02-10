@@ -1,12 +1,13 @@
 import { create } from 'zustand'
 import { supabase } from '../lib/supabase'
-import { Dataset, DatasetSchema } from '../types'
+import { Dataset, DatasetSchema, InsightSuggestion } from '../types'
 import { generateSchema, parseData } from '../lib/schemaGenerator'
 
 interface DatasetState {
   datasets: Dataset[]
   currentDataset: Dataset | null
   parsedData: unknown[] | null
+  suggestionCache: Map<string, InsightSuggestion[]>
   loading: boolean
   error: string | null
   fetchDatasets: (projectId: string) => Promise<void>
@@ -14,17 +15,30 @@ interface DatasetState {
   deleteDataset: (id: string) => Promise<void>
   setCurrentDataset: (dataset: Dataset | null) => void
   loadDatasetData: (dataset: Dataset) => Promise<unknown[] | null>
+  getCachedSuggestions: (datasetId: string) => InsightSuggestion[] | undefined
+  cacheSuggestions: (datasetId: string, suggestions: InsightSuggestion[]) => void
 }
 
 export const useDatasetStore = create<DatasetState>((set, get) => ({
   datasets: [],
   currentDataset: null,
   parsedData: null,
+  suggestionCache: new Map(),
   loading: false,
   error: null,
 
+  getCachedSuggestions: (datasetId: string) => {
+    return get().suggestionCache.get(datasetId)
+  },
+
+  cacheSuggestions: (datasetId: string, suggestions: InsightSuggestion[]) => {
+    const cache = new Map(get().suggestionCache)
+    cache.set(datasetId, suggestions)
+    set({ suggestionCache: cache })
+  },
+
   fetchDatasets: async (projectId: string) => {
-    set({ loading: true, error: null, datasets: [], currentDataset: null, parsedData: null })
+    set({ loading: true, error: null, datasets: [], currentDataset: null, parsedData: null, suggestionCache: new Map() })
     try {
       const { data, error } = await supabase
         .from('datasets')
