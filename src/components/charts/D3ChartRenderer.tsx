@@ -11,9 +11,10 @@ interface D3ChartRendererProps {
   code: string
   data: unknown[]
   className?: string
+  onRetry?: () => void
 }
 
-export const D3ChartRenderer = forwardRef<D3ChartHandle, D3ChartRendererProps>(function D3ChartRenderer({ code, data, className = '' }, ref) {
+export const D3ChartRenderer = forwardRef<D3ChartHandle, D3ChartRendererProps>(function D3ChartRenderer({ code, data, className = '', onRetry }, ref) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -115,12 +116,22 @@ export const D3ChartRenderer = forwardRef<D3ChartHandle, D3ChartRendererProps>(f
       {error && (
         <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
           <p className="text-red-700 text-sm">{error}</p>
-          <details className="mt-2">
-            <summary className="text-sm text-red-600 cursor-pointer">View code</summary>
-            <pre className="mt-2 p-2 bg-red-100 rounded text-xs overflow-auto max-h-64">
-              {code}
-            </pre>
-          </details>
+          <div className="flex items-center gap-3 mt-2">
+            {onRetry && (
+              <button
+                onClick={onRetry}
+                className="text-sm text-red-700 font-medium hover:text-red-800 underline"
+              >
+                Regenerate chart
+              </button>
+            )}
+            <details>
+              <summary className="text-sm text-red-600 cursor-pointer">View code</summary>
+              <pre className="mt-2 p-2 bg-red-100 rounded text-xs overflow-auto max-h-64">
+                {code}
+              </pre>
+            </details>
+          </div>
         </div>
       )}
 

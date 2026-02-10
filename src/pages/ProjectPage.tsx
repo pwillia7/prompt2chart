@@ -378,7 +378,7 @@ export function ProjectPage() {
                     </div>
                   </div>
                   {currentChart.chart_library === 'd3' && currentChart.d3_code && renderData ? (
-                    <D3ChartRenderer ref={d3Ref} code={currentChart.d3_code} data={renderData} />
+                    <D3ChartRenderer ref={d3Ref} code={currentChart.d3_code} data={renderData} onRetry={() => handleGenerateChart(currentChart.prompt)} />
                   ) : currentChart.vega_spec_json ? (
                     <ChartRenderer ref={vegaRef} spec={currentChart.vega_spec_json} data={renderData ?? undefined} />
                   ) : (
