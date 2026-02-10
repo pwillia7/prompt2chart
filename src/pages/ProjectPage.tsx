@@ -186,7 +186,7 @@ export function ProjectPage() {
     }
   }
 
-  const handleGenerateChart = async (prompt: string) => {
+  const handleGenerateChart = async (prompt: string, libraryOverride?: ChartLibrary) => {
     if (!projectId || !currentDataset || !parsedData) return
 
     trackUsage({ eventType: 'chart_generation', metadata: { projectId } })
@@ -201,7 +201,7 @@ export function ProjectPage() {
       }
     }
 
-    const library = currentChart ? currentChart.chart_library : selectedLibrary
+    const library = libraryOverride ?? (currentChart ? currentChart.chart_library : selectedLibrary)
 
     await generateChart({
       projectId,
@@ -221,7 +221,7 @@ export function ProjectPage() {
 
   const handleSuggestionSelect = (prompt: string, library?: ChartLibrary) => {
     if (library) setSelectedLibrary(library)
-    handleGenerateChart(prompt)
+    handleGenerateChart(prompt, library)
   }
 
   if (projectLoading && !currentProject) {
