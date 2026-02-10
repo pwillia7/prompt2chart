@@ -383,7 +383,7 @@ export function openD3InCodePen(d3Code: string, data: unknown[], title = 'D3 Cha
     title,
     html: '<div id="container"></div>',
     css: 'body { margin: 0; display: flex; justify-content: center; padding: 20px; font-family: sans-serif; background: white; }\n#container { position: relative; }',
-    js: `var data = ${dataJson};\nvar container = d3.select('#container');\nvar width = 700;\nvar height = 450;\nvar margin = { top: 40, right: 40, bottom: 60, left: 60 };\nvar svg = container.append('svg')\n  .attr('width', width)\n  .attr('height', height)\n  .attr('viewBox', '0 0 ' + width + ' ' + height)\n  .style('max-width', '100%')\n  .style('height', 'auto')\n  .style('overflow', 'visible')\n  .style('touch-action', 'none');\n\n${d3Code}`,
+    js: `(function() {\nvar data = ${dataJson};\nvar container = d3.select('#container');\nvar width = 700;\nvar height = 450;\nvar margin = { top: 40, right: 40, bottom: 60, left: 60 };\nvar svg = container.append('svg')\n  .attr('width', width)\n  .attr('height', height)\n  .attr('viewBox', '0 0 ' + width + ' ' + height)\n  .style('max-width', '100%')\n  .style('height', 'auto')\n  .style('overflow', 'visible')\n  .style('touch-action', 'none');\n\n${d3Code}\n})();`,
     js_external: 'https://cdn.jsdelivr.net/npm/d3@7',
     editors: '001',
   })
