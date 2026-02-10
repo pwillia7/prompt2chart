@@ -29,7 +29,6 @@ export function InsightSuggestions({ schema, allSchemas, onSelectSuggestion, dis
     if (schema.columns.length === 0) return
 
     let cancelled = false
-    fetchedKeyRef.current = schemaKey
 
     async function fetchSuggestions() {
       setLoading(true)
@@ -42,6 +41,7 @@ export function InsightSuggestions({ schema, allSchemas, onSelectSuggestion, dis
 
         if (fnError) throw fnError
         if (!cancelled) {
+          fetchedKeyRef.current = schemaKey
           setSuggestions(data.suggestions || [])
           setExpanded(false)
         }
