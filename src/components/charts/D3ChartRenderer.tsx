@@ -90,6 +90,24 @@ export const D3ChartRenderer = forwardRef<D3ChartHandle, D3ChartRendererProps>(f
         brushEl.addEventListener('touchstart', (e) => e.stopPropagation())
       })
 
+      // Propagate SVG background color to container so HTML legends match
+      const svgEl = container.querySelector('svg')
+      if (svgEl) {
+        const bg = getComputedStyle(svgEl).backgroundColor
+        if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') {
+          container.style.backgroundColor = bg
+          // If background is dark, set light text color for legend readability
+          const match = bg.match(/\d+/g)
+          if (match) {
+            const [r, g, b] = match.map(Number)
+            const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+            if (luminance < 0.5) {
+              container.style.color = '#e5e5e5'
+            }
+          }
+        }
+      }
+
       if (isMounted) setLoading(false)
     } catch (err) {
       console.error('D3 rendering error:', err)

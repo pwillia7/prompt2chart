@@ -194,6 +194,20 @@ export function buildStandaloneHtmlD3(d3Code: string, data: unknown[]): string {
     .style('touch-action', 'none');
 
   ${d3Code}
+
+  // Propagate SVG background to container so HTML legends match
+  var svgNode = container.select('svg').node();
+  if (svgNode) {
+    var bg = getComputedStyle(svgNode).backgroundColor;
+    if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') {
+      container.style('background-color', bg);
+      var m = bg.match(/\\d+/g);
+      if (m) {
+        var lum = (0.299 * +m[0] + 0.587 * +m[1] + 0.114 * +m[2]) / 255;
+        if (lum < 0.5) container.style('color', '#e5e5e5');
+      }
+    }
+  }
 })();
 </script>
 </body>

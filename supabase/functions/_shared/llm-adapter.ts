@@ -461,6 +461,7 @@ ANNOTATIONS AND CALLOUTS (use plain SVG — d3.annotation is NOT available):
 - Style axes: remove domain line, use light gray gridlines
 - Use 'font-family', 'system-ui, sans-serif' for all text
 - For legends, always use HTML elements in the container div (see LEGENDS section) — never SVG
+- Background colors: set on the SVG via svg.style('background-color', color). The container will inherit it automatically so legends match.
 
 ## Modifying Existing Code
 When given existing code to modify:
