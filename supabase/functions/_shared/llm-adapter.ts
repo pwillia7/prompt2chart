@@ -489,31 +489,41 @@ The "reasoning" field must be a JSON STRING (not a nested object) containing:
 }
 EXACTLY 2 bullets per section. Use short, punchy fragments — not full sentences. Max 12 words each. Be specific to actual column names — never generic.`
 
-const SYSTEM_PROMPT_INSIGHTS = `You are an expert data analyst. Given a dataset schema, suggest 5 interesting visualizations that would reveal insights from the data.
+const SYSTEM_PROMPT_INSIGHTS = `You are a senior data analyst preparing a dashboard for a stakeholder.
+Given a dataset schema with sample values, suggest 5 visualizations that answer specific analytical questions about the data.
 
-You MUST respond with a JSON object in this exact format:
+Think step-by-step about what would be INTERESTING and ACTIONABLE:
+1. Look at the column names and sample values to understand the domain
+2. Identify the most impactful questions a stakeholder would ask
+3. Design visualizations that answer those questions — not just "show X by Y"
+
+Each suggestion's "prompt" should be a detailed, specific instruction describing the chart, including any computed measures (rolling averages, percentages, deviations), specific groupings, sorting, or highlighting. The "description" should be framed as the analytical question being answered (8-15 words).
+
+Analytical strategies to consider:
+- Trends & seasonality: time series with rolling averages, year-over-year overlays
+- Distributions & outliers: histograms, box plots, highlight values beyond 2σ
+- Correlations: scatter plots with regression lines, bubble charts with size encoding
+- Composition: stacked bars, treemaps, sunbursts showing part-to-whole
+- Ranking & top-N: sorted bar charts, lollipop charts of top/bottom performers
+- Segmented comparison: faceted or grouped charts comparing metrics across categories
+- Change detection: highlight significant changes, before/after comparisons
+
+CRITICAL: Include a MIX of both libraries — at least 2 "vega-lite" AND at least 2 "d3".
+Guidelines for library choice:
+- "vega-lite": standard statistical charts, faceted/layered views, bar/line/scatter/boxplot
+- "d3": interactive or unconventional charts — zoomable treemaps, force layouts, radial charts, brushable scatter, custom animations
+
+Respond with a JSON object:
 {
   "suggestions": [
     {
-      "prompt": "A natural language prompt describing the visualization",
-      "description": "Short description (5-10 words)",
-      "chartType": "bar|line|scatter|area|pie|donut|treemap|force",
+      "prompt": "Detailed chart generation instruction...",
+      "description": "Analytical question this answers (8-15 words)",
+      "chartType": "bar|line|scatter|area|pie|donut|treemap|force|boxplot|heatmap|histogram",
       "library": "vega-lite|d3"
     }
   ]
-}
-
-CRITICAL: You must include a MIX of both libraries — at least 2 "vega-lite" AND at least 2 "d3" suggestions. The 5th can be either.
-
-Guidelines for library choice:
-- Use "vega-lite" for: simple bar charts, line charts, scatter plots, basic area charts
-- Use "d3" for: interactive visualizations, donut charts, treemaps, force-directed graphs, complex multi-series charts, visualizations needing custom animations or brushing
-
-Focus on:
-- Distributions of numeric columns
-- Trends over time if temporal columns exist
-- Comparisons between categories
-- Relationships between numeric columns`
+}`
 
 class OpenAIProvider implements LLMProvider {
   private apiKey: string
