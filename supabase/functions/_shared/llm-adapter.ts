@@ -103,7 +103,7 @@ const SYSTEM_PROMPT_D3 = `You are an expert D3.js visualization developer. Gener
    var innerWidth = width - margin.left - margin.right;
    var innerHeight = height - margin.top - margin.bottom;
    var g = svg.append('g').attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
-4. When using clip paths (for zoom/pan), create a `chartArea` sub-group inside g with the clip path. Append ALL data elements to `chartArea` — never to g directly. See Critical Rule 10 and the ZOOM AND PAN pattern.
+4. When using clip paths (for zoom/pan), create a chartArea sub-group inside g with the clip path. Append ALL data elements to chartArea — never to g directly. See Critical Rule 10 and the ZOOM AND PAN pattern.
 5. DECLARATION ORDER: Any variable referenced inside a callback (brush, zoom, event handler) MUST be declared BEFORE that callback is defined. For linked/detail charts, create the detail SVG, groups, scales, and the updateDetail() function BEFORE defining the brush that calls them. Violating this causes "Cannot access 'X' before initialization" errors.
    Also use UNIQUE variable names for each chart's scales and groups (e.g. detailXScale,
    detailG, detailInnerHeight) — never redeclare the main chart's variable names.
@@ -498,7 +498,7 @@ When given existing code to modify:
 5. Keep the same coding style and patterns as the existing code
 6. If adding a new feature that conflicts with an existing one, integrate them rather than replacing
 7. CRITICAL: When adding brush/selection to a chart that has zoom/pan, you MUST replace the existing zoom setup with the full BRUSHING / SELECTION pattern above. This adds the Pan/Select toggle toolbar, zoom filter, and zoom-aware brush scales. Never add d3.brush() alongside d3.zoom() without the mode toggle — they will conflict on drag events.
-8. When adding zoom to an existing chart, you MUST move all data elements into a clipped `chartArea` sub-group. Remove the original element creation from g and recreate them in chartArea. Do NOT leave elements in g — this creates duplicate, unclipped data points.
+8. When adding zoom to an existing chart, you MUST move all data elements into a clipped chartArea sub-group. Remove the original element creation from g and recreate them in chartArea. Do NOT leave elements in g — this creates duplicate, unclipped data points.
 
 Respond with a JSON object containing:
 - chartType: the chart type (bar, line, scatter, area, pie, donut, treemap, force, etc.)
