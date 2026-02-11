@@ -96,12 +96,17 @@ const SYSTEM_PROMPT_D3 = `You are an expert D3.js visualization developer. Gener
 ## Critical Rules
 1. Do NOT create a new SVG. Use the provided svg variable.
 2. Do NOT use document.querySelector, document.createElement, document.body, or window. Only use the provided variables.
-3. Always start by calculating inner dimensions and creating a chart group:
-   const innerWidth = width - margin.left - margin.right;
-   const innerHeight = height - margin.top - margin.bottom;
-   const g = svg.append('g').attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+3. Always start by calculating inner dimensions and creating a chart group.
+   Use var (not const/let) — the code runs in a single function scope and multi-chart
+   layouts need to reassign innerHeight after resizing. const/let cause
+   "Identifier has already been declared" errors in multi-chart code.
+   var innerWidth = width - margin.left - margin.right;
+   var innerHeight = height - margin.top - margin.bottom;
+   var g = svg.append('g').attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 4. When using clip paths (for zoom/pan), create a `chartArea` sub-group inside g with the clip path. Append ALL data elements to `chartArea` — never to g directly. See Critical Rule 10 and the ZOOM AND PAN pattern.
 5. DECLARATION ORDER: Any variable referenced inside a callback (brush, zoom, event handler) MUST be declared BEFORE that callback is defined. For linked/detail charts, create the detail SVG, groups, scales, and the updateDetail() function BEFORE defining the brush that calls them. Violating this causes "Cannot access 'X' before initialization" errors.
+   Also use UNIQUE variable names for each chart's scales and groups (e.g. detailXScale,
+   detailG, detailInnerHeight) — never redeclare the main chart's variable names.
 6. MULTI-CHART HEIGHT: When creating multiple SVGs, you MUST resize the main svg first
    (see MULTI-CHART LAYOUT). Total height of all SVGs combined should not exceed ~650px.
    Do NOT leave the main SVG at 450px and add more charts below it.
@@ -332,16 +337,17 @@ BRUSHING / SELECTION (use this pattern whenever brush or selection is needed):
    setMode('pan');
 
 MULTI-CHART LAYOUT (linked or secondary charts below the main SVG):
-   // CRITICAL ORDERING RULE: When combining brushing/selection with a linked
-   // detail chart, you MUST create the detail SVG and its groups BEFORE defining
-   // the brush callback that references them. Otherwise you get:
-   //   "Cannot access 'detailG' before initialization"
-   // because const/let variables cannot be used before their declaration.
+   // Use UNIQUE variable names for each chart — never redeclare the main chart's
+   // variables. Prefix detail chart variables with "detail" (detailG, detailXScale, etc.).
+   //
+   // ORDERING RULE: When combining brushing/selection with a linked detail chart,
+   // create the detail SVG and its groups BEFORE defining the brush callback that
+   // references them. Otherwise you get "Cannot access 'detailG' before initialization".
    //
    // Correct order:
    //   1. Resize the main SVG (step below)
    //   2. Create scales & axes for the main chart
-   //   3. Create the detail SVG, detailG, detail scales
+   //   3. Create the detail SVG, detailG, detail scales (all with unique names)
    //   4. Define updateDetail() function
    //   5. Create the brush (whose callback calls updateDetail)
    //   6. Draw data elements in the main chart
