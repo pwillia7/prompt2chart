@@ -61,13 +61,22 @@ function Section({ icon, label, color, children, defaultOpen = true }: {
   )
 }
 
-function BulletList({ items }: { items: string[] }) {
+function BulletList({ items, onExplain }: { items: string[]; onExplain?: (item: string) => void }) {
   return (
     <ul className="space-y-1.5">
       {items.map((item, i) => (
-        <li key={i} className="flex items-start gap-2 text-sm text-gray-600 leading-snug">
+        <li key={i} className="flex items-start gap-2 text-sm text-gray-600 leading-snug group">
           <span className="flex-shrink-0 mt-1.5 w-1 h-1 rounded-full bg-gray-400" />
-          {item}
+          <span className="flex-1">{item}</span>
+          {onExplain && (
+            <button
+              onClick={() => onExplain(item)}
+              className="flex-shrink-0 text-[11px] text-gray-400 hover:text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity mt-0.5"
+              title="Ask the analyst to explain this"
+            >
+              Explain
+            </button>
+          )}
         </li>
       ))}
     </ul>
@@ -103,12 +112,12 @@ export function AnalystNotes({ explanation, chart, schema, allSchemas, onSuggest
     setAnalystChat(chartId, updater(getAnalystChat(chartId)))
   }, [getAnalystChat, setAnalystChat])
 
-  const handleSend = async () => {
-    const text = input.trim()
+  const handleSend = async (overrideText?: string) => {
+    const text = overrideText ?? input.trim()
     if (!text || loading || !chart || !schema) return
 
     updateMessages(chart.id, prev => [...prev, { role: 'user', content: text }])
-    setInput('')
+    if (!overrideText) setInput('')
     setLoading(true)
 
     try {
@@ -142,6 +151,10 @@ export function AnalystNotes({ explanation, chart, schema, allSchemas, onSuggest
     }
   }
 
+  const handleExplain = (insight: string) => {
+    handleSend(`Explain this insight in more detail: "${insight}"`)
+  }
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
@@ -173,7 +186,7 @@ export function AnalystNotes({ explanation, chart, schema, allSchemas, onSuggest
               </svg>
             }
           >
-            <BulletList items={notes.chartInsights} />
+            <BulletList items={notes.chartInsights} onExplain={chart ? handleExplain : undefined} />
           </Section>
 
           <Section
@@ -185,7 +198,7 @@ export function AnalystNotes({ explanation, chart, schema, allSchemas, onSuggest
               </svg>
             }
           >
-            <BulletList items={notes.dataInsights} />
+            <BulletList items={notes.dataInsights} onExplain={chart ? handleExplain : undefined} />
           </Section>
 
           <Section
@@ -271,7 +284,7 @@ export function AnalystNotes({ explanation, chart, schema, allSchemas, onSuggest
               disabled={loading || !schema}
             />
             <button
-              onClick={handleSend}
+              onClick={() => handleSend()}
               disabled={loading || !input.trim() || !schema}
               className="px-3 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
