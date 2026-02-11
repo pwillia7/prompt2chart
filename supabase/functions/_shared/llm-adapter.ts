@@ -100,7 +100,7 @@ const SYSTEM_PROMPT_D3 = `You are an expert D3.js visualization developer. Gener
    const innerWidth = width - margin.left - margin.right;
    const innerHeight = height - margin.top - margin.bottom;
    const g = svg.append('g').attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
-4. When using clip paths (for zoom/pan), clip a sub-group for data elements only — never clip g itself, or axis labels will be cut off. See the ZOOM AND PAN pattern below.
+4. When using clip paths (for zoom/pan), create a `chartArea` sub-group inside g with the clip path. Append ALL data elements to `chartArea` — never to g directly. See Critical Rule 10 and the ZOOM AND PAN pattern.
 5. DECLARATION ORDER: Any variable referenced inside a callback (brush, zoom, event handler) MUST be declared BEFORE that callback is defined. For linked/detail charts, create the detail SVG, groups, scales, and the updateDetail() function BEFORE defining the brush that calls them. Violating this causes "Cannot access 'X' before initialization" errors.
 6. MULTI-CHART HEIGHT: When creating multiple SVGs, you MUST resize the main svg first
    (see MULTI-CHART LAYOUT). Total height of all SVGs combined should not exceed ~650px.
@@ -112,6 +112,11 @@ const SYSTEM_PROMPT_D3 = `You are an expert D3.js visualization developer. Gener
 9. AVAILABLE MODULES: Only core D3.js v7 is available. Do NOT use external D3 plugins:
    d3.annotation, d3.legend, d3.tip, d3.hexbin, d3.cloud, d3.sankey, d3.geoProjection, etc.
    For annotations use plain SVG (see ANNOTATIONS section). For legends use HTML (see LEGENDS section).
+10. ZOOM RENDERING: When adding zoom/pan, create the clip-path sub-group (chartArea) FIRST,
+    then append ALL data elements to chartArea — never to g directly. Store selections in
+    variables (e.g. var points = chartArea.selectAll(...).data(...).enter().append(...)).
+    The zoom callback must REPOSITION existing elements (points.attr('cx', ...)) —
+    NEVER use .enter().append() inside the zoom handler or you will create duplicate elements.
 
 ## Data Safety
 - Always filter out null/invalid values before using them in scales:
@@ -160,6 +165,9 @@ HOVER EFFECTS - use function() not arrow functions for 'this':
    })
 
 ZOOM AND PAN (semantic zoom — use ONLY when brush/selection is NOT needed):
+   // IMPORTANT: Set up clip path and chartArea BEFORE creating data elements.
+   // All data elements go in chartArea. If you put them in g, they won't be clipped.
+
    // Save original scale copies for reset
    var xScale0 = xScale.copy();
    var yScale0 = yScale.copy();
@@ -174,7 +182,16 @@ ZOOM AND PAN (semantic zoom — use ONLY when brush/selection is NOT needed):
      .attr('height', innerHeight);
    var chartArea = g.append('g')
      .attr('clip-path', 'url(#' + clipId + ')');
-   // Append data elements (points, lines, bars) to chartArea, NOT to g.
+
+   // Append ALL data elements (circles, paths, rects) to chartArea — NOT to g.
+   // Store them in a variable so the zoom handler can reposition them.
+   var points = chartArea.selectAll('circle')
+     .data(cleanData).enter().append('circle')
+     .attr('cx', function(d) { return xScale(d['xValue']); })
+     .attr('cy', function(d) { return yScale(d['yValue']); })
+     .attr('r', 5)
+     .attr('fill', function(d) { return color(d['cat']); });
+
    // Append axes to g directly (they stay unclipped).
 
    // Prevent browser from intercepting gestures (needed for touch panning)
@@ -191,7 +208,7 @@ ZOOM AND PAN (semantic zoom — use ONLY when brush/selection is NOT needed):
        // Update axes (in g, not clipped)
        xAxisGroup.call(d3.axisBottom(newX));
        yAxisGroup.call(d3.axisLeft(newY));
-       // Reposition data elements (in chartArea, clipped)
+       // REPOSITION existing elements — do NOT create new ones here
        points
          .attr('cx', function(d) { return newX(d['xValue']); })
          .attr('cy', function(d) { return newY(d['yValue']); });
@@ -475,6 +492,7 @@ When given existing code to modify:
 5. Keep the same coding style and patterns as the existing code
 6. If adding a new feature that conflicts with an existing one, integrate them rather than replacing
 7. CRITICAL: When adding brush/selection to a chart that has zoom/pan, you MUST replace the existing zoom setup with the full BRUSHING / SELECTION pattern above. This adds the Pan/Select toggle toolbar, zoom filter, and zoom-aware brush scales. Never add d3.brush() alongside d3.zoom() without the mode toggle — they will conflict on drag events.
+8. When adding zoom to an existing chart, you MUST move all data elements into a clipped `chartArea` sub-group. Remove the original element creation from g and recreate them in chartArea. Do NOT leave elements in g — this creates duplicate, unclipped data points.
 
 Respond with a JSON object containing:
 - chartType: the chart type (bar, line, scatter, area, pie, donut, treemap, force, etc.)
