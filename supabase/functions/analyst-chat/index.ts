@@ -1,6 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { getAuthenticatedUser, AuthError, checkRateLimit, logUsageEvent } from '../_shared/auth.ts'
+import { useCredits, InsufficientCreditsError } from '../_shared/credits.ts'
 import { analystChatWithRetry, ChatMessage, DatasetSchema, ChartLibrary, AllSchemaEntry } from '../_shared/llm-adapter.ts'
 
 interface AnalystChatRequest {
@@ -104,6 +105,9 @@ serve(async (req) => {
       )
     }
 
+    // Credit check
+    await useCredits(user.id, 'analyst-chat')
+
     const systemPrompt = buildSystemPrompt(schema, chartLibrary, chartCode, vegaSpec, explanation, allSchemas)
 
     // Truncate conversation history to last N messages to control token usage
@@ -128,6 +132,13 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ error: error.message }),
         { status: error.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    if (error instanceof InsufficientCreditsError) {
+      return new Response(
+        JSON.stringify({ error: error.message, creditsRemaining: error.remaining }),
+        { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 

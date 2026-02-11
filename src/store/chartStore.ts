@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { supabase } from '../lib/supabase'
 import { Chart, ChartLibrary, VegaLiteSpec, ConversationMessage, ChartEditHistory, DatasetSchema, ChartGenerationResponse } from '../types'
+import { useBillingStore } from './billingStore'
 
 export interface AllSchemaEntry {
   datasetId: string
@@ -83,9 +84,26 @@ export const useChartStore = create<ChartState>((set, get) => ({
         },
       })
 
-      if (fnError) throw fnError
+      if (fnError) {
+        // Try to extract a meaningful error message from the edge function response
+        try {
+          const body = await (fnError as any).context?.json?.()
+          if (body?.creditsRemaining !== undefined) {
+            useBillingStore.getState().setCredits(body.creditsRemaining)
+          }
+          if (body?.error) throw new Error(body.error)
+        } catch (e) {
+          if (e instanceof Error && e.message !== (fnError as Error).message) throw e
+        }
+        throw fnError
+      }
 
-      const response = responseData as ChartGenerationResponse
+      const response = responseData as ChartGenerationResponse & { creditsRemaining?: number }
+
+      // Update credit balance from response
+      if (response.creditsRemaining !== undefined) {
+        useBillingStore.getState().setCredits(response.creditsRemaining)
+      }
       const isD3 = response.library === 'd3' || library === 'd3'
 
       // Build insert payload based on library
@@ -95,7 +113,10 @@ export const useChartStore = create<ChartState>((set, get) => ({
         prompt,
         chart_library: isD3 ? 'd3' : 'vega-lite',
         explanation: response.reasoning,
-        parent_chart_id: parentChartId || null,
+      }
+
+      if (parentChartId) {
+        insertPayload.parent_chart_id = parentChartId
       }
 
       if (isD3) {

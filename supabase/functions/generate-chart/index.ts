@@ -1,6 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { getAuthenticatedUser, AuthError, checkRateLimit, logUsageEvent } from '../_shared/auth.ts'
+import { useCredits, InsufficientCreditsError } from '../_shared/credits.ts'
 import { generateChartWithRetry, DatasetSchema, ChartLibrary, AllSchemaEntry } from '../_shared/llm-adapter.ts'
 
 interface GenerateChartRequest {
@@ -60,6 +61,11 @@ serve(async (req) => {
       )
     }
 
+    // Credit check (deduct before LLM call)
+    const creditsRemaining = await useCredits(user.id, 'generate-chart', {
+      library: library || 'vega-lite',
+    })
+
     const response = await generateChartWithRetry(
       prompt,
       schema,
@@ -76,7 +82,7 @@ serve(async (req) => {
     })
 
     return new Response(
-      JSON.stringify(response),
+      JSON.stringify({ ...response, creditsRemaining }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error) {
@@ -84,6 +90,13 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ error: error.message }),
         { status: error.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    if (error instanceof InsufficientCreditsError) {
+      return new Response(
+        JSON.stringify({ error: error.message, creditsRemaining: error.remaining }),
+        { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
