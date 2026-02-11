@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Layout } from '../components/layout/Layout'
 import { DatasetUploader } from '../components/datasets/DatasetUploader'
@@ -186,8 +186,17 @@ export function ProjectPage() {
     }
   }
 
+  const autoRetryCountRef = useRef(0)
+  const lastGeneratedIdRef = useRef<string | null>(null)
+  const isAutoRetryRef = useRef(false)
+
   const handleGenerateChart = async (prompt: string, libraryOverride?: ChartLibrary) => {
     if (!projectId || !currentDataset || !parsedData) return
+
+    if (!isAutoRetryRef.current) {
+      autoRetryCountRef.current = 0
+    }
+    isAutoRetryRef.current = false
 
     trackUsage({ eventType: 'chart_generation', metadata: { projectId } })
 
@@ -203,7 +212,7 @@ export function ProjectPage() {
 
     const library = libraryOverride ?? (currentChart ? currentChart.chart_library : selectedLibrary)
 
-    await generateChart({
+    const chart = await generateChart({
       projectId,
       datasetId: currentDataset.id,
       prompt,
@@ -213,6 +222,9 @@ export function ProjectPage() {
       allSchemas,
       parentChartId: currentChart?.id ?? null,
     })
+    if (chart) {
+      lastGeneratedIdRef.current = chart.id
+    }
   }
 
   const handleStartNewChart = () => {
@@ -223,6 +235,19 @@ export function ProjectPage() {
     if (library) setSelectedLibrary(library)
     handleGenerateChart(prompt, library)
   }
+
+  const handleRenderError = useCallback((errorMsg: string) => {
+    if (!currentChart) return
+    if (currentChart.id !== lastGeneratedIdRef.current) return
+    if (autoRetryCountRef.current >= 2) return
+    if (generating) return
+
+    autoRetryCountRef.current++
+    isAutoRetryRef.current = true
+    handleGenerateChart(
+      currentChart.prompt + `\n\nIMPORTANT: The previous code failed with this rendering error: "${errorMsg}". Fix the code to resolve this error.`,
+    )
+  }, [currentChart, generating])
 
   if (projectLoading && !currentProject) {
     return (
@@ -378,7 +403,7 @@ export function ProjectPage() {
                     </div>
                   </div>
                   {currentChart.chart_library === 'd3' && currentChart.d3_code && renderData ? (
-                    <D3ChartRenderer ref={d3Ref} code={currentChart.d3_code} data={renderData} onRetry={() => handleGenerateChart(currentChart.prompt)} />
+                    <D3ChartRenderer ref={d3Ref} code={currentChart.d3_code} data={renderData} onRetry={() => handleGenerateChart(currentChart.prompt)} onRenderError={handleRenderError} />
                   ) : currentChart.vega_spec_json ? (
                     <ChartRenderer ref={vegaRef} spec={currentChart.vega_spec_json} data={renderData ?? undefined} />
                   ) : (
