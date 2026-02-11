@@ -8,23 +8,43 @@ interface AnalystChatRequest {
   chartLibrary: ChartLibrary
   chartCode?: string
   vegaSpec?: string
+  explanation?: string
   conversationHistory: { role: 'user' | 'assistant'; content: string }[]
   allSchemas?: AllSchemaEntry[]
 }
 
-function buildSystemPrompt(schema: DatasetSchema, chartLibrary: ChartLibrary, chartCode?: string, vegaSpec?: string, allSchemas?: AllSchemaEntry[]): string {
+function buildSystemPrompt(schema: DatasetSchema, chartLibrary: ChartLibrary, chartCode?: string, vegaSpec?: string, explanation?: string, allSchemas?: AllSchemaEntry[]): string {
   const cols = schema.columns.map(c => `${c.name} (${c.type})`).join(', ')
 
-  let prompt = `You are a senior data analyst. The user is looking at a ${chartLibrary === 'd3' ? 'D3.js' : 'Vega-Lite'} chart built from their dataset.
+  let prompt = `You are the senior data analyst who built and analyzed this ${chartLibrary === 'd3' ? 'D3.js' : 'Vega-Lite'} chart. The user is your stakeholder reviewing the chart you created.
 
 Dataset: ${schema.rowCount} rows with columns: ${cols}
 
 `
 
   if (chartCode) {
-    prompt += `Current chart code:\n${chartCode}\n\n`
+    prompt += `Chart code you wrote:\n${chartCode}\n\n`
   } else if (vegaSpec) {
-    prompt += `Current Vega-Lite spec:\n${vegaSpec}\n\n`
+    prompt += `Vega-Lite spec you wrote:\n${vegaSpec}\n\n`
+  }
+
+  if (explanation) {
+    try {
+      const parsed = JSON.parse(explanation)
+      if (parsed.chartInsights || parsed.dataInsights) {
+        prompt += `Your analysis notes on this chart:\n`
+        if (parsed.chartInsights?.length) {
+          prompt += `  Chart insights: ${parsed.chartInsights.join('; ')}\n`
+        }
+        if (parsed.dataInsights?.length) {
+          prompt += `  Data insights: ${parsed.dataInsights.join('; ')}\n`
+        }
+        prompt += `\n`
+      }
+    } catch {
+      // not JSON, include as-is
+      prompt += `Your analysis notes: ${explanation}\n\n`
+    }
   }
 
   if (allSchemas && allSchemas.length > 1) {
@@ -39,7 +59,7 @@ Dataset: ${schema.rowCount} rows with columns: ${cols}
     }
   }
 
-  prompt += `Answer questions about patterns, suggest improvements, explain statistical concepts. Be concise — use short paragraphs and bullet lists. Reference actual column names.`
+  prompt += `When the user asks you to explain an insight, expand authoritatively on YOUR prior analysis — you wrote it, so own it. Reference specific columns, values, and patterns from the data. Be concise — use short paragraphs and bullet lists.`
 
   return prompt
 }
@@ -50,7 +70,7 @@ serve(async (req) => {
   }
 
   try {
-    const { message, schema, chartLibrary, chartCode, vegaSpec, conversationHistory, allSchemas } = await req.json() as AnalystChatRequest
+    const { message, schema, chartLibrary, chartCode, vegaSpec, explanation, conversationHistory, allSchemas } = await req.json() as AnalystChatRequest
 
     if (!message || !schema) {
       return new Response(
@@ -59,7 +79,7 @@ serve(async (req) => {
       )
     }
 
-    const systemPrompt = buildSystemPrompt(schema, chartLibrary, chartCode, vegaSpec, allSchemas)
+    const systemPrompt = buildSystemPrompt(schema, chartLibrary, chartCode, vegaSpec, explanation, allSchemas)
 
     const messages: ChatMessage[] = [
       ...conversationHistory.map(m => ({ role: m.role, content: m.content })),

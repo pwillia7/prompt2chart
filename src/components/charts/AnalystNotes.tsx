@@ -136,6 +136,7 @@ export function AnalystNotes({ explanation, chart, schema, allSchemas, onSuggest
           vegaSpec: chart.vega_spec_json
             ? JSON.stringify((() => { const { data: _, ...rest } = chart.vega_spec_json!; return rest })())
             : undefined,
+          explanation: chart.explanation ?? undefined,
           conversationHistory,
           allSchemas,
         },
@@ -151,8 +152,9 @@ export function AnalystNotes({ explanation, chart, schema, allSchemas, onSuggest
     }
   }
 
-  const handleExplain = (insight: string) => {
-    handleSend(`Explain this insight in more detail: "${insight}"`)
+  const handleExplain = (insight: string, section: 'chart' | 'data') => {
+    const label = section === 'chart' ? 'chart insight' : 'data insight'
+    handleSend(`You noted this ${label}: "${insight}" — walk me through what you found and why it matters.`)
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -186,7 +188,7 @@ export function AnalystNotes({ explanation, chart, schema, allSchemas, onSuggest
               </svg>
             }
           >
-            <BulletList items={notes.chartInsights} onExplain={chart ? handleExplain : undefined} />
+            <BulletList items={notes.chartInsights} onExplain={chart ? (item) => handleExplain(item, 'chart') : undefined} />
           </Section>
 
           <Section
@@ -198,7 +200,7 @@ export function AnalystNotes({ explanation, chart, schema, allSchemas, onSuggest
               </svg>
             }
           >
-            <BulletList items={notes.dataInsights} onExplain={chart ? handleExplain : undefined} />
+            <BulletList items={notes.dataInsights} onExplain={chart ? (item) => handleExplain(item, 'data') : undefined} />
           </Section>
 
           <Section
