@@ -6,7 +6,7 @@ export function LoginPage() {
   const { user } = useAuthStore()
 
   if (user) {
-    return <Navigate to="/" replace />
+    return <Navigate to="/dashboard" replace />
   }
 
   return (

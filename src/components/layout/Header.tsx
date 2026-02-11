@@ -9,7 +9,7 @@ export function Header() {
     <header className="bg-white border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <Link to="/" className="flex items-center gap-2">
+          <Link to="/dashboard" className="flex items-center gap-2">
             <svg className="w-8 h-8" viewBox="0 0 100 100">
               <rect x="10" y="60" width="15" height="30" fill="#0ea5e9"/>
               <rect x="30" y="40" width="15" height="50" fill="#38bdf8"/>

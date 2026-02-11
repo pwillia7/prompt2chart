@@ -264,7 +264,7 @@ export function ProjectPage() {
       <Layout>
         <div className="text-center py-12">
           <h2 className="text-xl font-semibold text-gray-900">Project not found</h2>
-          <Button variant="secondary" className="mt-4" onClick={() => navigate('/')}>
+          <Button variant="secondary" className="mt-4" onClick={() => navigate('/dashboard')}>
             Back to Dashboard
           </Button>
         </div>
@@ -276,7 +276,7 @@ export function ProjectPage() {
     <Layout>
       <div className="mb-6">
         <button
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/dashboard')}
           className="flex items-center text-gray-600 hover:text-gray-900 mb-4"
         >
           <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
