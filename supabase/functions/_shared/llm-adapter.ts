@@ -345,8 +345,8 @@ MULTI-CHART LAYOUT (linked or secondary charts below the main SVG):
    // references them. Otherwise you get "Cannot access 'detailG' before initialization".
    //
    // Correct order:
-   //   1. Resize the main SVG (step below)
-   //   2. Create scales & axes for the main chart
+   //   1. Resize the main SVG and recalculate innerHeight
+   //   2. Create g, scales, axes for the main chart (Critical Rule 3 still applies!)
    //   3. Create the detail SVG, detailG, detail scales (all with unique names)
    //   4. Define updateDetail() function
    //   5. Create the brush (whose callback calls updateDetail)
@@ -355,12 +355,18 @@ MULTI-CHART LAYOUT (linked or secondary charts below the main SVG):
    // HEIGHT BUDGET: Total height of all SVGs should be ~650px max.
    //   2 charts → main 350 + detail 280 = 630
    //   3 charts → main 280 + second 200 + third 150 = 630
-   // Resize the MAIN svg first — do NOT leave it at 450 and stack more below:
+
+   // Step 1: Resize the MAIN svg — do NOT leave it at 450 and stack more below:
    var mainHeight = 350;  // shrink from default 450
    svg.attr('height', mainHeight)
       .attr('viewBox', '0 0 ' + width + ' ' + mainHeight);
    var innerHeight = mainHeight - margin.top - margin.bottom;  // recalculate!
 
+   // Step 2: Create g group and main chart scales (same as Critical Rule 3):
+   var g = svg.append('g').attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+   // ... create xScale, yScale, axes, etc. for the main chart ...
+
+   // Step 3: Create the detail chart with UNIQUE variable names.
    // The container div grows vertically to fit. Append additional SVGs to container.
    var detailHeight = 280;
    var detailMargin = { top: 30, right: 40, bottom: 50, left: 60 };
