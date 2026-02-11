@@ -50,7 +50,25 @@ export const D3ChartRenderer = forwardRef<D3ChartHandle, D3ChartRendererProps>(f
       const height = 450
       const margin = { top: 40, right: 40, bottom: 60, left: 60 }
 
-      const svg = d3.select(container)
+      // Wrap d3 in a Proxy to catch access to unavailable plugins
+      // and give clear errors instead of "Cannot read properties of undefined"
+      const UNAVAILABLE_PLUGINS = new Set([
+        'annotation', 'legend', 'tip', 'hexbin', 'cloud',
+        'sankey', 'geoProjection', 'tile', 'contour',
+      ])
+      const d3Safe = new Proxy(d3, {
+        get(target, prop) {
+          if (typeof prop === 'string' && UNAVAILABLE_PLUGINS.has(prop)) {
+            throw new Error(
+              `d3.${prop}() is not available — only core D3.js v7 is included. ` +
+              'Use plain SVG for annotations and HTML for legends.',
+            )
+          }
+          return (target as Record<string | symbol, unknown>)[prop]
+        },
+      })
+
+      const svg = d3Safe.select(container)
         .append('svg')
         .attr('width', width)
         .attr('height', height)
@@ -79,7 +97,7 @@ export const D3ChartRenderer = forwardRef<D3ChartHandle, D3ChartRendererProps>(f
       // Clone data to prevent generated code from mutating shared state
       const safeData = structuredClone(data)
 
-      renderChart(d3, svg, safeData, width, height, margin, d3.select(container))
+      renderChart(d3Safe, svg, safeData, width, height, margin, d3Safe.select(container))
 
       // Prevent brush/zoom drag conflict: stop mousedown on brush overlays
       // from bubbling to the SVG where d3.zoom would capture them.

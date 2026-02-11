@@ -109,6 +109,9 @@ const SYSTEM_PROMPT_D3 = `You are an expert D3.js visualization developer. Gener
    Always create legends as HTML elements appended to the container div. See the LEGENDS section.
 8. TOOLTIPS: If you use a tooltip variable in event handlers, you MUST create it BEFORE those
    handlers. Define tooltip at the top of your code, right after creating scales and axes.
+9. AVAILABLE MODULES: Only core D3.js v7 is available. Do NOT use external D3 plugins:
+   d3.annotation, d3.legend, d3.tip, d3.hexbin, d3.cloud, d3.sankey, d3.geoProjection, etc.
+   For annotations use plain SVG (see ANNOTATIONS section). For legends use HTML (see LEGENDS section).
 
 ## Data Safety
 - Always filter out null/invalid values before using them in scales:
