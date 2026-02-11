@@ -561,10 +561,12 @@ Respond with a JSON object:
 class OpenAIProvider implements LLMProvider {
   private apiKey: string
   private model: string
+  private chatModel: string
 
   constructor() {
     this.apiKey = Deno.env.get('OPENAI_API_KEY') || ''
-    this.model = 'gpt-4o'
+    this.model = Deno.env.get('OPENAI_MODEL') || 'gpt-4o'
+    this.chatModel = Deno.env.get('OPENAI_CHAT_MODEL') || 'gpt-4o-mini'
   }
 
   async generateChart(prompt: string, schema: DatasetSchema, library: ChartLibrary, existingCode?: string, allSchemas?: AllSchemaEntry[]): Promise<ChartResponse> {
@@ -597,34 +599,50 @@ class OpenAIProvider implements LLMProvider {
       { role: 'system', content: systemPrompt },
       ...messages.map(m => ({ role: m.role, content: m.content })),
     ]
-    return this.callAPI(apiMessages, false)
+    return this.callAPI(apiMessages, false, this.chatModel, 1024, 0.5)
   }
 
-  private async callAPI(messages: { role: string; content: string }[], jsonMode = true): Promise<string> {
+  private async callAPI(
+    messages: { role: string; content: string }[],
+    jsonMode = true,
+    model?: string,
+    maxTokens = 4096,
+    temperature = 0.3,
+  ): Promise<string> {
     const body: Record<string, unknown> = {
-      model: this.model,
+      model: model || this.model,
       messages,
-      temperature: 0.3,
+      temperature,
+      max_tokens: maxTokens,
     }
     if (jsonMode) {
       body.response_format = { type: 'json_object' }
     }
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-    })
 
-    if (!response.ok) {
-      const error = await response.text()
-      throw new Error(`OpenAI API error: ${error}`)
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 45_000)
+
+    try {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      })
+
+      if (!response.ok) {
+        const error = await response.text()
+        throw new Error(`OpenAI API error: ${error}`)
+      }
+
+      const data = await response.json()
+      return data.choices[0].message.content
+    } finally {
+      clearTimeout(timeout)
     }
-
-    const data = await response.json()
-    return data.choices[0].message.content
   }
 
   private buildChartPrompt(prompt: string, schema: DatasetSchema, library: ChartLibrary, existingCode?: string, allSchemas?: AllSchemaEntry[]): string {
@@ -719,10 +737,12 @@ ${existingCode}`
 class AnthropicProvider implements LLMProvider {
   private apiKey: string
   private model: string
+  private chatModel: string
 
   constructor() {
     this.apiKey = Deno.env.get('ANTHROPIC_API_KEY') || ''
-    this.model = 'claude-3-5-sonnet-20241022'
+    this.model = Deno.env.get('ANTHROPIC_MODEL') || 'claude-sonnet-4-5-20250929'
+    this.chatModel = Deno.env.get('ANTHROPIC_CHAT_MODEL') || 'claude-haiku-4-5-20251001'
   }
 
   async generateChart(prompt: string, schema: DatasetSchema, library: ChartLibrary, existingCode?: string, allSchemas?: AllSchemaEntry[]): Promise<ChartResponse> {
@@ -743,67 +763,90 @@ class AnthropicProvider implements LLMProvider {
   }
 
   async analystChat(systemPrompt: string, messages: ChatMessage[]): Promise<string> {
-    return this.callAPIMessages(systemPrompt, messages)
+    return this.callAPIMessages(systemPrompt, messages, this.chatModel, 1024, 0.5)
   }
 
-  private async callAPIMessages(systemPrompt: string, messages: ChatMessage[]): Promise<string> {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key': this.apiKey,
-        'anthropic-version': '2023-06-01',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: this.model,
-        max_tokens: 2048,
-        system: systemPrompt,
-        messages: messages.map(m => ({ role: m.role, content: m.content })),
-      }),
-    })
+  private async callAPIMessages(
+    systemPrompt: string,
+    messages: ChatMessage[],
+    model?: string,
+    maxTokens = 2048,
+    temperature = 0.3,
+  ): Promise<string> {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 45_000)
 
-    if (!response.ok) {
-      const error = await response.text()
-      throw new Error(`Anthropic API error: ${error}`)
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'x-api-key': this.apiKey,
+          'anthropic-version': '2023-06-01',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: model || this.model,
+          max_tokens: maxTokens,
+          temperature,
+          system: systemPrompt,
+          messages: messages.map(m => ({ role: m.role, content: m.content })),
+        }),
+        signal: controller.signal,
+      })
+
+      if (!response.ok) {
+        const error = await response.text()
+        throw new Error(`Anthropic API error: ${error}`)
+      }
+
+      const data = await response.json()
+      const content = data.content[0]
+      if (content.type !== 'text') {
+        throw new Error('Unexpected response type from Anthropic')
+      }
+
+      return content.text
+    } finally {
+      clearTimeout(timeout)
     }
-
-    const data = await response.json()
-    const content = data.content[0]
-    if (content.type !== 'text') {
-      throw new Error('Unexpected response type from Anthropic')
-    }
-
-    return content.text
   }
 
   private async callAPI(systemPrompt: string, userMessage: string): Promise<string> {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key': this.apiKey,
-        'anthropic-version': '2023-06-01',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: this.model,
-        max_tokens: 4096,
-        system: systemPrompt + '\n\nAlways respond with valid JSON.',
-        messages: [{ role: 'user', content: userMessage }],
-      }),
-    })
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 45_000)
 
-    if (!response.ok) {
-      const error = await response.text()
-      throw new Error(`Anthropic API error: ${error}`)
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'x-api-key': this.apiKey,
+          'anthropic-version': '2023-06-01',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: this.model,
+          max_tokens: 4096,
+          system: systemPrompt + '\n\nAlways respond with valid JSON.',
+          messages: [{ role: 'user', content: userMessage }],
+        }),
+        signal: controller.signal,
+      })
+
+      if (!response.ok) {
+        const error = await response.text()
+        throw new Error(`Anthropic API error: ${error}`)
+      }
+
+      const data = await response.json()
+      const content = data.content[0]
+      if (content.type !== 'text') {
+        throw new Error('Unexpected response type from Anthropic')
+      }
+
+      return content.text
+    } finally {
+      clearTimeout(timeout)
     }
-
-    const data = await response.json()
-    const content = data.content[0]
-    if (content.type !== 'text') {
-      throw new Error('Unexpected response type from Anthropic')
-    }
-
-    return content.text
   }
 
   private buildChartPrompt(prompt: string, schema: DatasetSchema, library: ChartLibrary, existingCode?: string, allSchemas?: AllSchemaEntry[]): string {
