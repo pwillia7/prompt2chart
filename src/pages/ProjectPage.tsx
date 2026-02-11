@@ -402,15 +402,25 @@ export function ProjectPage() {
                       </Button>
                     </div>
                   </div>
-                  {currentChart.chart_library === 'd3' && currentChart.d3_code && renderData ? (
-                    <D3ChartRenderer ref={d3Ref} code={currentChart.d3_code} data={renderData} onRetry={() => handleGenerateChart(currentChart.prompt)} onRenderError={handleRenderError} />
-                  ) : currentChart.vega_spec_json ? (
-                    <ChartRenderer ref={vegaRef} spec={currentChart.vega_spec_json} data={renderData ?? undefined} />
-                  ) : (
-                    <div className="p-8 text-center text-gray-500">
-                      Unable to render chart: missing data
-                    </div>
-                  )}
+                  <div className="relative">
+                    {currentChart.chart_library === 'd3' && currentChart.d3_code && renderData ? (
+                      <D3ChartRenderer ref={d3Ref} code={currentChart.d3_code} data={renderData} onRetry={() => handleGenerateChart(currentChart.prompt)} onRenderError={handleRenderError} />
+                    ) : currentChart.vega_spec_json ? (
+                      <ChartRenderer ref={vegaRef} spec={currentChart.vega_spec_json} data={renderData ?? undefined} />
+                    ) : (
+                      <div className="p-8 text-center text-gray-500">
+                        Unable to render chart: missing data
+                      </div>
+                    )}
+                    {generating && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-white/70 backdrop-blur-[1px] z-20 rounded-lg">
+                        <div className="flex flex-col items-center gap-2">
+                          <Spinner />
+                          <span className="text-sm text-gray-500 font-medium">Updating chart...</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                   {parsedData && renderData && parsedData.length > renderData.length && (
                     <p className="mt-2 text-xs text-gray-500 text-center">
                       Showing {renderData.length.toLocaleString()} of {parsedData.length.toLocaleString()} rows (sampled for performance)
@@ -420,16 +430,25 @@ export function ProjectPage() {
               </>
             )}
 
-            {/* Empty state */}
+            {/* Empty state / generating first chart */}
             {!currentChart && currentDataset && (
-              <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-                <h3 className="mt-2 text-sm font-medium text-gray-900">No chart selected</h3>
-                <p className="mt-1 text-sm text-gray-500">
-                  Enter a prompt below to generate a visualization
-                </p>
+              <div className="bg-white rounded-lg border border-gray-200 p-12 text-center relative">
+                {generating ? (
+                  <div className="flex flex-col items-center gap-3">
+                    <Spinner />
+                    <p className="text-sm text-gray-500 font-medium">Generating chart...</p>
+                  </div>
+                ) : (
+                  <>
+                    <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">No chart selected</h3>
+                    <p className="mt-1 text-sm text-gray-500">
+                      Enter a prompt below to generate a visualization
+                    </p>
+                  </>
+                )}
               </div>
             )}
 
