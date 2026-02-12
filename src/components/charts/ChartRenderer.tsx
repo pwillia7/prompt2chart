@@ -51,12 +51,7 @@ export const ChartRenderer = forwardRef<VegaChartHandle, ChartRendererProps>(fun
 
         // Try Vega-Lite first
         const result = await embed(containerRef.current, enhancedSpec as VisualizationSpec, {
-          actions: {
-            export: { svg: true, png: true },
-            source: false,
-            compiled: false,
-            editor: false,
-          },
+          actions: false,
           renderer: 'canvas',
         })
         viewRef.current = result.view
@@ -73,12 +68,7 @@ export const ChartRenderer = forwardRef<VegaChartHandle, ChartRendererProps>(fun
           if (!vegaSpec) throw vlError
 
           const fallbackResult = await embed(containerRef.current!, vegaSpec as VisualizationSpec, {
-            actions: {
-              export: { svg: true, png: true },
-              source: false,
-              compiled: false,
-              editor: false,
-            },
+            actions: false,
             renderer: 'canvas',
             mode: 'vega',
           })
