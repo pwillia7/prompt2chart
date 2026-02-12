@@ -20,8 +20,24 @@ export class InsufficientCreditsError extends Error {
 }
 
 /**
- * Check and deduct credits atomically. Throws InsufficientCreditsError if
+ * Check that a user has enough credits for an operation.
+ * Throws InsufficientCreditsError if not. Does NOT deduct.
+ */
+export async function checkCredits(
+  userId: string,
+  operation: CreditOperation,
+): Promise<void> {
+  const balance = await getCredits(userId)
+  const cost = CREDIT_COSTS[operation]
+  if (balance < cost) {
+    throw new InsufficientCreditsError(balance)
+  }
+}
+
+/**
+ * Deduct credits atomically. Throws InsufficientCreditsError if
  * the user doesn't have enough credits.
+ * Call this AFTER a successful operation, not before.
  */
 export async function useCredits(
   userId: string,

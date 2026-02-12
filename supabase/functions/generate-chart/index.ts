@@ -1,7 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { getAuthenticatedUser, AuthError, checkRateLimit, logUsageEvent } from '../_shared/auth.ts'
-import { useCredits, InsufficientCreditsError } from '../_shared/credits.ts'
+import { checkCredits, useCredits, InsufficientCreditsError } from '../_shared/credits.ts'
 import { generateChartWithRetry, DatasetSchema, ChartLibrary, AllSchemaEntry } from '../_shared/llm-adapter.ts'
 
 interface GenerateChartRequest {
@@ -61,10 +61,8 @@ serve(async (req) => {
       )
     }
 
-    // Credit check (deduct before LLM call)
-    const creditsRemaining = await useCredits(user.id, 'generate-chart', {
-      library: library || 'vega-lite',
-    })
+    // Credit check (verify balance, don't deduct yet)
+    await checkCredits(user.id, 'generate-chart')
 
     const response = await generateChartWithRetry(
       prompt,
@@ -73,6 +71,11 @@ serve(async (req) => {
       existingCode || undefined,
       allSchemas,
     )
+
+    // Deduct credits only after successful generation
+    const creditsRemaining = await useCredits(user.id, 'generate-chart', {
+      library: library || 'vega-lite',
+    })
 
     // Log usage
     await logUsageEvent(supabaseUrl, serviceRoleKey, user.id, 'chart_generation', {

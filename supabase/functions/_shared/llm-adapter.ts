@@ -114,9 +114,12 @@ const SYSTEM_PROMPT_D3 = `You are an expert D3.js visualization developer. Gener
    Always create legends as HTML elements appended to the container div. See the LEGENDS section.
 8. TOOLTIPS: If you use a tooltip variable in event handlers, you MUST create it BEFORE those
    handlers. Define tooltip at the top of your code, right after creating scales and axes.
-9. AVAILABLE MODULES: Only core D3.js v7 is available. Do NOT use external D3 plugins:
-   d3.annotation, d3.legend, d3.tip, d3.hexbin, d3.cloud, d3.sankey, d3.geoProjection, etc.
+9. AVAILABLE MODULES: ONLY the core D3.js v7 library is available — nothing else. Do NOT use:
+   - D3 plugins: d3.annotation, d3.legend, d3.tip, d3.hexbin, d3.cloud, d3.sankey, d3.geoProjection, etc.
+   - External libraries: simple-statistics (ss), regression, lodash, moment, etc.
+   - Any import/require statements — code runs in a sandboxed function with no module loader.
    For annotations use plain SVG (see ANNOTATIONS section). For legends use HTML (see LEGENDS section).
+   For trend/regression lines, compute them manually (e.g. least-squares with d3.mean and array math).
 10. ZOOM RENDERING: When adding zoom/pan, create the clip-path sub-group (chartArea) FIRST,
     then append ALL data elements to chartArea — never to g directly. Store selections in
     variables (e.g. var points = chartArea.selectAll(...).data(...).enter().append(...)).

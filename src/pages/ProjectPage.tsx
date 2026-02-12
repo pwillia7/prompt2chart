@@ -190,7 +190,7 @@ export function ProjectPage() {
   const lastGeneratedIdRef = useRef<string | null>(null)
   const isAutoRetryRef = useRef(false)
 
-  const handleGenerateChart = async (prompt: string, libraryOverride?: ChartLibrary) => {
+  const handleGenerateChart = async (prompt: string, libraryOverride?: ChartLibrary, fromScratch?: boolean) => {
     if (!projectId || !currentDataset || !parsedData) return
 
     if (!isAutoRetryRef.current) {
@@ -201,7 +201,7 @@ export function ProjectPage() {
     trackUsage({ eventType: 'chart_generation', metadata: { projectId } })
 
     let existingCode: string | undefined
-    if (currentChart) {
+    if (currentChart && !fromScratch) {
       if (currentChart.chart_library === 'd3' && currentChart.d3_code) {
         existingCode = currentChart.d3_code
       } else if (currentChart.chart_library === 'vega-lite' && currentChart.vega_spec_json) {
@@ -245,7 +245,9 @@ export function ProjectPage() {
     autoRetryCountRef.current++
     isAutoRetryRef.current = true
     handleGenerateChart(
-      currentChart.prompt + `\n\nIMPORTANT: The previous code failed with this rendering error: "${errorMsg}". Fix the code to resolve this error.`,
+      currentChart.prompt + `\n\nIMPORTANT: The previous code failed with this rendering error: "${errorMsg}". Generate completely new code that avoids this error.`,
+      undefined,
+      true, // fromScratch — don't pass broken code as existingCode
     )
   }, [currentChart, generating])
 
@@ -404,7 +406,7 @@ export function ProjectPage() {
                   </div>
                   <div className="relative">
                     {currentChart.chart_library === 'd3' && currentChart.d3_code && renderData ? (
-                      <D3ChartRenderer ref={d3Ref} code={currentChart.d3_code} data={renderData} onRetry={() => handleGenerateChart(currentChart.prompt)} onRenderError={handleRenderError} />
+                      <D3ChartRenderer ref={d3Ref} code={currentChart.d3_code} data={renderData} onRetry={() => handleGenerateChart(currentChart.prompt, undefined, true)} onRenderError={handleRenderError} />
                     ) : currentChart.vega_spec_json ? (
                       <ChartRenderer ref={vegaRef} spec={currentChart.vega_spec_json} data={renderData ?? undefined} />
                     ) : (

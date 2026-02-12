@@ -1,7 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { getAuthenticatedUser, AuthError, checkRateLimit, logUsageEvent } from '../_shared/auth.ts'
-import { useCredits, InsufficientCreditsError } from '../_shared/credits.ts'
+import { checkCredits, useCredits, InsufficientCreditsError } from '../_shared/credits.ts'
 import { analystChatWithRetry, ChatMessage, DatasetSchema, ChartLibrary, AllSchemaEntry } from '../_shared/llm-adapter.ts'
 
 interface AnalystChatRequest {
@@ -105,8 +105,8 @@ serve(async (req) => {
       )
     }
 
-    // Credit check
-    await useCredits(user.id, 'analyst-chat')
+    // Credit check (verify balance, don't deduct yet)
+    await checkCredits(user.id, 'analyst-chat')
 
     const systemPrompt = buildSystemPrompt(schema, chartLibrary, chartCode, vegaSpec, explanation, allSchemas)
 
@@ -119,6 +119,9 @@ serve(async (req) => {
     ]
 
     const reply = await analystChatWithRetry(systemPrompt, messages)
+
+    // Deduct credits only after successful response
+    await useCredits(user.id, 'analyst-chat')
 
     // Log usage
     await logUsageEvent(supabaseUrl, serviceRoleKey, user.id, 'analyst_chat')

@@ -1,7 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { getAuthenticatedUser, AuthError, checkRateLimit, logUsageEvent } from '../_shared/auth.ts'
-import { useCredits, InsufficientCreditsError } from '../_shared/credits.ts'
+import { checkCredits, useCredits, InsufficientCreditsError } from '../_shared/credits.ts'
 import { suggestInsightsWithRetry, DatasetSchema, AllSchemaEntry } from '../_shared/llm-adapter.ts'
 
 interface SuggestInsightsRequest {
@@ -40,10 +40,13 @@ serve(async (req) => {
       )
     }
 
-    // Credit check
-    await useCredits(user.id, 'suggest-insights')
+    // Credit check (verify balance, don't deduct yet)
+    await checkCredits(user.id, 'suggest-insights')
 
     const suggestions = await suggestInsightsWithRetry(schema, allSchemas)
+
+    // Deduct credits only after successful generation
+    await useCredits(user.id, 'suggest-insights')
 
     // Log usage
     await logUsageEvent(supabaseUrl, serviceRoleKey, user.id, 'suggest_insights')
