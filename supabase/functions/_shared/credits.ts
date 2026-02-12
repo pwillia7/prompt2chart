@@ -1,9 +1,8 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'
 
-// Credit costs per operation
+// Credit costs per operation (suggest-insights is free)
 export const CREDIT_COSTS = {
   'generate-chart': 1,
-  'suggest-insights': 1,
   'analyst-chat': 1,
 } as const
 
