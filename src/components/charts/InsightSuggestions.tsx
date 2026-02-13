@@ -65,7 +65,7 @@ export function InsightSuggestions({ datasetId, schema, allSchemas, onSelectSugg
 
   if (loading && suggestions.length === 0) {
     return (
-      <div className="flex items-center gap-2 text-sm text-gray-500">
+      <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
         <Spinner size="sm" />
         <span>Generating visualization suggestions...</span>
       </div>
@@ -74,7 +74,7 @@ export function InsightSuggestions({ datasetId, schema, allSchemas, onSelectSugg
 
   if (error) {
     return (
-      <div className="text-sm text-amber-600">
+      <div className="text-sm text-amber-400">
         Could not generate suggestions: {error}
       </div>
     )
@@ -86,7 +86,7 @@ export function InsightSuggestions({ datasetId, schema, allSchemas, onSelectSugg
 
   return (
     <div className="space-y-3">
-      <h4 className="text-sm font-medium text-gray-700">Suggested Visualizations</h4>
+      <h4 className="text-sm font-medium text-[var(--text-muted)]">Suggested Visualizations</h4>
       <div className="flex flex-wrap gap-2">
         {visibleSuggestions.map((suggestion, idx) => (
           <Button
@@ -101,10 +101,10 @@ export function InsightSuggestions({ datasetId, schema, allSchemas, onSelectSugg
               <ChartTypeIcon type={suggestion.chartType} />
               <span>{suggestion.description}</span>
               {suggestion.library && (
-                <span className={`px-1.5 py-0.5 text-xs rounded ${
+                <span className={`px-1.5 py-0.5 text-xs rounded-pill ${
                   suggestion.library === 'd3'
-                    ? 'bg-orange-100 text-orange-600'
-                    : 'bg-blue-100 text-blue-600'
+                    ? 'bg-orange-500/15 text-orange-400'
+                    : 'bg-blue-500/15 text-blue-400'
                 }`}>
                   {suggestion.library === 'd3' ? 'D3' : 'VL'}
                 </span>
@@ -115,7 +115,7 @@ export function InsightSuggestions({ datasetId, schema, allSchemas, onSelectSugg
         {hasMore && !expanded && (
           <button
             onClick={() => setExpanded(true)}
-            className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1"
+            className="text-xs text-[var(--text-subtle)] hover:text-[var(--text-muted)] px-2 py-1 transition-colors duration-fast"
           >
             Show {suggestions.length - INITIAL_VISIBLE} more...
           </button>

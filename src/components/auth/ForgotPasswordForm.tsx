@@ -25,14 +25,14 @@ export function ForgotPasswordForm() {
   if (sent) {
     return (
       <div className="text-center">
-        <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <p className="text-green-800">
+        <div className="mb-4 p-4 bg-[var(--accent)]/10 border border-[var(--accent)]/20 rounded-card">
+          <p className="text-green-400">
             If an account exists with that email, you'll receive a password reset link shortly.
           </p>
         </div>
         <Link
           to="/login"
-          className="text-primary-600 hover:text-primary-700 font-medium text-sm"
+          className="text-[var(--primary)] hover:text-primary-400 font-medium text-sm"
         >
           Back to login
         </Link>
@@ -43,12 +43,12 @@ export function ForgotPasswordForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {error && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+        <div className="p-3 bg-[var(--danger)]/10 border border-[var(--danger)]/20 rounded-[10px] text-red-400 text-sm">
           {error}
         </div>
       )}
 
-      <p className="text-sm text-gray-600">
+      <p className="text-sm text-[var(--text-muted)]">
         Enter your email address and we'll send you a link to reset your password.
       </p>
 
@@ -65,8 +65,8 @@ export function ForgotPasswordForm() {
         Send Reset Link
       </Button>
 
-      <p className="text-center text-sm text-gray-600">
-        <Link to="/login" className="text-primary-600 hover:text-primary-700 font-medium">
+      <p className="text-center text-sm text-[var(--text-muted)]">
+        <Link to="/login" className="text-[var(--primary)] hover:text-primary-400 font-medium">
           Back to login
         </Link>
       </p>

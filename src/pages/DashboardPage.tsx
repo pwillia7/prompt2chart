@@ -27,10 +27,10 @@ export function DashboardPage() {
   return (
     <Layout>
       {checkoutMessage && (
-        <div className={`mb-6 p-4 rounded-lg border text-sm ${
+        <div className={`mb-6 p-4 rounded-card border text-sm ${
           checkoutMessage.includes('successful')
-            ? 'bg-green-50 border-green-200 text-green-800'
-            : 'bg-gray-50 border-gray-200 text-gray-700'
+            ? 'bg-[var(--accent)]/10 border-[var(--accent)]/20 text-green-400'
+            : 'bg-[var(--surface-1)] border-[var(--border)] text-[var(--text-muted)]'
         }`}>
           {checkoutMessage}
           <button
@@ -44,8 +44,8 @@ export function DashboardPage() {
 
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Your Projects</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-2xl font-semibold text-[var(--text)]">Your Projects</h1>
+          <p className="text-[var(--text-muted)] mt-1">
             Create and manage your visualization projects
           </p>
         </div>

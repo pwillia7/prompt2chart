@@ -147,26 +147,26 @@ export const D3ChartRenderer = forwardRef<D3ChartHandle, D3ChartRendererProps>(f
   return (
     <div className={`relative ${className}`}>
       {loading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-10">
+        <div className="absolute inset-0 flex items-center justify-center bg-[var(--bg)]/80 z-10">
           <Spinner />
         </div>
       )}
 
       {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-red-700 text-sm">{error}</p>
+        <div className="p-4 bg-[var(--danger)]/10 border border-[var(--danger)]/20 rounded-card">
+          <p className="text-red-400 text-sm">{error}</p>
           <div className="flex items-center gap-3 mt-2">
             {onRetry && (
               <button
                 onClick={onRetry}
-                className="text-sm text-red-700 font-medium hover:text-red-800 underline"
+                className="text-sm text-red-400 font-medium hover:text-red-300 underline"
               >
                 Regenerate chart
               </button>
             )}
             <details>
-              <summary className="text-sm text-red-600 cursor-pointer">View code</summary>
-              <pre className="mt-2 p-2 bg-red-100 rounded text-xs overflow-auto max-h-64">
+              <summary className="text-sm text-red-400/70 cursor-pointer">View code</summary>
+              <pre className="mt-2 p-2 bg-[var(--surface-2)] rounded-[10px] text-xs overflow-auto max-h-64 text-[var(--text-muted)] font-mono">
                 {code}
               </pre>
             </details>

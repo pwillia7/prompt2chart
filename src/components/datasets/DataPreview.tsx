@@ -11,35 +11,35 @@ export function DataPreview({ data, schema, maxRows = 10 }: DataPreviewProps) {
   const columns = schema.columns.map((c) => c.name)
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-      <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
-        <h3 className="text-sm font-medium text-gray-900">
+    <div className="bg-[var(--surface-1)] rounded-card border border-[var(--border)] overflow-hidden">
+      <div className="px-4 py-3 border-b border-[var(--border)]">
+        <h3 className="text-sm font-medium text-[var(--text)]">
           Data Preview
         </h3>
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="text-sm text-[var(--text-subtle)] mt-1">
           Showing {Math.min(maxRows, data.length)} of {data.length.toLocaleString()} rows
         </p>
       </div>
 
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
+        <table className="min-w-full">
+          <thead>
+            <tr className="border-b border-[var(--border)]">
               {columns.map((col) => (
                 <th
                   key={col}
-                  className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  className="px-4 py-2 text-left text-xs font-medium text-[var(--text-subtle)] uppercase tracking-wider"
                 >
                   {col}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody>
             {previewData.map((row, idx) => (
-              <tr key={idx} className="hover:bg-gray-50">
+              <tr key={idx} className={`border-b border-[var(--border)] ${idx % 2 === 1 ? 'bg-white/[0.02]' : ''} hover:bg-white/[0.04] transition-colors`}>
                 {columns.map((col) => (
-                  <td key={col} className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">
+                  <td key={col} className="px-4 py-2 text-sm text-[var(--text-muted)] whitespace-nowrap font-mono text-xs">
                     {formatCellValue((row as Record<string, unknown>)[col])}
                   </td>
                 ))}
@@ -54,7 +54,7 @@ export function DataPreview({ data, schema, maxRows = 10 }: DataPreviewProps) {
 
 function formatCellValue(value: unknown): string {
   if (value === null || value === undefined) {
-    return '—'
+    return '\u2014'
   }
   if (typeof value === 'number') {
     return value.toLocaleString()

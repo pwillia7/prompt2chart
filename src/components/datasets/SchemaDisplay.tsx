@@ -6,46 +6,48 @@ interface SchemaDisplayProps {
 
 export function SchemaDisplay({ schema }: SchemaDisplayProps) {
   const typeColors: Record<string, string> = {
-    numeric: 'bg-blue-100 text-blue-800',
-    categorical: 'bg-green-100 text-green-800',
-    temporal: 'bg-purple-100 text-purple-800',
-    string: 'bg-gray-100 text-gray-800',
+    numeric: 'bg-indigo-500/15 text-indigo-400',
+    categorical: 'bg-emerald-500/15 text-emerald-400',
+    temporal: 'bg-violet-500/15 text-violet-400',
+    string: 'bg-white/10 text-[var(--text-muted)]',
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-      <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
-        <h3 className="text-sm font-medium text-gray-900">
+    <div className="bg-[var(--surface-1)] rounded-card border border-[var(--border)] overflow-hidden">
+      <div className="px-4 py-3 border-b border-[var(--border)]">
+        <h3 className="text-sm font-medium text-[var(--text)]">
           Dataset Schema
         </h3>
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="text-sm text-[var(--text-subtle)] mt-1">
           {schema.rowCount.toLocaleString()} rows, {schema.columns.length} columns
         </p>
       </div>
 
-      <div className="divide-y divide-gray-100">
-        {schema.columns.map((column) => (
-          <div key={column.name} className="px-4 py-3">
+      <div>
+        {schema.columns.map((column, idx) => (
+          <div key={column.name} className={`px-4 py-3 ${idx < schema.columns.length - 1 ? 'border-b border-[var(--border)]' : ''}`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="font-medium text-gray-900">{column.name}</span>
-                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${typeColors[column.type]}`}>
+                <span className="font-medium text-[var(--text)] font-mono text-sm">{column.name}</span>
+                <span className={`px-2 py-0.5 rounded-pill text-xs font-medium ${typeColors[column.type]}`}>
                   {column.type}
                 </span>
                 {column.nullable && (
-                  <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                  <span className="px-2 py-0.5 rounded-pill text-xs font-medium bg-amber-500/15 text-amber-400">
                     nullable
                   </span>
                 )}
               </div>
             </div>
-            <div className="mt-1 text-sm text-gray-500">
-              <span className="text-gray-400">Sample: </span>
-              {column.sample_values
-                .filter((v) => v !== null)
-                .slice(0, 3)
-                .map((v) => JSON.stringify(v))
-                .join(', ')}
+            <div className="mt-1 text-sm text-[var(--text-subtle)]">
+              <span className="text-[var(--text-subtle)] opacity-60">Sample: </span>
+              <span className="font-mono text-xs">
+                {column.sample_values
+                  .filter((v) => v !== null)
+                  .slice(0, 3)
+                  .map((v) => JSON.stringify(v))
+                  .join(', ')}
+              </span>
             </div>
           </div>
         ))}

@@ -70,10 +70,10 @@ function ChartTreeItem({
     <>
       <button
         onClick={() => onSelect(chart)}
-        className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
+        className={`w-full text-left px-3 py-2 rounded-lg transition-colors duration-fast ${
           currentChartId === chart.id
-            ? 'bg-primary-50 text-primary-700'
-            : 'hover:bg-gray-50'
+            ? 'bg-[var(--primary)]/10 text-[var(--primary)]'
+            : 'hover:bg-[var(--surface-2)]'
         }`}
         style={{ paddingLeft: `${12 + depth * 16}px` }}
       >
@@ -84,7 +84,7 @@ function ChartTreeItem({
                 e.stopPropagation()
                 onToggleCollapse(chart.id)
               }}
-              className="flex-shrink-0 w-4 h-4 flex items-center justify-center text-gray-400 hover:text-gray-600"
+              className="flex-shrink-0 w-4 h-4 flex items-center justify-center text-[var(--text-subtle)] hover:text-[var(--text-muted)]"
             >
               <svg
                 className={`w-3 h-3 transition-transform ${isCollapsed ? '' : 'rotate-90'}`}
@@ -96,7 +96,7 @@ function ChartTreeItem({
               </svg>
             </button>
           ) : depth > 0 ? (
-            <span className="flex-shrink-0 w-4 h-4 flex items-center justify-center text-gray-300 text-xs">&raquo;</span>
+            <span className="flex-shrink-0 w-4 h-4 flex items-center justify-center text-[var(--text-subtle)] text-xs">&raquo;</span>
           ) : (
             <span className="flex-shrink-0 w-4 h-4" />
           )}
@@ -105,7 +105,7 @@ function ChartTreeItem({
           }`} />
           <span className="font-medium text-sm truncate">{chart.prompt}</span>
         </div>
-        <div className="text-xs text-gray-500" style={{ marginLeft: '1.625rem' }}>
+        <div className="text-xs text-[var(--text-subtle)]" style={{ marginLeft: '1.625rem' }}>
           {new Date(chart.created_at).toLocaleString()}
         </div>
       </button>
@@ -265,7 +265,7 @@ export function ProjectPage() {
     return (
       <Layout>
         <div className="text-center py-12">
-          <h2 className="text-xl font-semibold text-gray-900">Project not found</h2>
+          <h2 className="text-xl font-semibold text-[var(--text)]">Project not found</h2>
           <Button variant="secondary" className="mt-4" onClick={() => navigate('/dashboard')}>
             Back to Dashboard
           </Button>
@@ -279,33 +279,33 @@ export function ProjectPage() {
       <div className="mb-6">
         <button
           onClick={() => navigate('/dashboard')}
-          className="flex items-center text-gray-600 hover:text-gray-900 mb-4"
+          className="flex items-center text-[var(--text-muted)] hover:text-[var(--text)] mb-4 transition-colors duration-fast"
         >
           <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
           Back to Dashboard
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">{currentProject.name}</h1>
+        <h1 className="text-2xl font-bold text-[var(--text)]">{currentProject.name}</h1>
       </div>
 
-      <div className="flex border-b border-gray-200 mb-6">
+      <div className="flex border-b border-[var(--border)] mb-6">
         <button
           onClick={() => setActiveTab('data')}
-          className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors ${
+          className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors duration-fast ${
             activeTab === 'data'
-              ? 'border-primary-500 text-primary-600'
-              : 'border-transparent text-gray-500 hover:text-gray-700'
+              ? 'border-[var(--primary)] text-[var(--primary)]'
+              : 'border-transparent text-[var(--text-subtle)] hover:text-[var(--text-muted)]'
           }`}
         >
           Data
         </button>
         <button
           onClick={() => setActiveTab('charts')}
-          className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors ${
+          className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors duration-fast ${
             activeTab === 'charts'
-              ? 'border-primary-500 text-primary-600'
-              : 'border-transparent text-gray-500 hover:text-gray-700'
+              ? 'border-[var(--primary)] text-[var(--primary)]'
+              : 'border-transparent text-[var(--text-subtle)] hover:text-[var(--text-muted)]'
           }`}
         >
           Charts ({charts.length})
@@ -315,8 +315,8 @@ export function ProjectPage() {
       {activeTab === 'data' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="space-y-6">
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Upload Dataset</h2>
+            <div className="bg-[var(--surface-1)] rounded-card border border-[var(--border)] p-6">
+              <h2 className="text-lg font-semibold text-[var(--text)] mb-4">Upload Dataset</h2>
               <DatasetUploader
                 projectId={projectId!}
                 onUploadComplete={() => {
@@ -326,8 +326,8 @@ export function ProjectPage() {
             </div>
 
             {datasets.length > 0 && (
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <h3 className="text-sm font-medium text-gray-900 mb-3">Your Datasets</h3>
+              <div className="bg-[var(--surface-1)] rounded-card border border-[var(--border)] p-6">
+                <h3 className="text-sm font-medium text-[var(--text)] mb-3">Your Datasets</h3>
                 <div className="space-y-2">
                   {datasets.map((dataset) => (
                     <button
@@ -336,16 +336,16 @@ export function ProjectPage() {
                         setCurrentDataset(dataset)
                         loadDatasetData(dataset)
                       }}
-                      className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
+                      className={`w-full text-left px-3 py-2 rounded-lg transition-colors duration-fast ${
                         currentDataset?.id === dataset.id
-                          ? 'bg-primary-50 text-primary-700'
-                          : 'hover:bg-gray-50'
+                          ? 'bg-[var(--primary)]/10 text-[var(--primary)]'
+                          : 'hover:bg-[var(--surface-2)]'
                       }`}
                     >
                       <div className="font-medium text-sm">
                         {dataset.file_path.split('/').pop()}
                       </div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-[var(--text-subtle)]">
                         {dataset.row_count.toLocaleString()} rows
                       </div>
                     </button>
@@ -374,16 +374,16 @@ export function ProjectPage() {
             {/* Current chart display */}
             {currentChart && (
               <>
-                <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <div className="bg-[var(--surface-1)] rounded-card border border-[var(--border)] p-6">
                   <div className="flex justify-between items-center mb-4">
                     <div className="flex items-center gap-2 flex-1 mr-4 min-w-0">
-                      <h3 className="font-medium text-gray-900 truncate">
+                      <h3 className="font-medium text-[var(--text)] truncate">
                         {currentChart.prompt}
                       </h3>
-                      <span className={`flex-shrink-0 px-2 py-0.5 text-xs font-medium rounded-full ${
+                      <span className={`flex-shrink-0 px-2 py-0.5 text-xs font-medium rounded-pill ${
                         currentChart.chart_library === 'd3'
-                          ? 'bg-orange-100 text-orange-700'
-                          : 'bg-blue-100 text-blue-700'
+                          ? 'bg-orange-500/15 text-orange-400'
+                          : 'bg-blue-500/15 text-blue-400'
                       }`}>
                         {currentChart.chart_library === 'd3' ? 'D3.js' : 'Vega-Lite'}
                       </span>
@@ -410,21 +410,21 @@ export function ProjectPage() {
                     ) : currentChart.vega_spec_json ? (
                       <ChartRenderer ref={vegaRef} spec={currentChart.vega_spec_json} data={renderData ?? undefined} />
                     ) : (
-                      <div className="p-8 text-center text-gray-500">
+                      <div className="p-8 text-center text-[var(--text-subtle)]">
                         Unable to render chart: missing data
                       </div>
                     )}
                     {generating && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-white/70 backdrop-blur-[1px] z-20 rounded-lg">
+                      <div className="absolute inset-0 flex items-center justify-center bg-[var(--bg)]/70 backdrop-blur-[1px] z-20 rounded-card">
                         <div className="flex flex-col items-center gap-2">
                           <Spinner />
-                          <span className="text-sm text-gray-500 font-medium">Updating chart...</span>
+                          <span className="text-sm text-[var(--text-muted)] font-medium">Updating chart...</span>
                         </div>
                       </div>
                     )}
                   </div>
                   {parsedData && renderData && parsedData.length > renderData.length && (
-                    <p className="mt-2 text-xs text-gray-500 text-center">
+                    <p className="mt-2 text-xs text-[var(--text-subtle)] text-center">
                       Showing {renderData.length.toLocaleString()} of {parsedData.length.toLocaleString()} rows (sampled for performance)
                     </p>
                   )}
@@ -434,19 +434,19 @@ export function ProjectPage() {
 
             {/* Empty state / generating first chart */}
             {!currentChart && currentDataset && (
-              <div className="bg-white rounded-lg border border-gray-200 p-12 text-center relative">
+              <div className="bg-[var(--surface-1)] rounded-card border border-[var(--border)] p-12 text-center relative">
                 {generating ? (
                   <div className="flex flex-col items-center gap-3">
                     <Spinner />
-                    <p className="text-sm text-gray-500 font-medium">Generating chart...</p>
+                    <p className="text-sm text-[var(--text-muted)] font-medium">Generating chart...</p>
                   </div>
                 ) : (
                   <>
-                    <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="mx-auto h-12 w-12 text-[var(--text-subtle)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                     </svg>
-                    <h3 className="mt-2 text-sm font-medium text-gray-900">No chart selected</h3>
-                    <p className="mt-1 text-sm text-gray-500">
+                    <h3 className="mt-2 text-sm font-medium text-[var(--text)]">No chart selected</h3>
+                    <p className="mt-1 text-sm text-[var(--text-muted)]">
                       Enter a prompt below to generate a visualization
                     </p>
                   </>
@@ -456,8 +456,8 @@ export function ProjectPage() {
 
             {/* No dataset warning */}
             {!currentDataset && (
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-6 text-center">
-                <p className="text-amber-700">
+              <div className="bg-[var(--warning)]/10 border border-[var(--warning)]/20 rounded-card p-6 text-center">
+                <p className="text-amber-400">
                   Please upload a dataset first before generating charts
                 </p>
                 <Button
@@ -472,36 +472,36 @@ export function ProjectPage() {
 
             {/* Generation error */}
             {chartError && (
-              <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+              <div className="p-4 bg-[var(--danger)]/10 border border-[var(--danger)]/20 rounded-card text-red-400 text-sm">
                 {chartError}
               </div>
             )}
 
             {/* Chart generation controls */}
             {currentDataset && (
-              <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
+              <div className="bg-[var(--surface-1)] rounded-card border border-[var(--border)] p-6 space-y-4">
                 {currentChart ? (
                   <>
                     <div className="flex justify-between items-center">
-                      <h3 className="text-lg font-semibold text-gray-900">
+                      <h3 className="text-lg font-semibold text-[var(--text)]">
                         Refine Chart
                       </h3>
                       <button
                         onClick={handleStartNewChart}
-                        className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                        className="text-sm text-[var(--text-subtle)] hover:text-[var(--text-muted)] transition-colors duration-fast"
                       >
                         + New chart instead
                       </button>
                     </div>
-                    <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg text-sm text-gray-600">
+                    <div className="flex items-center gap-2 px-3 py-2 bg-[var(--surface-2)] rounded-lg text-sm text-[var(--text-muted)]">
                       <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                       </svg>
                       <span className="truncate">{currentChart.prompt}</span>
-                      <span className={`flex-shrink-0 px-1.5 py-0.5 text-xs font-medium rounded ${
+                      <span className={`flex-shrink-0 px-1.5 py-0.5 text-xs font-medium rounded-pill ${
                         currentChart.chart_library === 'd3'
-                          ? 'bg-orange-100 text-orange-700'
-                          : 'bg-blue-100 text-blue-700'
+                          ? 'bg-orange-500/15 text-orange-400'
+                          : 'bg-blue-500/15 text-blue-400'
                       }`}>
                         {currentChart.chart_library === 'd3' ? 'D3' : 'Vega-Lite'}
                       </span>
@@ -509,20 +509,20 @@ export function ProjectPage() {
                   </>
                 ) : (
                   <>
-                    <h3 className="text-lg font-semibold text-gray-900">
+                    <h3 className="text-lg font-semibold text-[var(--text)]">
                       Create Chart
                     </h3>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-[var(--text-muted)] mb-2">
                         Visualization Library
                       </label>
                       <div className="flex gap-2">
                         <button
                           onClick={() => setSelectedLibrary('vega-lite')}
-                          className={`flex-1 px-4 py-2.5 rounded-lg border-2 text-sm font-medium transition-colors ${
+                          className={`flex-1 px-4 py-2.5 rounded-card border-2 text-sm font-medium transition-colors duration-fast ${
                             selectedLibrary === 'vega-lite'
-                              ? 'border-blue-500 bg-blue-50 text-blue-700'
-                              : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                              ? 'border-blue-500 bg-blue-500/10 text-blue-400'
+                              : 'border-[var(--border-strong)] text-[var(--text-muted)] hover:border-[var(--text-subtle)]'
                           }`}
                         >
                           <div className="font-semibold">Vega-Lite</div>
@@ -530,10 +530,10 @@ export function ProjectPage() {
                         </button>
                         <button
                           onClick={() => setSelectedLibrary('d3')}
-                          className={`flex-1 px-4 py-2.5 rounded-lg border-2 text-sm font-medium transition-colors ${
+                          className={`flex-1 px-4 py-2.5 rounded-card border-2 text-sm font-medium transition-colors duration-fast ${
                             selectedLibrary === 'd3'
-                              ? 'border-orange-500 bg-orange-50 text-orange-700'
-                              : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                              ? 'border-orange-500 bg-orange-500/10 text-orange-400'
+                              : 'border-[var(--border-strong)] text-[var(--text-muted)] hover:border-[var(--text-subtle)]'
                           }`}
                         >
                           <div className="font-semibold">D3.js</div>
@@ -541,10 +541,10 @@ export function ProjectPage() {
                         </button>
                       </div>
                     </div>
-                    <div className="text-xs text-gray-400 flex gap-3">
+                    <div className="text-xs text-[var(--text-subtle)] flex gap-3">
                       <span>Examples:</span>
-                      <a href="https://vega.github.io/vega-lite/examples/" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-600 underline">Vega-Lite Gallery</a>
-                      <a href="https://observablehq.com/@d3/gallery" target="_blank" rel="noopener noreferrer" className="text-orange-500 hover:text-orange-600 underline">D3.js Gallery</a>
+                      <a href="https://vega.github.io/vega-lite/examples/" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">Vega-Lite Gallery</a>
+                      <a href="https://observablehq.com/@d3/gallery" target="_blank" rel="noopener noreferrer" className="text-orange-400 hover:text-orange-300 underline">D3.js Gallery</a>
                     </div>
                     <InsightSuggestions
                       datasetId={currentDataset.id}
@@ -584,10 +584,10 @@ export function ProjectPage() {
                 onSuggestionClick={handleGenerateChart}
               />
             )}
-            <div className="bg-white rounded-lg border border-gray-200 p-4">
-              <h3 className="text-sm font-medium text-gray-900 mb-3">Chart History</h3>
+            <div className="bg-[var(--surface-1)] rounded-card border border-[var(--border)] p-4">
+              <h3 className="text-sm font-medium text-[var(--text)] mb-3">Chart History</h3>
               {charts.length === 0 ? (
-                <p className="text-sm text-gray-500">No charts yet</p>
+                <p className="text-sm text-[var(--text-subtle)]">No charts yet</p>
               ) : (
                 <div className="space-y-1">
                   {chartTree.map((node) => (

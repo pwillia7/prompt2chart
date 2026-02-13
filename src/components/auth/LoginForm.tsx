@@ -40,14 +40,14 @@ export function LoginForm() {
   if (magicLinkSent) {
     return (
       <div className="text-center">
-        <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <p className="text-green-800">
+        <div className="mb-4 p-4 bg-[var(--accent)]/10 border border-[var(--accent)]/20 rounded-card">
+          <p className="text-green-400">
             Check your email for a magic link to sign in.
           </p>
         </div>
         <button
           onClick={() => setMagicLinkSent(false)}
-          className="text-primary-600 hover:text-primary-700 text-sm"
+          className="text-[var(--primary)] hover:text-primary-400 text-sm"
         >
           Back to login
         </button>
@@ -61,16 +61,16 @@ export function LoginForm() {
 
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-gray-300" />
+          <div className="w-full border-t border-[var(--border-strong)]" />
         </div>
         <div className="relative flex justify-center text-sm">
-          <span className="px-2 bg-white text-gray-500">or</span>
+          <span className="px-2 bg-[var(--surface-1)] text-[var(--text-subtle)]">or</span>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+          <div className="p-3 bg-[var(--danger)]/10 border border-[var(--danger)]/20 rounded-[10px] text-red-400 text-sm">
             {error}
           </div>
         )}
@@ -96,7 +96,7 @@ export function LoginForm() {
         <div className="flex justify-end">
           <Link
             to="/forgot-password"
-            className="text-sm text-primary-600 hover:text-primary-700"
+            className="text-sm text-[var(--primary)] hover:text-primary-400"
           >
             Forgot password?
           </Link>
@@ -117,9 +117,9 @@ export function LoginForm() {
         </Button>
       </form>
 
-      <p className="text-center text-sm text-gray-600">
+      <p className="text-center text-sm text-[var(--text-muted)]">
         Don't have an account?{' '}
-        <Link to="/signup" className="text-primary-600 hover:text-primary-700 font-medium">
+        <Link to="/signup" className="text-[var(--primary)] hover:text-primary-400 font-medium">
           Sign up
         </Link>
       </p>

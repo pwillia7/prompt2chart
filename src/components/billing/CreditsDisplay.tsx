@@ -19,10 +19,10 @@ export function CreditsDisplay({ onUpgrade }: CreditsDisplayProps) {
   return (
     <button
       onClick={onUpgrade}
-      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] text-sm font-medium transition-colors duration-fast ${
         isLow
-          ? 'bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200'
-          : 'text-gray-600 hover:bg-gray-100'
+          ? 'bg-[var(--warning)]/10 text-amber-400 hover:bg-[var(--warning)]/15 border border-[var(--warning)]/20'
+          : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)]'
       }`}
       title="Click to buy more credits"
     >

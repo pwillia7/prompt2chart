@@ -43,12 +43,14 @@ export function ChartPromptInput({
         placeholder={placeholder}
         disabled={disabled || loading}
         rows={3}
-        className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm
-          focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500
-          disabled:bg-gray-100 disabled:cursor-not-allowed resize-none"
+        className="w-full px-4 py-3 bg-[var(--surface-2)] border border-[var(--border-strong)] rounded-card
+          text-[var(--text)] placeholder:text-[var(--text-subtle)] font-mono text-sm
+          focus:outline-none focus:ring-2 focus:ring-[var(--ring)] focus:border-[var(--primary)]
+          disabled:opacity-50 disabled:cursor-not-allowed resize-none
+          transition-all duration-fast"
       />
       <div className="flex items-center justify-between">
-        <span className="text-xs text-gray-400">{isMac ? '⌘' : 'Ctrl+'}Enter to submit</span>
+        <span className="text-xs text-[var(--text-subtle)]">{isMac ? '\u2318' : 'Ctrl+'}Enter to submit</span>
         <Button
           type="submit"
           loading={loading}

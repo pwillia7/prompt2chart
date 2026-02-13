@@ -146,9 +146,8 @@ export function ExportMenu({ chart, d3Handle, vegaHandle, data }: ExportMenuProp
     <div ref={menuRef} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-lg bg-gray-200 text-gray-900 hover:bg-gray-300 transition-colors"
+        className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-[10px] bg-[var(--surface-2)] text-[var(--text)] border border-[var(--border-strong)] hover:bg-[var(--surface-3)] transition-colors duration-fast"
       >
-        {/* Download icon */}
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
         </svg>
@@ -159,53 +158,53 @@ export function ExportMenu({ chart, d3Handle, vegaHandle, data }: ExportMenuProp
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg border border-gray-200 shadow-lg z-50 py-1">
-          <div className="px-3 py-1.5 text-xs font-medium text-gray-400 uppercase tracking-wider">Image</div>
+        <div className="absolute right-0 mt-1 w-48 bg-[#0A0A0A] rounded-card border border-[var(--border)] shadow-medium z-50 py-1">
+          <div className="px-3 py-1.5 text-xs font-medium text-[var(--text-subtle)] uppercase tracking-wider">Image</div>
           <button
             onClick={() => handleExport('png')}
-            className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+            className="w-full text-left px-3 py-2 text-sm text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text)] flex items-center gap-2 transition-colors duration-fast"
           >
-            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 text-[var(--text-subtle)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
             PNG Image
           </button>
           <button
             onClick={() => handleExport('svg')}
-            className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+            className="w-full text-left px-3 py-2 text-sm text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text)] flex items-center gap-2 transition-colors duration-fast"
           >
-            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 text-[var(--text-subtle)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
             </svg>
             SVG Vector
           </button>
 
-          <div className="border-t border-gray-100 my-1" />
+          <div className="border-t border-[var(--border)] my-1" />
 
-          <div className="px-3 py-1.5 text-xs font-medium text-gray-400 uppercase tracking-wider">Code</div>
+          <div className="px-3 py-1.5 text-xs font-medium text-[var(--text-subtle)] uppercase tracking-wider">Code</div>
           <button
             onClick={() => handleExport('code')}
-            className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+            className="w-full text-left px-3 py-2 text-sm text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text)] flex items-center gap-2 transition-colors duration-fast"
           >
-            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 text-[var(--text-subtle)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
             </svg>
             Copy Code
           </button>
           <button
             onClick={() => handleExport('html')}
-            className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+            className="w-full text-left px-3 py-2 text-sm text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text)] flex items-center gap-2 transition-colors duration-fast"
           >
-            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 text-[var(--text-subtle)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
             </svg>
             Download HTML
           </button>
           <button
             onClick={() => handleExport('codepen')}
-            className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+            className="w-full text-left px-3 py-2 text-sm text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text)] flex items-center gap-2 transition-colors duration-fast"
           >
-            <svg className="w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="currentColor">
+            <svg className="w-4 h-4 text-[var(--text-subtle)]" viewBox="0 0 24 24" fill="currentColor">
               <path d="M8.21 12L6.88 12.89V11.11L8.21 12zm2.79 1.84V16l-3.48-2.32 1.46-.97 2.02 1.13zm.5-3.68L8.56 8.5l2.94-1.96v2.18l-2.02 1.13 1.52 1.01v.3zM12 10.74L10.27 12 12 13.26 13.73 12 12 10.74zM22 12c0 5.52-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2s10 4.48 10 10zm-3.5-1.3l-.01-.02-5.99-4V6.5L12 6.34l-.5.16v.18l-5.99 4-.01.02-.5.33v2.94l.5.33.01.02 5.99 4v.18l.5.16.5-.16v-.18l5.99-4 .01-.02.5-.33V11.03l-.5-.33zm-5.5 5.12V18l3.48-2.32-1.46-.97-2.02 1.11zm3.32-3.93L17.78 12l-1.46-.89v1.78l-1.5.04z" />
             </svg>
             Edit in CodePen
@@ -215,7 +214,7 @@ export function ExportMenu({ chart, d3Handle, vegaHandle, data }: ExportMenuProp
 
       {/* Feedback toast */}
       {toast && (
-        <div className="absolute right-0 mt-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg whitespace-nowrap z-50">
+        <div className="absolute right-0 mt-2 px-3 py-2 bg-[var(--surface-1)] text-[var(--text)] text-sm rounded-card shadow-medium border border-[var(--border)] whitespace-nowrap z-50">
           {toast}
         </div>
       )}

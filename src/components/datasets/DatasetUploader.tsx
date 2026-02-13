@@ -60,22 +60,22 @@ export function DatasetUploader({ projectId, onUploadComplete }: DatasetUploader
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         className={`
-          border-2 border-dashed rounded-lg p-8 text-center transition-colors
-          ${isDragging ? 'border-primary-500 bg-primary-50' : 'border-gray-300 hover:border-gray-400'}
+          border-2 border-dashed rounded-card p-8 text-center transition-all duration-fast
+          ${isDragging ? 'border-[var(--primary)] bg-[var(--primary)]/5' : 'border-[var(--border-strong)] hover:border-[var(--text-subtle)]'}
           ${loading ? 'opacity-50 pointer-events-none' : ''}
         `}
       >
         {loading ? (
           <div className="flex flex-col items-center gap-3">
             <Spinner />
-            <p className="text-gray-600">Uploading and analyzing...</p>
+            <p className="text-[var(--text-muted)]">Uploading and analyzing...</p>
           </div>
         ) : (
           <>
-            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="mx-auto h-12 w-12 text-[var(--text-subtle)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
             </svg>
-            <p className="mt-2 text-gray-600">
+            <p className="mt-2 text-[var(--text-muted)]">
               Drag and drop your data file here, or
             </p>
             <label className="mt-2 inline-block cursor-pointer">
@@ -85,11 +85,11 @@ export function DatasetUploader({ projectId, onUploadComplete }: DatasetUploader
                 onChange={handleInputChange}
                 className="hidden"
               />
-              <span className="inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 bg-gray-200 text-gray-900 hover:bg-gray-300 focus:ring-gray-500 px-3 py-1.5 text-sm">
+              <span className="inline-flex items-center justify-center font-medium rounded-[10px] transition-all duration-fast bg-[var(--surface-2)] text-[var(--text)] border border-[var(--border-strong)] hover:bg-[var(--surface-3)] px-3 py-1.5 text-sm">
                 Browse Files
               </span>
             </label>
-            <p className="mt-2 text-sm text-gray-500">
+            <p className="mt-2 text-sm text-[var(--text-subtle)]">
               Supports CSV and JSON (max 10MB)
             </p>
           </>
@@ -97,7 +97,7 @@ export function DatasetUploader({ projectId, onUploadComplete }: DatasetUploader
       </div>
 
       {error && (
-        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+        <div className="mt-4 p-3 bg-[var(--danger)]/10 border border-[var(--danger)]/20 rounded-card text-red-400 text-sm">
           {error}
         </div>
       )}

@@ -12,21 +12,21 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="fixed inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 p-6">
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-[#0A0A0A] rounded-modal shadow-medium border border-[var(--border)] max-w-lg w-full mx-4 p-6">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+          className="absolute top-4 right-4 text-[var(--text-subtle)] hover:text-[var(--text-muted)] transition-colors duration-fast"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
 
-        <h2 className="text-xl font-bold text-gray-900 mb-1">Buy Credits</h2>
-        <p className="text-sm text-gray-500 mb-6">
-          You have <span className="font-medium text-gray-900">{credits ?? 0}</span> credits remaining.
-          Each chart generation, insight suggestion, or analyst chat message costs 1 credit.
+        <h2 className="text-xl font-semibold text-[var(--text)] mb-1">Buy Credits</h2>
+        <p className="text-sm text-[var(--text-muted)] mb-6">
+          You have <span className="font-medium text-[var(--text)]">{credits ?? 0}</span> credits remaining.
+          Each chart generation or analyst chat message costs 1 credit.
         </p>
 
         <div className="space-y-3">
@@ -35,13 +35,13 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
               key={pack.id}
               disabled={purchasing}
               onClick={() => purchaseCredits(pack.id)}
-              className="w-full flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50/50 transition-colors disabled:opacity-50 text-left"
+              className="w-full flex items-center justify-between p-4 border border-[var(--border)] rounded-card bg-[var(--surface-1)] hover:border-[var(--primary)]/40 hover:bg-[var(--surface-2)] transition-all duration-fast disabled:opacity-50 text-left"
             >
               <div>
-                <div className="font-semibold text-gray-900">{pack.name}</div>
-                <div className="text-sm text-gray-500">{pack.credits} credits</div>
+                <div className="font-semibold text-[var(--text)]">{pack.name}</div>
+                <div className="text-sm text-[var(--text-muted)]">{pack.credits} credits</div>
               </div>
-              <div className="text-lg font-bold text-gray-900">
+              <div className="text-lg font-bold text-[var(--text)]">
                 ${(pack.priceUsd / 100).toFixed(0)}
               </div>
             </button>
@@ -49,7 +49,7 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
         </div>
 
         {packs.length === 0 && (
-          <p className="text-sm text-gray-500 text-center py-4">
+          <p className="text-sm text-[var(--text-muted)] text-center py-4">
             Credit packs are not available yet. Check back soon.
           </p>
         )}
