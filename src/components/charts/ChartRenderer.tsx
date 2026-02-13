@@ -117,7 +117,7 @@ export const ChartRenderer = forwardRef<VegaChartHandle, ChartRendererProps>(fun
       <div
         ref={containerRef}
         className={`min-h-[420px] max-w-full overflow-x-auto ${error ? 'hidden' : ''}`}
-        style={{ maxHeight: '500px' }}
+        style={{ maxHeight: '500px', color: '#000' }}
       />
 
       {usedFallback && !error && (

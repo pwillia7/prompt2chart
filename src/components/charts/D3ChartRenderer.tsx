@@ -33,9 +33,11 @@ export const D3ChartRenderer = forwardRef<D3ChartHandle, D3ChartRendererProps>(f
     setLoading(true)
     setError(null)
 
-    // Clear previous content
+    // Clear previous content and reset inline styles from prior render
     const container = containerRef.current
     d3.select(container).selectAll('*').remove()
+    container.style.backgroundColor = ''
+    container.style.color = ''
 
     // Validate data
     if (!Array.isArray(data) || data.length === 0) {
@@ -177,7 +179,7 @@ export const D3ChartRenderer = forwardRef<D3ChartHandle, D3ChartRendererProps>(f
       <div
         ref={containerRef}
         className={`min-h-[300px] max-w-full overflow-x-auto ${error ? 'hidden' : ''}`}
-        style={{ position: 'relative' }}
+        style={{ position: 'relative', color: '#000' }}
       />
     </div>
   )
