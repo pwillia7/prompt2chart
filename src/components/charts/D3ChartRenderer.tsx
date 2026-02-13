@@ -33,11 +33,13 @@ export const D3ChartRenderer = forwardRef<D3ChartHandle, D3ChartRendererProps>(f
     setLoading(true)
     setError(null)
 
-    // Clear previous content and reset inline styles from prior render
+    // Clear previous content and reset inline styles from prior render.
+    // Reset color to #000 (not '') so SVG elements get black as the default
+    // currentColor — clearing to '' would inherit the site's grey text color.
     const container = containerRef.current
     d3.select(container).selectAll('*').remove()
     container.style.backgroundColor = ''
-    container.style.color = ''
+    container.style.color = '#000'
 
     // Validate data
     if (!Array.isArray(data) || data.length === 0) {
@@ -80,6 +82,7 @@ export const D3ChartRenderer = forwardRef<D3ChartHandle, D3ChartRendererProps>(f
         .style('height', 'auto')
         .style('overflow', 'hidden')
         .style('touch-action', 'none')
+        .style('color', '#000')
 
       // Build the function body with string concat to avoid
       // breaking any template literals in the generated code.
