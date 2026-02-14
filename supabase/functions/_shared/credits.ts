@@ -90,7 +90,7 @@ export async function getCredits(userId: string): Promise<number> {
 
 // Stripe credit pack definitions
 export const CREDIT_PACKS = [
-  { id: 'starter', name: 'Starter', credits: 50, priceUsd: 500 },
-  { id: 'pro', name: 'Pro', credits: 200, priceUsd: 1500 },
-  { id: 'power', name: 'Power', credits: 500, priceUsd: 3000 },
+  { id: 'starter', name: 'Starter', credits: 100, priceUsd: 500 },
+  { id: 'pro', name: 'Pro', credits: 300, priceUsd: 1500 },
+  { id: 'power', name: 'Power', credits: 800, priceUsd: 3000 },
 ] as const

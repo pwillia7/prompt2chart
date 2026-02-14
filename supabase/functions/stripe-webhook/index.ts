@@ -66,6 +66,12 @@ serve(async (req) => {
       return new Response('Failed to add credits', { status: 500 })
     }
 
+    // Mark user as a paid customer
+    await adminClient
+      .from('user_credits')
+      .update({ ever_purchased: true })
+      .eq('user_id', userId)
+
     console.log(`Added ${credits} credits to user ${userId} (session: ${session.id})`)
   }
 

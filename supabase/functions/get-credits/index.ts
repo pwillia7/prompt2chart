@@ -1,4 +1,5 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'
 import { corsHeaders } from '../_shared/cors.ts'
 import { getAuthenticatedUser, AuthError } from '../_shared/auth.ts'
 import { getCredits, CREDIT_PACKS } from '../_shared/credits.ts'
@@ -10,6 +11,16 @@ serve(async (req) => {
 
   try {
     const { user } = await getAuthenticatedUser(req)
+
+    // Lazily grant monthly free credits if eligible
+    try {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+      const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+      const adminClient = createClient(supabaseUrl, serviceRoleKey)
+      await adminClient.rpc('grant_monthly_credits', { p_user_id: user.id })
+    } catch (e) {
+      console.error('Monthly credit grant failed (non-blocking):', e)
+    }
 
     const balance = await getCredits(user.id)
 
