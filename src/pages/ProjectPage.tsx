@@ -103,7 +103,7 @@ function ChartTreeItem({
           <span className={`flex-shrink-0 w-2 h-2 rounded-full ${
             chart.chart_library === 'd3' ? 'bg-orange-400' : 'bg-[var(--text-subtle)]'
           }`} />
-          <span className="font-medium text-sm truncate">{chart.prompt}</span>
+          <span className="font-medium text-sm truncate" title={chart.prompt}>{chart.prompt}</span>
         </div>
         <div className="text-xs text-[var(--text-subtle)]" style={{ marginLeft: '1.625rem' }}>
           {new Date(chart.created_at).toLocaleString()}
