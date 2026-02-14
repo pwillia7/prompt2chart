@@ -9,6 +9,7 @@ import { DashboardPage } from './pages/DashboardPage'
 import { ProjectPage } from './pages/ProjectPage'
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
 import { LandingPage } from './pages/LandingPage'
+import { FeedbackPage } from './pages/FeedbackPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { Spinner } from './components/ui/Spinner'
 
@@ -47,6 +48,14 @@ function App() {
           element={
             <AuthGuard>
               <ProjectPage />
+            </AuthGuard>
+          }
+        />
+        <Route
+          path="/feedback"
+          element={
+            <AuthGuard>
+              <FeedbackPage />
             </AuthGuard>
           }
         />
