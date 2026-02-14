@@ -76,11 +76,11 @@ Respond with a JSON object containing:
 ## REASONING FORMAT
 The "reasoning" field must be a JSON STRING (not a nested object) containing:
 {
-  "chartInsights": ["max-12-word observation", "max-12-word observation"],
-  "dataInsights": ["max-12-word observation", "max-12-word observation"],
-  "suggestions": ["short actionable prompt", "short actionable prompt"]
+  "chartInsights": ["insight about what the chart reveals", "another chart insight", ...],
+  "dataInsights": ["insight about a pattern or anomaly in the data", ...],
+  "suggestions": ["actionable follow-up prompt", "another follow-up prompt"]
 }
-EXACTLY 2 bullets per section. Use short, punchy fragments — not full sentences. Max 12 words each. Be specific to actual column names — never generic.`
+2-4 bullets per section. Each bullet should be a single informative sentence (15-30 words) that explains WHAT you observed AND WHY it matters or what it implies. Reference specific column names, values, ranges, or percentages. Never be generic (bad: "more males than females") — instead be specific and analytical (good: "Males account for 62% of respondents, which may skew satisfaction scores that correlate with gender in this dataset").`
 
 const SYSTEM_PROMPT_D3 = `You are an expert D3.js visualization developer. Generate D3.js v7 code for beautiful, interactive SVG visualizations.
 
@@ -519,11 +519,11 @@ Respond with a JSON object containing:
 ## REASONING FORMAT
 The "reasoning" field must be a JSON STRING (not a nested object) containing:
 {
-  "chartInsights": ["max-12-word observation", "max-12-word observation"],
-  "dataInsights": ["max-12-word observation", "max-12-word observation"],
-  "suggestions": ["short actionable prompt", "short actionable prompt"]
+  "chartInsights": ["insight about what the chart reveals", "another chart insight", ...],
+  "dataInsights": ["insight about a pattern or anomaly in the data", ...],
+  "suggestions": ["actionable follow-up prompt", "another follow-up prompt"]
 }
-EXACTLY 2 bullets per section. Use short, punchy fragments — not full sentences. Max 12 words each. Be specific to actual column names — never generic.`
+2-4 bullets per section. Each bullet should be a single informative sentence (15-30 words) that explains WHAT you observed AND WHY it matters or what it implies. Reference specific column names, values, ranges, or percentages. Never be generic (bad: "more males than females") — instead be specific and analytical (good: "Males account for 62% of respondents, which may skew satisfaction scores that correlate with gender in this dataset").`
 
 const SYSTEM_PROMPT_INSIGHTS = `You are a senior data analyst preparing a dashboard for a stakeholder.
 Given a dataset schema with sample values, suggest 5 visualizations that answer specific analytical questions about the data.
