@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { supabase } from '../../lib/supabase'
+import { track } from '../../lib/analytics'
 import { useChartStore, AllSchemaEntry } from '../../store/chartStore'
 import type { Chart, DatasetSchema } from '../../types'
 
@@ -119,6 +120,7 @@ export function AnalystNotes({ explanation, chart, schema, allSchemas, onSuggest
     updateMessages(chart.id, prev => [...prev, { role: 'user', content: text }])
     if (!overrideText) setInput('')
     setLoading(true)
+    track('analyst-chat-sent')
 
     try {
       const currentMessages = getAnalystChat(chart.id)

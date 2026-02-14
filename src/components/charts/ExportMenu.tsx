@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { Chart, VegaLiteSpec } from '../../types'
 import type { D3ChartHandle } from './D3ChartRenderer'
 import type { VegaChartHandle } from './ChartRenderer'
+import { track } from '../../lib/analytics'
 import {
   d3SvgToString,
   d3SvgToPng,
@@ -52,6 +53,7 @@ export function ExportMenu({ chart, d3Handle, vegaHandle, data }: ExportMenuProp
 
   async function handleExport(action: 'png' | 'svg' | 'code' | 'html' | 'codepen') {
     setOpen(false)
+    track('chart-exported', { format: action, library: chart.chart_library })
     try {
       if (isD3) {
         const svgEl = d3Handle?.getSvgEl()

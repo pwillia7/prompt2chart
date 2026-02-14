@@ -16,6 +16,7 @@ import { useProjectStore } from '../store/projectStore'
 import { useDatasetStore } from '../store/datasetStore'
 import { useChartStore } from '../store/chartStore'
 import { trackUsage } from '../lib/usageTracker'
+import { track } from '../lib/analytics'
 import { sampleData } from '../lib/dataSampler'
 import { Chart, ChartLibrary } from '../types'
 
@@ -211,6 +212,7 @@ export function ProjectPage() {
     }
 
     const library = libraryOverride ?? (currentChart ? currentChart.chart_library : selectedLibrary)
+    track('chart-generated', { library })
 
     const chart = await generateChart({
       projectId,
@@ -233,6 +235,7 @@ export function ProjectPage() {
 
   const handleSuggestionSelect = (prompt: string, library?: ChartLibrary) => {
     if (library) setSelectedLibrary(library)
+    track('suggestion-clicked', { library: library ?? selectedLibrary })
     handleGenerateChart(prompt, library)
   }
 
@@ -321,6 +324,7 @@ export function ProjectPage() {
                 projectId={projectId!}
                 onUploadComplete={() => {
                   trackUsage({ eventType: 'dataset_upload', metadata: { projectId } })
+                  track('dataset-uploaded')
                 }}
               />
             </div>

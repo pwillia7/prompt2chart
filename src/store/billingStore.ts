@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { supabase } from '../lib/supabase'
+import { track } from '../lib/analytics'
 
 interface CreditPack {
   id: string
@@ -45,6 +46,7 @@ export const useBillingStore = create<BillingState>((set) => ({
       })
       if (error) throw error
       if (data?.url) {
+        track('credit-purchase', { pack: packId })
         window.location.href = data.url
       }
     } catch (error) {
