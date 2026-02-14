@@ -40,7 +40,7 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
           className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
           onClick={onClose}
         />
-        <div className={`relative bg-[#0A0A0A] rounded-modal shadow-medium border border-[var(--border)] w-full ${sizes[size]} p-6`}>
+        <div className={`relative bg-[var(--surface-1)] rounded-modal shadow-medium border border-[var(--border)] w-full ${sizes[size]} p-6`}>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-[var(--text)]">{title}</h2>
             <button

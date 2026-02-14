@@ -14,10 +14,10 @@ export function LoginPage() {
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <svg className="mx-auto w-14 h-14" viewBox="0 0 100 100">
-            <rect x="10" y="60" width="15" height="30" fill="#818cf8" />
-            <rect x="30" y="40" width="15" height="50" fill="#6366f1" />
-            <rect x="50" y="20" width="15" height="70" fill="#4F46E5" />
-            <rect x="70" y="35" width="15" height="55" fill="#a78bfa" />
+            <rect x="10" y="60" width="15" height="30" fill="#FDBA74" />
+            <rect x="30" y="40" width="15" height="50" fill="#FB923C" />
+            <rect x="50" y="20" width="15" height="70" fill="#F97316" />
+            <rect x="70" y="35" width="15" height="55" fill="#EA580C" />
           </svg>
           <h2 className="mt-6 text-3xl font-bold text-[var(--text)]">
             Welcome back

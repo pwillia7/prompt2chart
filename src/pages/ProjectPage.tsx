@@ -101,7 +101,7 @@ function ChartTreeItem({
             <span className="flex-shrink-0 w-4 h-4" />
           )}
           <span className={`flex-shrink-0 w-2 h-2 rounded-full ${
-            chart.chart_library === 'd3' ? 'bg-orange-400' : 'bg-blue-400'
+            chart.chart_library === 'd3' ? 'bg-orange-400' : 'bg-[var(--text-subtle)]'
           }`} />
           <span className="font-medium text-sm truncate">{chart.prompt}</span>
         </div>
@@ -383,7 +383,7 @@ export function ProjectPage() {
                       <span className={`flex-shrink-0 px-2 py-0.5 text-xs font-medium rounded-pill ${
                         currentChart.chart_library === 'd3'
                           ? 'bg-orange-500/15 text-orange-400'
-                          : 'bg-blue-500/15 text-blue-400'
+                          : 'bg-[var(--surface-3)] text-[var(--text-muted)]'
                       }`}>
                         {currentChart.chart_library === 'd3' ? 'D3.js' : 'Vega-Lite'}
                       </span>
@@ -501,7 +501,7 @@ export function ProjectPage() {
                       <span className={`flex-shrink-0 px-1.5 py-0.5 text-xs font-medium rounded-pill ${
                         currentChart.chart_library === 'd3'
                           ? 'bg-orange-500/15 text-orange-400'
-                          : 'bg-blue-500/15 text-blue-400'
+                          : 'bg-[var(--surface-3)] text-[var(--text-muted)]'
                       }`}>
                         {currentChart.chart_library === 'd3' ? 'D3' : 'Vega-Lite'}
                       </span>
@@ -521,7 +521,7 @@ export function ProjectPage() {
                           onClick={() => setSelectedLibrary('vega-lite')}
                           className={`flex-1 px-4 py-2.5 rounded-card border-2 text-sm font-medium transition-colors duration-fast ${
                             selectedLibrary === 'vega-lite'
-                              ? 'border-blue-500 bg-blue-500/10 text-blue-400'
+                              ? 'border-[var(--text-subtle)] bg-[var(--surface-2)] text-[var(--text-muted)]'
                               : 'border-[var(--border-strong)] text-[var(--text-muted)] hover:border-[var(--text-subtle)]'
                           }`}
                         >
@@ -543,7 +543,7 @@ export function ProjectPage() {
                     </div>
                     <div className="text-xs text-[var(--text-subtle)] flex gap-3">
                       <span>Examples:</span>
-                      <a href="https://vega.github.io/vega-lite/examples/" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">Vega-Lite Gallery</a>
+                      <a href="https://vega.github.io/vega-lite/examples/" target="_blank" rel="noopener noreferrer" className="text-[var(--text-muted)] hover:text-[var(--text)] underline">Vega-Lite Gallery</a>
                       <a href="https://observablehq.com/@d3/gallery" target="_blank" rel="noopener noreferrer" className="text-orange-400 hover:text-orange-300 underline">D3.js Gallery</a>
                     </div>
                     <InsightSuggestions

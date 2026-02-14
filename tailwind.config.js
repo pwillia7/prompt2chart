@@ -4,6 +4,7 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  darkMode: 'class',
   theme: {
     extend: {
       fontFamily: {
@@ -18,27 +19,21 @@ export default {
           2: 'var(--surface-2)',
           3: 'var(--surface-3)',
         },
-        // Brand
+        // Brand — orange
         primary: {
           DEFAULT: 'var(--primary)',
           hover: 'var(--primary-hover)',
           pressed: 'var(--primary-pressed)',
-          50: '#eef2ff',
-          100: '#e0e7ff',
-          200: '#c7d2fe',
-          300: '#a5b4fc',
-          400: '#818cf8',
-          500: '#4F46E5',
-          600: '#4338CA',
-          700: '#3730A3',
-          800: '#312e81',
-          900: '#1e1b4b',
-        },
-        secondary: {
-          DEFAULT: 'var(--secondary)',
-        },
-        accent: {
-          DEFAULT: 'var(--accent)',
+          50: '#fff7ed',
+          100: '#ffedd5',
+          200: '#fed7aa',
+          300: '#fdba74',
+          400: '#fb923c',
+          500: '#f97316',
+          600: '#ea580c',
+          700: '#c2410c',
+          800: '#9a3412',
+          900: '#7c2d12',
         },
         danger: {
           DEFAULT: 'var(--danger)',

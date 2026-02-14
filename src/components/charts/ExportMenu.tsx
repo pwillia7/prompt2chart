@@ -158,7 +158,7 @@ export function ExportMenu({ chart, d3Handle, vegaHandle, data }: ExportMenuProp
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-1 w-48 bg-[#0A0A0A] rounded-card border border-[var(--border)] shadow-medium z-50 py-1">
+        <div className="absolute right-0 mt-1 w-48 bg-[var(--surface-1)] rounded-card border border-[var(--border)] shadow-medium z-50 py-1">
           <div className="px-3 py-1.5 text-xs font-medium text-[var(--text-subtle)] uppercase tracking-wider">Image</div>
           <button
             onClick={() => handleExport('png')}

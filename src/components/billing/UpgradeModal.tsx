@@ -13,7 +13,7 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-[#0A0A0A] rounded-modal shadow-medium border border-[var(--border)] max-w-lg w-full mx-4 p-6">
+      <div className="relative bg-[var(--surface-1)] rounded-modal shadow-medium border border-[var(--border)] max-w-lg w-full mx-4 p-6">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-[var(--text-subtle)] hover:text-[var(--text-muted)] transition-colors duration-fast"

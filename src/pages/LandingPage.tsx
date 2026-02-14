@@ -15,10 +15,10 @@ export function LandingPage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <svg className="w-7 h-7" viewBox="0 0 100 100">
-              <rect x="10" y="60" width="15" height="30" fill="#818cf8" />
-              <rect x="30" y="40" width="15" height="50" fill="#6366f1" />
-              <rect x="50" y="20" width="15" height="70" fill="#4F46E5" />
-              <rect x="70" y="35" width="15" height="55" fill="#a78bfa" />
+              <rect x="10" y="60" width="15" height="30" fill="#FDBA74" />
+              <rect x="30" y="40" width="15" height="50" fill="#FB923C" />
+              <rect x="50" y="20" width="15" height="70" fill="#F97316" />
+              <rect x="70" y="35" width="15" height="55" fill="#EA580C" />
             </svg>
             <span className="text-lg font-semibold text-[var(--text)]">Prompt2Chart</span>
           </div>
@@ -55,7 +55,7 @@ export function LandingPage() {
               to="/signup"
               className="px-8 py-3 bg-[var(--primary)] text-white text-base font-medium rounded-[10px] hover:bg-[var(--primary-hover)] transition-colors duration-fast shadow-soft"
             >
-              Get Started Free
+              Get Started Free →
             </Link>
             <a
               href="#how-it-works"
@@ -75,7 +75,7 @@ export function LandingPage() {
                 the company name."
               </p>
               <div className="mt-4 flex items-center gap-2 text-xs text-[var(--text-muted)]">
-                <svg className="w-4 h-4 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 text-[var(--primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
                 AI generates interactive D3.js chart in seconds
@@ -86,7 +86,10 @@ export function LandingPage() {
       </section>
 
       {/* Features */}
-      <section className="py-20 bg-[var(--surface-1)]">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="border-t border-dashed border-[var(--border-strong)]" />
+      </div>
+      <section className="py-20">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-[var(--text)]">
@@ -157,6 +160,9 @@ export function LandingPage() {
       </section>
 
       {/* How it works */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="border-t border-dashed border-[var(--border-strong)]" />
+      </div>
       <section id="how-it-works" className="py-20">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
@@ -194,28 +200,28 @@ export function LandingPage() {
           <h2 className="text-3xl font-bold text-white">
             Ready to start visualizing?
           </h2>
-          <p className="mt-4 text-lg text-indigo-200">
+          <p className="mt-4 text-lg text-white/70">
             Sign up for free and create your first chart in under a minute.
           </p>
           <Link
             to="/signup"
-            className="mt-8 inline-block px-8 py-3 bg-white text-[var(--primary)] text-base font-medium rounded-[10px] hover:bg-indigo-50 transition-colors duration-fast shadow-soft"
+            className="mt-8 inline-block px-8 py-3 bg-white text-[var(--primary)] text-base font-medium rounded-[10px] hover:bg-white/90 transition-colors duration-fast shadow-soft"
           >
-            Get Started Free
+            Get Started Free →
           </Link>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-12 bg-[#060810]">
+      <footer className="py-12 bg-[var(--surface-1)]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <svg className="w-6 h-6" viewBox="0 0 100 100">
-                <rect x="10" y="60" width="15" height="30" fill="#818cf8" />
-                <rect x="30" y="40" width="15" height="50" fill="#6366f1" />
-                <rect x="50" y="20" width="15" height="70" fill="#4F46E5" />
-                <rect x="70" y="35" width="15" height="55" fill="#a78bfa" />
+                <rect x="10" y="60" width="15" height="30" fill="#FDBA74" />
+                <rect x="30" y="40" width="15" height="50" fill="#FB923C" />
+                <rect x="50" y="20" width="15" height="70" fill="#F97316" />
+                <rect x="70" y="35" width="15" height="55" fill="#EA580C" />
               </svg>
               <span className="text-sm font-medium text-[var(--text-subtle)]">Prompt2Chart</span>
             </div>
@@ -232,7 +238,7 @@ export function LandingPage() {
 function FeatureCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
   return (
     <div className="bg-[var(--surface-2)] rounded-card p-6 border border-[var(--border)] hover:border-[var(--border-strong)] transition-colors duration-normal">
-      <div className="w-10 h-10 bg-[var(--primary)]/10 rounded-[10px] flex items-center justify-center text-[var(--primary)] mb-4">
+      <div className="w-10 h-10 bg-[var(--surface-3)] rounded-[10px] flex items-center justify-center text-[var(--text-muted)] mb-4">
         {icon}
       </div>
       <h3 className="text-base font-semibold text-[var(--text)] mb-2">{title}</h3>

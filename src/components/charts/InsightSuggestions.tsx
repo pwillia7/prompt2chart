@@ -104,7 +104,7 @@ export function InsightSuggestions({ datasetId, schema, allSchemas, onSelectSugg
                 <span className={`px-1.5 py-0.5 text-xs rounded-pill ${
                   suggestion.library === 'd3'
                     ? 'bg-orange-500/15 text-orange-400'
-                    : 'bg-blue-500/15 text-blue-400'
+                    : 'bg-[var(--surface-3)] text-[var(--text-muted)]'
                 }`}>
                   {suggestion.library === 'd3' ? 'D3' : 'VL'}
                 </span>

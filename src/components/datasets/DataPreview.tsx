@@ -37,7 +37,7 @@ export function DataPreview({ data, schema, maxRows = 10 }: DataPreviewProps) {
           </thead>
           <tbody>
             {previewData.map((row, idx) => (
-              <tr key={idx} className={`border-b border-[var(--border)] ${idx % 2 === 1 ? 'bg-white/[0.02]' : ''} hover:bg-white/[0.04] transition-colors`}>
+              <tr key={idx} className={`border-b border-[var(--border)] ${idx % 2 === 1 ? 'bg-[var(--text)]/[0.03]' : ''} hover:bg-[var(--text)]/[0.05] transition-colors`}>
                 {columns.map((col) => (
                   <td key={col} className="px-4 py-2 text-sm text-[var(--text-muted)] whitespace-nowrap font-mono text-xs">
                     {formatCellValue((row as Record<string, unknown>)[col])}

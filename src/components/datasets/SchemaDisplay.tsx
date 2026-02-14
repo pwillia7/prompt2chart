@@ -6,10 +6,10 @@ interface SchemaDisplayProps {
 
 export function SchemaDisplay({ schema }: SchemaDisplayProps) {
   const typeColors: Record<string, string> = {
-    numeric: 'bg-indigo-500/15 text-indigo-400',
-    categorical: 'bg-emerald-500/15 text-emerald-400',
-    temporal: 'bg-violet-500/15 text-violet-400',
-    string: 'bg-white/10 text-[var(--text-muted)]',
+    numeric: 'bg-[var(--surface-3)] text-[var(--text-muted)]',
+    categorical: 'bg-[var(--surface-3)] text-[var(--text-muted)]',
+    temporal: 'bg-[var(--surface-3)] text-[var(--text-muted)]',
+    string: 'bg-[var(--surface-3)] text-[var(--text-muted)]',
   }
 
   return (
@@ -33,7 +33,7 @@ export function SchemaDisplay({ schema }: SchemaDisplayProps) {
                   {column.type}
                 </span>
                 {column.nullable && (
-                  <span className="px-2 py-0.5 rounded-pill text-xs font-medium bg-amber-500/15 text-amber-400">
+                  <span className="px-2 py-0.5 rounded-pill text-xs font-medium bg-[var(--warning)]/15 text-[var(--warning)]">
                     nullable
                   </span>
                 )}
