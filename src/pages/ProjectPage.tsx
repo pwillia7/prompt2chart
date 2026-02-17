@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { Layout } from '../components/layout/Layout'
+import { useDocumentTitle } from '../lib/useDocumentTitle'
 import { DatasetUploader } from '../components/datasets/DatasetUploader'
 import { SchemaDisplay } from '../components/datasets/SchemaDisplay'
 import { DataPreview } from '../components/datasets/DataPreview'
@@ -126,6 +127,7 @@ function ChartTreeItem({
 }
 
 export function ProjectPage() {
+  useDocumentTitle('Project - Prompt2Chart')
   const { projectId } = useParams<{ projectId: string }>()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<'data' | 'charts'>('data')

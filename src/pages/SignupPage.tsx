@@ -1,9 +1,11 @@
 import { Navigate } from 'react-router-dom'
 import { SignupForm } from '../components/auth/SignupForm'
 import { useAuthStore } from '../store/authStore'
+import { useDocumentTitle } from '../lib/useDocumentTitle'
 
 export function SignupPage() {
   const { session } = useAuthStore()
+  useDocumentTitle('Sign Up - Prompt2Chart')
 
   if (session) {
     return <Navigate to="/dashboard" replace />

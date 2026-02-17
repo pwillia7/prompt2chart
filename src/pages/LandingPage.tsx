@@ -2,11 +2,13 @@ import { useEffect, useRef } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import * as d3 from 'd3'
 import { useAuthStore } from '../store/authStore'
+import { useDocumentTitle } from '../lib/useDocumentTitle'
 
 export function LandingPage() {
-  const { user } = useAuthStore()
+  const { session } = useAuthStore()
+  useDocumentTitle('Prompt2Chart - AI-Powered Data Visualizations')
 
-  if (user) {
+  if (session) {
     return <Navigate to="/dashboard" replace />
   }
 

@@ -4,8 +4,10 @@ import { Layout } from '../components/layout/Layout'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { track } from '../lib/analytics'
+import { useDocumentTitle } from '../lib/useDocumentTitle'
 
 export function FeedbackPage() {
+  useDocumentTitle('Feedback & Support - Prompt2Chart')
   const navigate = useNavigate()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')

@@ -2,8 +2,10 @@ import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Layout } from '../components/layout/Layout'
 import { useBillingStore } from '../store/billingStore'
+import { useDocumentTitle } from '../lib/useDocumentTitle'
 
 export function PricingPage() {
+  useDocumentTitle('Pricing - Prompt2Chart')
   const navigate = useNavigate()
   const { credits, packs, purchasing, fetchCredits, purchaseCredits } = useBillingStore()
 

@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#0f172a"/>
+  <rect x="0" y="590" width="1200" height="40" fill="#0ea5e9" opacity="0.15"/>
+
+  <!-- Chart bars -->
+  <rect x="420" y="320" width="50" height="100" rx="4" fill="#FDBA74"/>
+  <rect x="490" y="260" width="50" height="160" rx="4" fill="#FB923C"/>
+  <rect x="560" y="200" width="50" height="220" rx="4" fill="#F97316"/>
+  <rect x="630" y="240" width="50" height="180" rx="4" fill="#EA580C"/>
+  <rect x="700" y="180" width="50" height="240" rx="4" fill="#F97316"/>
+
+  <!-- Trend line -->
+  <polyline points="445,310 515,250 585,190 655,230 725,170" stroke="#0ea5e9" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="445" cy="310" r="5" fill="#0ea5e9"/>
+  <circle cx="515" cy="250" r="5" fill="#0ea5e9"/>
+  <circle cx="585" cy="190" r="5" fill="#0ea5e9"/>
+  <circle cx="655" cy="230" r="5" fill="#0ea5e9"/>
+  <circle cx="725" cy="170" r="5" fill="#0ea5e9"/>
+
+  <!-- Title -->
+  <text x="600" y="100" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="56" font-weight="700" fill="#f8fafc">Prompt2Chart</text>
+
+  <!-- Tagline -->
+  <text x="600" y="150" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="24" fill="#94a3b8">Turn your data into interactive visualizations with AI</text>
+
+  <!-- Bottom text -->
+  <text x="600" y="530" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="20" fill="#64748b">prompt2chart.com</text>
+</svg>

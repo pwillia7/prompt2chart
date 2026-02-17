@@ -1,9 +1,11 @@
 import { Navigate } from 'react-router-dom'
 import { LoginForm } from '../components/auth/LoginForm'
 import { useAuthStore } from '../store/authStore'
+import { useDocumentTitle } from '../lib/useDocumentTitle'
 
 export function LoginPage() {
   const { session } = useAuthStore()
+  useDocumentTitle('Sign In - Prompt2Chart')
 
   if (session) {
     return <Navigate to="/dashboard" replace />

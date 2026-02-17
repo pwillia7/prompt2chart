@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
+import { useDocumentTitle } from '../lib/useDocumentTitle'
 
 export function NotFoundPage() {
+  useDocumentTitle('Page Not Found - Prompt2Chart')
   return (
     <div className="min-h-screen flex items-center justify-center bg-bg px-4">
       <div className="max-w-md w-full text-center">

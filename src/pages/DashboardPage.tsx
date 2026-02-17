@@ -6,8 +6,10 @@ import { CreateProjectModal } from '../components/projects/CreateProjectModal'
 import { SampleDataCards } from '../components/projects/SampleDataCards'
 import { Button } from '../components/ui/Button'
 import { useBillingStore } from '../store/billingStore'
+import { useDocumentTitle } from '../lib/useDocumentTitle'
 
 export function DashboardPage() {
+  useDocumentTitle('Dashboard - Prompt2Chart')
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [checkoutMessage, setCheckoutMessage] = useState<string | null>(null)
   const [searchParams, setSearchParams] = useSearchParams()
