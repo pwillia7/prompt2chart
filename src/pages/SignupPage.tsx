@@ -3,9 +3,9 @@ import { SignupForm } from '../components/auth/SignupForm'
 import { useAuthStore } from '../store/authStore'
 
 export function SignupPage() {
-  const { user } = useAuthStore()
+  const { session } = useAuthStore()
 
-  if (user) {
+  if (session) {
     return <Navigate to="/dashboard" replace />
   }
 

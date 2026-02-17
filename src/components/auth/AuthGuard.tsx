@@ -8,7 +8,7 @@ interface AuthGuardProps {
 }
 
 export function AuthGuard({ children }: AuthGuardProps) {
-  const { user, initialized } = useAuthStore()
+  const { session, initialized } = useAuthStore()
   const location = useLocation()
 
   if (!initialized) {
@@ -19,7 +19,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
     )
   }
 
-  if (!user) {
+  if (!session) {
     return <Navigate to="/login" state={{ from: location }} replace />
   }
 

@@ -126,6 +126,20 @@ All TailwindCSS, no custom CSS files. Custom `primary` color scale (sky blue). C
 
 Charts export to PNG, SVG, HTML, and raw code. PNG/SVG exports convert HTML legends to SVG elements (measuring positions from the live DOM) and expand the viewBox to fit. HTML export captures the full container natively.
 
+## Git Branching & Deployment
+
+- **`main`** = production. Auto-deploys to Netlify (prompt2chart.com). Never push directly unless it's tested.
+- **`dev`** = working branch. All new features and fixes go here first.
+
+**Workflow for new features:**
+1. `git checkout dev` and `git pull origin dev`
+2. Make changes, commit, push to `dev`
+3. Test locally on the remote Windows/Docker machine with `npm run dev`
+4. When ready for production: `git checkout main && git merge dev && git push origin main`
+5. Netlify auto-deploys from `main`
+
+**Supabase Edge Functions** are deployed separately via `supabase functions deploy` — they do NOT auto-deploy from git.
+
 ## Gotchas
 
 - `llm-adapter.ts` runs on **Deno**, not Node — use Deno-compatible imports

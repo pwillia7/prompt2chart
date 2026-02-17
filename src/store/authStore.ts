@@ -42,9 +42,12 @@ export const useAuthStore = create<AuthState>((set) => ({
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: window.location.origin + '/dashboard',
+        },
       })
       if (error) throw error
-      set({ user: data.user, session: data.session })
+      set({ user: data.session ? data.user : null, session: data.session })
       return { error: null }
     } catch (error) {
       return { error: error as Error }
