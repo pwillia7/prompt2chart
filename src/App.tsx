@@ -10,6 +10,7 @@ import { ProjectPage } from './pages/ProjectPage'
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
 import { LandingPage } from './pages/LandingPage'
 import { FeedbackPage } from './pages/FeedbackPage'
+import { PricingPage } from './pages/PricingPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { Spinner } from './components/ui/Spinner'
 
@@ -48,6 +49,14 @@ function App() {
           element={
             <AuthGuard>
               <ProjectPage />
+            </AuthGuard>
+          }
+        />
+        <Route
+          path="/pricing"
+          element={
+            <AuthGuard>
+              <PricingPage />
             </AuthGuard>
           }
         />
