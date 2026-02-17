@@ -7,11 +7,7 @@ interface AuthState {
   session: Session | null
   loading: boolean
   initialized: boolean
-  signUp: (email: string, password: string) => Promise<{ error: Error | null }>
-  signIn: (email: string, password: string) => Promise<{ error: Error | null }>
-  signInWithMagicLink: (email: string) => Promise<{ error: Error | null }>
   signInWithOAuth: (provider: Provider) => Promise<{ error: Error | null }>
-  resetPassword: (email: string) => Promise<{ error: Error | null }>
   signOut: () => Promise<void>
   initialize: () => Promise<void>
 }
@@ -36,61 +32,6 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 
-  signUp: async (email: string, password: string) => {
-    set({ loading: true })
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: window.location.origin + '/dashboard',
-        },
-      })
-      if (error) throw error
-      set({ user: data.session ? data.user : null, session: data.session })
-      return { error: null }
-    } catch (error) {
-      return { error: error as Error }
-    } finally {
-      set({ loading: false })
-    }
-  },
-
-  signIn: async (email: string, password: string) => {
-    set({ loading: true })
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-      if (error) throw error
-      set({ user: data.user, session: data.session })
-      return { error: null }
-    } catch (error) {
-      return { error: error as Error }
-    } finally {
-      set({ loading: false })
-    }
-  },
-
-  signInWithMagicLink: async (email: string) => {
-    set({ loading: true })
-    try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          emailRedirectTo: window.location.origin,
-        },
-      })
-      if (error) throw error
-      return { error: null }
-    } catch (error) {
-      return { error: error as Error }
-    } finally {
-      set({ loading: false })
-    }
-  },
-
   signInWithOAuth: async (provider: Provider) => {
     set({ loading: true })
     try {
@@ -99,21 +40,6 @@ export const useAuthStore = create<AuthState>((set) => ({
         options: {
           redirectTo: window.location.origin,
         },
-      })
-      if (error) throw error
-      return { error: null }
-    } catch (error) {
-      return { error: error as Error }
-    } finally {
-      set({ loading: false })
-    }
-  },
-
-  resetPassword: async (email: string) => {
-    set({ loading: true })
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/login`,
       })
       if (error) throw error
       return { error: null }
