@@ -58,13 +58,13 @@ export function DashboardPage() {
         </Button>
       </div>
 
-      <div className="mb-8">
+      <ProjectList />
+
+      <div className="mt-8">
         <h2 className="text-lg font-medium text-[var(--text)] mb-1">Try Sample Data</h2>
-        <p className="text-sm text-[var(--text-muted)] mb-4">Start exploring instantly</p>
+        <p className="text-sm text-[var(--text-muted)] mb-4">No data handy? Try a pre-loaded dataset</p>
         <SampleDataCards />
       </div>
-
-      <ProjectList />
 
       <CreateProjectModal
         isOpen={isCreateModalOpen}

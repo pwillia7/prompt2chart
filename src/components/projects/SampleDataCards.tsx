@@ -49,17 +49,7 @@ export function SampleDataCards() {
                   {sample.rowCount.toLocaleString()} rows
                 </span>
               </div>
-              <p className="text-sm text-[var(--text-muted)] mb-3">{sample.description}</p>
-              <div className="flex flex-wrap gap-1.5">
-                {sample.columns.map((col) => (
-                  <span
-                    key={col}
-                    className="text-xs px-2 py-0.5 rounded-full bg-[var(--surface-2)] text-[var(--text-muted)]"
-                  >
-                    {col}
-                  </span>
-                ))}
-              </div>
+              <p className="text-sm text-[var(--text-muted)]">{sample.description}</p>
               {isLoading && (
                 <div className="mt-3 flex items-center gap-2 text-sm text-[var(--primary)]">
                   <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
