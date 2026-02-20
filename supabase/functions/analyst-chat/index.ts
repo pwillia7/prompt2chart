@@ -17,7 +17,7 @@ interface AnalystChatRequest {
 
 const MAX_MESSAGE_LENGTH = 2000
 const MAX_HISTORY_MESSAGES = 10
-const RATE_LIMIT_PER_HOUR = 60
+const RATE_LIMIT_PER_MINUTE = 20
 
 function buildSystemPrompt(schema: DatasetSchema, chartLibrary: ChartLibrary, chartCode?: string, vegaSpec?: string, explanation?: string, allSchemas?: AllSchemaEntry[]): string {
   const cols = schema.columns.map(c => `${c.name} (${c.type})`).join(', ')
@@ -97,11 +97,11 @@ serve(async (req) => {
     // Rate limit check
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    const { allowed } = await checkRateLimit(supabaseUrl, serviceRoleKey, user.id, 'analyst_chat', RATE_LIMIT_PER_HOUR)
+    const { allowed, retryAfterSeconds } = await checkRateLimit(supabaseUrl, serviceRoleKey, user.id, 'analyst_chat', RATE_LIMIT_PER_MINUTE)
     if (!allowed) {
       return new Response(
-        JSON.stringify({ error: 'Rate limit exceeded. Please wait before sending more messages.' }),
-        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': '60' } }
+        JSON.stringify({ error: `Rate limit exceeded. Please wait ${retryAfterSeconds} seconds before sending more messages.` }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': String(retryAfterSeconds) } }
       )
     }
 

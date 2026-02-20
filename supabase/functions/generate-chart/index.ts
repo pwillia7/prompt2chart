@@ -14,7 +14,7 @@ interface GenerateChartRequest {
 
 const MAX_PROMPT_LENGTH = 4000
 const MAX_BODY_SIZE = 100_000 // 100KB
-const RATE_LIMIT_PER_HOUR = 30
+const RATE_LIMIT_PER_MINUTE = 20
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -53,11 +53,11 @@ serve(async (req) => {
     // Rate limit check
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    const { allowed, remaining } = await checkRateLimit(supabaseUrl, serviceRoleKey, user.id, 'chart_generation', RATE_LIMIT_PER_HOUR)
+    const { allowed, remaining, retryAfterSeconds } = await checkRateLimit(supabaseUrl, serviceRoleKey, user.id, 'chart_generation', RATE_LIMIT_PER_MINUTE)
     if (!allowed) {
       return new Response(
-        JSON.stringify({ error: 'Rate limit exceeded. Please wait before generating more charts.' }),
-        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': '300' } }
+        JSON.stringify({ error: `Rate limit exceeded. Please wait ${retryAfterSeconds} seconds before generating more charts.` }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': String(retryAfterSeconds) } }
       )
     }
 

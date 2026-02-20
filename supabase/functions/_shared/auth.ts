@@ -39,28 +39,42 @@ export async function checkRateLimit(
   serviceRoleKey: string,
   userId: string,
   eventType: string,
-  maxPerHour: number,
-): Promise<{ allowed: boolean; remaining: number }> {
+  maxPerMinute: number,
+): Promise<{ allowed: boolean; remaining: number; retryAfterSeconds: number }> {
   // Use service role client for rate limit checks (bypasses RLS)
   const adminClient = createClient(supabaseUrl, serviceRoleKey)
 
-  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
+  const now = Date.now()
+  const oneMinuteAgo = new Date(now - 60 * 1000).toISOString()
 
-  const { count, error } = await adminClient
+  const { data, count, error } = await adminClient
     .from('usage_events')
-    .select('*', { count: 'exact', head: true })
+    .select('created_at', { count: 'exact' })
     .eq('user_id', userId)
     .eq('event_type', eventType)
-    .gte('created_at', oneHourAgo)
+    .gte('created_at', oneMinuteAgo)
+    .order('created_at', { ascending: true })
+    .limit(1)
 
   if (error) {
     console.error('Rate limit check failed:', error)
     // Fail open — don't block users if rate limit check errors
-    return { allowed: true, remaining: maxPerHour }
+    return { allowed: true, remaining: maxPerMinute, retryAfterSeconds: 0 }
   }
 
   const used = count ?? 0
-  return { allowed: used < maxPerHour, remaining: Math.max(0, maxPerHour - used) }
+  // Calculate seconds until the oldest event in the window expires
+  let retryAfterSeconds = 60
+  if (data && data.length > 0) {
+    const oldestEventTime = new Date(data[0].created_at).getTime()
+    retryAfterSeconds = Math.max(1, Math.ceil((oldestEventTime + 60 * 1000 - now) / 1000))
+  }
+
+  return {
+    allowed: used < maxPerMinute,
+    remaining: Math.max(0, maxPerMinute - used),
+    retryAfterSeconds,
+  }
 }
 
 // Log a usage event (for rate limiting and billing)
