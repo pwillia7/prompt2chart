@@ -26,7 +26,19 @@ export function LandingPage() {
             </svg>
             <span className="text-lg font-semibold text-[var(--text)]">Prompt2Chart</span>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <a
+              href="#pricing"
+              className="text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text)] transition-colors duration-fast hidden sm:inline"
+            >
+              Pricing
+            </a>
+            <a
+              href="#faq"
+              className="text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text)] transition-colors duration-fast hidden sm:inline"
+            >
+              FAQ
+            </a>
             <Link
               to="/login"
               className="text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text)] transition-colors duration-fast"
@@ -206,6 +218,112 @@ export function LandingPage() {
         </div>
       </section>
 
+      {/* Pricing */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="border-t border-dashed border-[var(--border-strong)]" />
+      </div>
+      <section id="pricing" className="py-20">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-[var(--text)]">
+              Simple, transparent pricing
+            </h2>
+            <p className="mt-4 text-lg text-[var(--text-muted)]">
+              No subscriptions. No hidden fees. Start free and only pay for what you need.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+            {/* Free tier */}
+            <div className="bg-[var(--surface-2)] rounded-card p-6 border-2 border-[var(--primary)] relative">
+              <div className="absolute -top-3 left-6 px-3 py-0.5 bg-[var(--primary)] text-white text-xs font-medium rounded-full">
+                Free to start
+              </div>
+              <h3 className="text-lg font-semibold text-[var(--text)] mb-4 mt-1">What's included</h3>
+              <ul className="space-y-3">
+                <li className="flex items-start gap-3 text-sm text-[var(--text-muted)]">
+                  <svg className="w-5 h-5 text-green-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span><strong className="text-[var(--text)]">100 credits</strong> when you sign up</span>
+                </li>
+                <li className="flex items-start gap-3 text-sm text-[var(--text-muted)]">
+                  <svg className="w-5 h-5 text-green-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span><strong className="text-[var(--text)]">25 free credits</strong> added every month</span>
+                </li>
+                <li className="flex items-start gap-3 text-sm text-[var(--text-muted)]">
+                  <svg className="w-5 h-5 text-green-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span><strong className="text-[var(--text)]">Unlimited</strong> dataset uploads, projects, and exports</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Credit costs */}
+            <div className="bg-[var(--surface-2)] rounded-card p-6 border border-[var(--border)]">
+              <h3 className="text-lg font-semibold text-[var(--text)] mb-4">What costs a credit</h3>
+              <ul className="space-y-3">
+                <li className="flex items-center justify-between text-sm">
+                  <span className="text-[var(--text-muted)]">Chart generation</span>
+                  <span className="font-medium text-[var(--text)]">1 credit</span>
+                </li>
+                <li className="flex items-center justify-between text-sm">
+                  <span className="text-[var(--text-muted)]">Analyst chat message</span>
+                  <span className="font-medium text-[var(--text)]">1 credit</span>
+                </li>
+                <li className="border-t border-[var(--border)] pt-3 mt-3">
+                  <p className="text-xs font-medium text-[var(--text-subtle)] uppercase tracking-wider mb-2">Always free</p>
+                  <p className="text-sm text-[var(--text-muted)]">Dataset uploads, browsing, PNG/SVG/HTML exports</p>
+                </li>
+              </ul>
+              <p className="mt-4 text-xs text-[var(--text-subtle)]">
+                Need more? Credit packs available for purchase after signup.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="border-t border-dashed border-[var(--border-strong)]" />
+      </div>
+      <section id="faq" className="py-20">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-[var(--text)]">
+              Frequently asked questions
+            </h2>
+          </div>
+
+          <div className="space-y-4">
+            <FaqCard
+              question="What if I run out of credits?"
+              answer="You get 25 free credits every month, automatically. If you need more, you can buy credit packs anytime — no commitment, no subscription."
+            />
+            <FaqCard
+              question="Is my data secure?"
+              answer="Your data is stored privately and is never shared with other users or used for model training. Only you can access your datasets and charts."
+            />
+            <FaqCard
+              question="Do I need a subscription?"
+              answer="No. Prompt2Chart has no subscriptions. You get free monthly credits, and you can optionally purchase more whenever you need them."
+            />
+            <FaqCard
+              question="What data formats are supported?"
+              answer="You can upload CSV files or paste data directly. Prompt2Chart automatically detects column names, types, and data patterns."
+            />
+            <FaqCard
+              question="Can I export my charts?"
+              answer="Yes — every chart can be exported as PNG, SVG, or standalone HTML. Exports are always free and don't cost any credits."
+            />
+          </div>
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="py-20 bg-[var(--primary)]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -213,7 +331,7 @@ export function LandingPage() {
             Ready to start visualizing?
           </h2>
           <p className="mt-4 text-lg text-white/70">
-            Sign up for free and create your first chart in under a minute.
+            100 free credits included. No credit card required.
           </p>
           <Link
             to="/signup"
@@ -267,6 +385,15 @@ function StepCard({ number, title, description }: { number: string; title: strin
       </div>
       <h3 className="text-base font-semibold text-[var(--text)] mb-2">{title}</h3>
       <p className="text-[var(--text-muted)] text-sm leading-relaxed">{description}</p>
+    </div>
+  )
+}
+
+function FaqCard({ question, answer }: { question: string; answer: string }) {
+  return (
+    <div className="bg-[var(--surface-2)] rounded-card p-5 border border-[var(--border)]">
+      <h3 className="text-sm font-semibold text-[var(--text)] mb-2">{question}</h3>
+      <p className="text-sm text-[var(--text-muted)] leading-relaxed">{answer}</p>
     </div>
   )
 }
