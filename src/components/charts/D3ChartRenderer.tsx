@@ -13,9 +13,10 @@ interface D3ChartRendererProps {
   className?: string
   onRetry?: () => void
   onRenderError?: (error: string) => void
+  creditRefunded?: boolean
 }
 
-export const D3ChartRenderer = forwardRef<D3ChartHandle, D3ChartRendererProps>(function D3ChartRenderer({ code, data, className = '', onRetry, onRenderError }, ref) {
+export const D3ChartRenderer = forwardRef<D3ChartHandle, D3ChartRendererProps>(function D3ChartRenderer({ code, data, className = '', onRetry, onRenderError, creditRefunded }, ref) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -158,24 +159,34 @@ export const D3ChartRenderer = forwardRef<D3ChartHandle, D3ChartRendererProps>(f
       )}
 
       {error && (
-        <div className="p-4 bg-[var(--danger)]/10 border border-[var(--danger)]/20 rounded-card">
-          <p className="text-red-400 text-sm">{error}</p>
-          <div className="flex items-center gap-3 mt-2">
-            {onRetry && (
-              <button
-                onClick={onRetry}
-                className="text-sm text-red-400 font-medium hover:text-red-300 underline"
-              >
-                Regenerate chart
-              </button>
-            )}
-            <details>
+        <div className="space-y-3">
+          <div className="p-4 bg-[var(--danger)]/10 border border-[var(--danger)]/20 rounded-card">
+            <p className="text-red-400 text-sm">{error}</p>
+            <details className="mt-2">
               <summary className="text-sm text-red-400/70 cursor-pointer">View code</summary>
               <pre className="mt-2 p-2 bg-[var(--surface-2)] rounded-[10px] text-xs overflow-auto max-h-64 text-[var(--text-muted)] font-mono">
                 {code}
               </pre>
             </details>
           </div>
+          {onRetry && (
+            <div className="flex items-center gap-3 p-3 bg-[var(--surface-2)] rounded-card border border-[var(--border)]">
+              {creditRefunded && (
+                <span className="text-sm text-green-400 flex items-center gap-1.5">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Credit refunded
+                </span>
+              )}
+              <button
+                onClick={onRetry}
+                className="px-3 py-1.5 text-sm font-medium bg-[var(--primary)] text-white rounded-lg hover:bg-[var(--primary-hover)] transition-colors duration-fast"
+              >
+                Regenerate Chart
+              </button>
+            </div>
+          )}
         </div>
       )}
 

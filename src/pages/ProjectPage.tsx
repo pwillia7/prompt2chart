@@ -19,6 +19,8 @@ import { useChartStore } from '../store/chartStore'
 import { trackUsage } from '../lib/usageTracker'
 import { track } from '../lib/analytics'
 import { sampleData } from '../lib/dataSampler'
+import { supabase } from '../lib/supabase'
+import { useBillingStore } from '../store/billingStore'
 import { Chart, ChartLibrary } from '../types'
 
 interface ChartTreeNode {
@@ -192,10 +194,13 @@ export function ProjectPage() {
   const autoRetryCountRef = useRef(0)
   const lastGeneratedIdRef = useRef<string | null>(null)
   const isAutoRetryRef = useRef(false)
+  const refundedChartIdsRef = useRef<Set<string>>(new Set())
+  const [creditRefunded, setCreditRefunded] = useState(false)
 
   const handleGenerateChart = async (prompt: string, libraryOverride?: ChartLibrary, fromScratch?: boolean) => {
     if (!projectId || !currentDataset || !parsedData) return
 
+    setCreditRefunded(false)
     if (!isAutoRetryRef.current) {
       autoRetryCountRef.current = 0
     }
@@ -241,12 +246,29 @@ export function ProjectPage() {
     handleGenerateChart(prompt, library)
   }
 
-  const handleRenderError = useCallback((errorMsg: string) => {
+  const handleRenderError = useCallback(async (errorMsg: string) => {
     if (!currentChart) return
     if (currentChart.id !== lastGeneratedIdRef.current) return
-    if (autoRetryCountRef.current >= 2) return
     if (generating) return
 
+    // Refund credit for this failed render (once per chart)
+    if (!refundedChartIdsRef.current.has(currentChart.id)) {
+      refundedChartIdsRef.current.add(currentChart.id)
+      try {
+        const { data } = await supabase.functions.invoke('refund-credit', {
+          body: { chartId: currentChart.id },
+        })
+        if (data?.balance !== undefined) {
+          useBillingStore.getState().setCredits(data.balance)
+        }
+        setCreditRefunded(true)
+      } catch (e) {
+        console.error('Credit refund failed:', e)
+      }
+    }
+
+    // Auto-retry up to 2 times
+    if (autoRetryCountRef.current >= 2) return
     autoRetryCountRef.current++
     isAutoRetryRef.current = true
     handleGenerateChart(
@@ -412,9 +434,9 @@ export function ProjectPage() {
                   </div>
                   <div className="relative">
                     {currentChart.chart_library === 'd3' && currentChart.d3_code && renderData ? (
-                      <D3ChartRenderer ref={d3Ref} code={currentChart.d3_code} data={renderData} onRetry={() => handleGenerateChart(currentChart.prompt, undefined, true)} onRenderError={handleRenderError} />
+                      <D3ChartRenderer ref={d3Ref} code={currentChart.d3_code} data={renderData} onRetry={() => handleGenerateChart(currentChart.prompt, undefined, true)} onRenderError={handleRenderError} creditRefunded={creditRefunded} />
                     ) : currentChart.vega_spec_json ? (
-                      <ChartRenderer ref={vegaRef} spec={currentChart.vega_spec_json} data={renderData ?? undefined} />
+                      <ChartRenderer ref={vegaRef} spec={currentChart.vega_spec_json} data={renderData ?? undefined} onRetry={() => handleGenerateChart(currentChart.prompt, undefined, true)} onRenderError={handleRenderError} creditRefunded={creditRefunded} />
                     ) : (
                       <div className="p-8 text-center text-[var(--text-subtle)]">
                         Unable to render chart: missing data
