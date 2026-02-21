@@ -393,6 +393,7 @@ function ExamplesCarousel() {
   const [activeIndex, setActiveIndex] = useState(0)
   const [isHovered, setIsHovered] = useState(false)
   const autoAdvanceInterval = 6000
+  const sorted = [...exampleCharts].sort((a, b) => (a.library === 'd3' ? 0 : 1) - (b.library === 'd3' ? 0 : 1))
 
   const scrollToIndex = useCallback((idx: number) => {
     const el = scrollRef.current
@@ -422,7 +423,7 @@ function ExamplesCarousel() {
   }, [])
 
   const goTo = useCallback((idx: number) => {
-    const wrapped = ((idx % exampleCharts.length) + exampleCharts.length) % exampleCharts.length
+    const wrapped = ((idx % sorted.length) + sorted.length) % sorted.length
     scrollToIndex(wrapped)
   }, [scrollToIndex])
 
@@ -431,7 +432,7 @@ function ExamplesCarousel() {
     if (isHovered) return
     const timer = setInterval(() => {
       setActiveIndex(prev => {
-        const next = (prev + 1) % exampleCharts.length
+        const next = (prev + 1) % sorted.length
         scrollToIndex(next)
         return next
       })
@@ -448,7 +449,7 @@ function ExamplesCarousel() {
       {/* Centered heading */}
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 mb-8 text-center">
         <h3 className="text-2xl sm:text-3xl font-bold text-[var(--text)]">
-          Examples Gallery
+          Example Outputs
         </h3>
         <p className="mt-3 text-base text-[var(--text-muted)]">
           Every visualization below was generated from a single prompt.{' '}
@@ -494,7 +495,7 @@ function ExamplesCarousel() {
           {/* Spacer to allow first card to center */}
           <div className="shrink-0" style={{ width: 'max(0px, calc(50% - 370px))' }} aria-hidden="true" />
 
-          {exampleCharts.map((example, i) => (
+          {sorted.map((example, i) => (
             <div
               key={example.id}
               data-index={i}
@@ -535,7 +536,7 @@ function ExamplesCarousel() {
 
       {/* Dot indicators */}
       <div className="flex justify-center gap-1.5 mt-5">
-        {exampleCharts.map((_, i) => (
+        {sorted.map((_, i) => (
           <button
             key={i}
             onClick={() => goTo(i)}
