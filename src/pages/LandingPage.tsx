@@ -1,3 +1,4 @@
+import { useRef, useState, useCallback } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
@@ -94,48 +95,7 @@ export function LandingPage() {
 
         </div>
 
-        {/* Scrolling examples carousel */}
-        <div className="mt-16">
-          <div className="flex items-center justify-between max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mb-4">
-            <div className="text-xs font-medium text-[var(--text-subtle)] uppercase tracking-wider">
-              Examples Gallery
-            </div>
-            <Link
-              to="/examples"
-              className="text-sm font-medium text-[var(--primary)] hover:underline"
-            >
-              View all examples →
-            </Link>
-          </div>
-          <div
-            className="overflow-x-auto pb-4"
-            style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}
-          >
-            <div className="flex gap-5 px-4 sm:px-6 lg:px-8" style={{ width: 'max-content' }}>
-              {exampleCharts.map(example => (
-                <div
-                  key={example.id}
-                  className="w-[380px] shrink-0 bg-white rounded-card shadow-soft overflow-hidden border border-[var(--border)]"
-                  style={{ scrollSnapAlign: 'start' }}
-                >
-                  <div className="bg-white">
-                    {example.library === 'd3' ? (
-                      <D3ChartRenderer code={example.d3Code!} data={example.data as unknown[]} />
-                    ) : (
-                      <ChartRenderer spec={example.vegaSpec as VegaLiteSpec} />
-                    )}
-                  </div>
-                  <div className="p-3">
-                    <p className="text-sm font-semibold text-[var(--text)]">{example.title}</p>
-                    <p className="text-xs text-[var(--text-muted)] mt-1 italic line-clamp-2">
-                      &ldquo;{example.description}&rdquo;
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+        <ExamplesCarousel />
       </section>
 
       {/* Features */}
@@ -424,6 +384,154 @@ function FaqCard({ question, answer }: { question: string; answer: string }) {
     <div className="bg-[var(--surface-2)] rounded-card p-5 border border-[var(--border)]">
       <h3 className="text-sm font-semibold text-[var(--text)] mb-2">{question}</h3>
       <p className="text-sm text-[var(--text-muted)] leading-relaxed">{answer}</p>
+    </div>
+  )
+}
+
+function ExamplesCarousel() {
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const [activeIndex, setActiveIndex] = useState(0)
+
+  const scrollToIndex = useCallback((idx: number) => {
+    const el = scrollRef.current
+    if (!el) return
+    const card = el.querySelector(`[data-index="${idx}"]`) as HTMLElement | null
+    if (!card) return
+    const scrollLeft = card.offsetLeft - (el.clientWidth - card.offsetWidth) / 2
+    el.scrollTo({ left: scrollLeft, behavior: 'smooth' })
+  }, [])
+
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current
+    if (!el) return
+    const center = el.scrollLeft + el.clientWidth / 2
+    const cards = el.querySelectorAll<HTMLElement>('[data-index]')
+    let closestIdx = 0
+    let minDist = Infinity
+    cards.forEach(card => {
+      const cardCenter = card.offsetLeft + card.offsetWidth / 2
+      const dist = Math.abs(cardCenter - center)
+      if (dist < minDist) {
+        minDist = dist
+        closestIdx = parseInt(card.dataset.index!, 10)
+      }
+    })
+    setActiveIndex(closestIdx)
+  }, [])
+
+  const prev = useCallback(() => {
+    scrollToIndex(Math.max(0, activeIndex - 1))
+  }, [activeIndex, scrollToIndex])
+
+  const next = useCallback(() => {
+    scrollToIndex(Math.min(exampleCharts.length - 1, activeIndex + 1))
+  }, [activeIndex, scrollToIndex])
+
+  return (
+    <div className="mt-16">
+      <div className="flex items-center justify-between max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
+        <h3 className="text-xs font-medium text-[var(--text-subtle)] uppercase tracking-wider">
+          Examples Gallery
+        </h3>
+        <Link to="/examples" className="text-sm font-medium text-[var(--primary)] hover:underline">
+          View all examples →
+        </Link>
+      </div>
+
+      <div className="relative">
+        {/* Left arrow */}
+        {activeIndex > 0 && (
+          <button
+            onClick={prev}
+            className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white/90 shadow-lg border border-gray-200 flex items-center justify-center hover:bg-white hover:scale-105 transition-all"
+            aria-label="Previous chart"
+          >
+            <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+        )}
+
+        {/* Right arrow */}
+        {activeIndex < exampleCharts.length - 1 && (
+          <button
+            onClick={next}
+            className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white/90 shadow-lg border border-gray-200 flex items-center justify-center hover:bg-white hover:scale-105 transition-all"
+            aria-label="Next chart"
+          >
+            <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        )}
+
+        {/* Scrollable track */}
+        <div
+          ref={scrollRef}
+          onScroll={handleScroll}
+          className="carousel-scroll flex gap-5 overflow-x-auto"
+          style={{
+            scrollSnapType: 'x mandatory',
+            scrollbarWidth: 'none',
+          } as React.CSSProperties}
+        >
+          {/* Spacer to allow first card to center */}
+          <div className="shrink-0" style={{ width: 'max(1rem, calc(50% - 280px))' }} aria-hidden="true" />
+
+          {exampleCharts.map((example, i) => (
+            <div
+              key={example.id}
+              data-index={i}
+              className="w-[85vw] sm:w-[540px] shrink-0 bg-white rounded-card shadow-soft overflow-hidden border border-[var(--border)] flex flex-col"
+              style={{ scrollSnapAlign: 'center' }}
+            >
+              <div className="h-[300px] overflow-hidden bg-white">
+                {example.library === 'd3' ? (
+                  <D3ChartRenderer code={example.d3Code!} data={example.data as unknown[]} />
+                ) : (
+                  <ChartRenderer spec={example.vegaSpec as VegaLiteSpec} />
+                )}
+              </div>
+              <div className="p-4 border-t border-[var(--border)]">
+                <div className="flex items-center gap-2 mb-1">
+                  <p className="text-sm font-semibold text-[var(--text)]">{example.title}</p>
+                  <span className={`px-2 py-0.5 text-[10px] rounded-full font-medium ${
+                    example.library === 'd3'
+                      ? 'bg-orange-100 text-orange-700'
+                      : 'bg-blue-100 text-blue-700'
+                  }`}>
+                    {example.library === 'd3' ? 'D3.js' : 'Vega-Lite'}
+                  </span>
+                </div>
+                <p className="text-xs text-[var(--text-muted)] italic line-clamp-2">
+                  &ldquo;{example.description}&rdquo;
+                </p>
+              </div>
+            </div>
+          ))}
+
+          {/* Spacer to allow last card to center */}
+          <div className="shrink-0" style={{ width: 'max(1rem, calc(50% - 280px))' }} aria-hidden="true" />
+        </div>
+
+        <style>{`.carousel-scroll::-webkit-scrollbar { display: none; }`}</style>
+      </div>
+
+      {/* Dot indicators */}
+      <div className="flex justify-center gap-1.5 mt-5">
+        {exampleCharts.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => scrollToIndex(i)}
+            className={`rounded-full transition-all duration-200 ${
+              i === activeIndex
+                ? 'w-6 h-2 bg-[var(--primary)]'
+                : 'w-2 h-2 bg-[var(--border-strong)] hover:bg-[var(--text-subtle)]'
+            }`}
+            aria-label={`Go to example ${i + 1}`}
+          />
+        ))}
+      </div>
     </div>
   )
 }
