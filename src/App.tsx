@@ -9,6 +9,7 @@ import { DashboardPage } from './pages/DashboardPage'
 import { ProjectPage } from './pages/ProjectPage'
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
 import { LandingPage } from './pages/LandingPage'
+import { ExamplesPage } from './pages/ExamplesPage'
 import { FeedbackPage } from './pages/FeedbackPage'
 import { PricingPage } from './pages/PricingPage'
 import { NotFoundPage } from './pages/NotFoundPage'
@@ -36,6 +37,7 @@ function App() {
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/" element={<LandingPage />} />
+        <Route path="/examples" element={<ExamplesPage />} />
         <Route
           path="/dashboard"
           element={

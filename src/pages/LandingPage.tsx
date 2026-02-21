@@ -41,6 +41,12 @@ export function LandingPage() {
               FAQ
             </a>
             <Link
+              to="/examples"
+              className="text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text)] transition-colors duration-fast hidden sm:inline"
+            >
+              Examples
+            </Link>
+            <Link
               to="/login"
               onClick={() => track('signin-clicked')}
               className="text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text)] transition-colors duration-fast"
