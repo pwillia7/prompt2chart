@@ -247,36 +247,40 @@ export function ProjectPage() {
   }
 
   const handleRenderError = useCallback(async (errorMsg: string) => {
-    if (!currentChart) return
-    if (currentChart.id !== lastGeneratedIdRef.current) return
-    if (generating) return
+    // Read fresh state from the store to avoid stale closures
+    const chart = useChartStore.getState().currentChart
+    if (!chart) return
+    if (chart.id !== lastGeneratedIdRef.current) return
 
-    // Refund credit for this failed render (once per chart)
-    if (!refundedChartIdsRef.current.has(currentChart.id)) {
-      refundedChartIdsRef.current.add(currentChart.id)
+    // Always refund credit for render failures (once per chart)
+    if (!refundedChartIdsRef.current.has(chart.id)) {
+      refundedChartIdsRef.current.add(chart.id)
       try {
-        const { data } = await supabase.functions.invoke('refund-credit', {
-          body: { chartId: currentChart.id },
+        const { data, error } = await supabase.functions.invoke('refund-credit', {
+          body: { chartId: chart.id },
         })
-        if (data?.balance !== undefined) {
+        if (error) {
+          console.error('Credit refund error:', error)
+        } else if (data?.balance !== undefined) {
           useBillingStore.getState().setCredits(data.balance)
+          setCreditRefunded(true)
         }
-        setCreditRefunded(true)
       } catch (e) {
         console.error('Credit refund failed:', e)
       }
     }
 
-    // Auto-retry up to 2 times
+    // Auto-retry up to 2 times (skip if already generating)
+    if (useChartStore.getState().generating) return
     if (autoRetryCountRef.current >= 2) return
     autoRetryCountRef.current++
     isAutoRetryRef.current = true
     handleGenerateChart(
-      currentChart.prompt + `\n\nIMPORTANT: The previous code failed with this rendering error: "${errorMsg}". Generate completely new code that avoids this error.`,
+      chart.prompt + `\n\nIMPORTANT: The previous code failed with this rendering error: "${errorMsg}". Generate completely new code that avoids this error.`,
       undefined,
       true, // fromScratch — don't pass broken code as existingCode
     )
-  }, [currentChart, generating])
+  }, [])
 
   if (projectLoading && !currentProject) {
     return (
