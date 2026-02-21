@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback } from 'react'
+import { useRef, useState, useCallback, useEffect } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
@@ -391,6 +391,8 @@ function FaqCard({ question, answer }: { question: string; answer: string }) {
 function ExamplesCarousel() {
   const scrollRef = useRef<HTMLDivElement>(null)
   const [activeIndex, setActiveIndex] = useState(0)
+  const [isHovered, setIsHovered] = useState(false)
+  const autoAdvanceInterval = 6000
 
   const scrollToIndex = useCallback((idx: number) => {
     const el = scrollRef.current
@@ -419,73 +421,87 @@ function ExamplesCarousel() {
     setActiveIndex(closestIdx)
   }, [])
 
-  const prev = useCallback(() => {
-    scrollToIndex(Math.max(0, activeIndex - 1))
-  }, [activeIndex, scrollToIndex])
+  const goTo = useCallback((idx: number) => {
+    const wrapped = ((idx % exampleCharts.length) + exampleCharts.length) % exampleCharts.length
+    scrollToIndex(wrapped)
+  }, [scrollToIndex])
 
-  const next = useCallback(() => {
-    scrollToIndex(Math.min(exampleCharts.length - 1, activeIndex + 1))
-  }, [activeIndex, scrollToIndex])
+  // Auto-advance with wraparound, paused on hover
+  useEffect(() => {
+    if (isHovered) return
+    const timer = setInterval(() => {
+      setActiveIndex(prev => {
+        const next = (prev + 1) % exampleCharts.length
+        scrollToIndex(next)
+        return next
+      })
+    }, autoAdvanceInterval)
+    return () => clearInterval(timer)
+  }, [isHovered, scrollToIndex])
 
   return (
-    <div className="mt-16">
-      <div className="flex items-center justify-between max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
-        <h3 className="text-xs font-medium text-[var(--text-subtle)] uppercase tracking-wider">
+    <div
+      className="mt-16"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {/* Centered heading */}
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 mb-8 text-center">
+        <h3 className="text-2xl sm:text-3xl font-bold text-[var(--text)]">
           Examples Gallery
         </h3>
-        <Link to="/examples" className="text-sm font-medium text-[var(--primary)] hover:underline">
-          View all examples →
-        </Link>
+        <p className="mt-3 text-base text-[var(--text-muted)]">
+          Every visualization below was generated from a single prompt.{' '}
+          <Link to="/examples" className="text-[var(--primary)] font-medium hover:underline">
+            View all examples →
+          </Link>
+        </p>
       </div>
 
-      <div className="relative">
-        {/* Left arrow */}
-        {activeIndex > 0 && (
-          <button
-            onClick={prev}
-            className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white/90 shadow-lg border border-gray-200 flex items-center justify-center hover:bg-white hover:scale-105 transition-all"
-            aria-label="Previous chart"
-          >
-            <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-        )}
+      <div className="relative max-w-4xl mx-auto">
+        {/* Left arrow — always visible, wraps around */}
+        <button
+          onClick={() => goTo(activeIndex - 1)}
+          className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white/90 shadow-lg border border-gray-200 flex items-center justify-center hover:bg-white hover:scale-105 transition-all"
+          aria-label="Previous chart"
+        >
+          <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
 
-        {/* Right arrow */}
-        {activeIndex < exampleCharts.length - 1 && (
-          <button
-            onClick={next}
-            className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white/90 shadow-lg border border-gray-200 flex items-center justify-center hover:bg-white hover:scale-105 transition-all"
-            aria-label="Next chart"
-          >
-            <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-        )}
+        {/* Right arrow — always visible, wraps around */}
+        <button
+          onClick={() => goTo(activeIndex + 1)}
+          className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white/90 shadow-lg border border-gray-200 flex items-center justify-center hover:bg-white hover:scale-105 transition-all"
+          aria-label="Next chart"
+        >
+          <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
 
-        {/* Scrollable track */}
+        {/* Scrollable track — single card visible */}
         <div
           ref={scrollRef}
           onScroll={handleScroll}
-          className="carousel-scroll flex gap-5 overflow-x-auto"
+          className="carousel-scroll flex gap-6 overflow-x-auto px-12 sm:px-16"
           style={{
             scrollSnapType: 'x mandatory',
             scrollbarWidth: 'none',
           } as React.CSSProperties}
         >
           {/* Spacer to allow first card to center */}
-          <div className="shrink-0" style={{ width: 'max(1rem, calc(50% - 280px))' }} aria-hidden="true" />
+          <div className="shrink-0" style={{ width: 'max(0px, calc(50% - 370px))' }} aria-hidden="true" />
 
           {exampleCharts.map((example, i) => (
             <div
               key={example.id}
               data-index={i}
-              className="w-[85vw] sm:w-[540px] shrink-0 bg-white rounded-card shadow-soft overflow-hidden border border-[var(--border)] flex flex-col"
+              className="w-[85vw] max-w-[700px] shrink-0 bg-white rounded-card shadow-soft overflow-hidden border border-[var(--border)] flex flex-col"
               style={{ scrollSnapAlign: 'center' }}
             >
-              <div className="h-[300px] overflow-hidden bg-white">
+              <div className="overflow-hidden bg-white">
                 {example.library === 'd3' ? (
                   <D3ChartRenderer code={example.d3Code!} data={example.data as unknown[]} />
                 ) : (
@@ -511,7 +527,7 @@ function ExamplesCarousel() {
           ))}
 
           {/* Spacer to allow last card to center */}
-          <div className="shrink-0" style={{ width: 'max(1rem, calc(50% - 280px))' }} aria-hidden="true" />
+          <div className="shrink-0" style={{ width: 'max(0px, calc(50% - 370px))' }} aria-hidden="true" />
         </div>
 
         <style>{`.carousel-scroll::-webkit-scrollbar { display: none; }`}</style>
@@ -522,7 +538,7 @@ function ExamplesCarousel() {
         {exampleCharts.map((_, i) => (
           <button
             key={i}
-            onClick={() => scrollToIndex(i)}
+            onClick={() => goTo(i)}
             className={`rounded-full transition-all duration-200 ${
               i === activeIndex
                 ? 'w-6 h-2 bg-[var(--primary)]'
