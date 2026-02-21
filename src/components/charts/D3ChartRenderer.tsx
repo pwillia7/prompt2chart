@@ -1,5 +1,6 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import * as d3 from 'd3'
+import * as d3Sankey from 'd3-sankey'
 import { Spinner } from '../ui/Spinner'
 
 export interface D3ChartHandle {
@@ -61,13 +62,14 @@ export const D3ChartRenderer = forwardRef<D3ChartHandle, D3ChartRendererProps>(f
       // and give clear errors instead of "Cannot read properties of undefined"
       const UNAVAILABLE_PLUGINS = new Set([
         'annotation', 'legend', 'tip', 'hexbin', 'cloud',
-        'sankey', 'geoProjection', 'tile', 'contour',
+        'geoProjection', 'tile',
       ])
-      const d3Safe = new Proxy(d3, {
+      const d3WithPlugins = Object.assign({}, d3, d3Sankey)
+      const d3Safe = new Proxy(d3WithPlugins, {
         get(target, prop) {
           if (typeof prop === 'string' && UNAVAILABLE_PLUGINS.has(prop)) {
             throw new Error(
-              `d3.${prop}() is not available — only core D3.js v7 is included. ` +
+              `d3.${prop}() is not available — only core D3.js v7 and d3-sankey are included. ` +
               'Use plain SVG for annotations and HTML for legends.',
             )
           }

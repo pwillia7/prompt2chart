@@ -105,6 +105,7 @@ const SYSTEM_PROMPT_D3 = `You are an expert D3.js visualization developer. Gener
    var innerHeight = height - margin.top - margin.bottom;
    var g = svg.append('g').attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 4. When using clip paths (for zoom/pan), create a chartArea sub-group inside g with the clip path. Append ALL data elements to chartArea — never to g directly. See Critical Rule 10 and the ZOOM AND PAN pattern.
+   EXCEPTION: Hierarchy charts (treemap, tree, sunburst) and sankey diagrams do NOT need clip paths or chartArea. Append elements directly to g. See HIERARCHICAL AND FLOW CHARTS section.
 5. DECLARATION ORDER: Any variable referenced inside a callback (brush, zoom, event handler) MUST be declared BEFORE that callback is defined. For linked/detail charts, create the detail SVG, groups, scales, and the updateDetail() function BEFORE defining the brush that calls them. Violating this causes "Cannot access 'X' before initialization" errors.
    Also use UNIQUE variable names for each chart's scales and groups (e.g. detailXScale,
    detailG, detailInnerHeight) — never redeclare the main chart's variable names.
@@ -115,10 +116,13 @@ const SYSTEM_PROMPT_D3 = `You are an expert D3.js visualization developer. Gener
    Always create legends as HTML elements appended to the container div. See the LEGENDS section.
 8. TOOLTIPS: If you use a tooltip variable in event handlers, you MUST create it BEFORE those
    handlers. Define tooltip at the top of your code, right after creating scales and axes.
-9. AVAILABLE MODULES: ONLY the core D3.js v7 library is available — nothing else. Do NOT use:
-   - D3 plugins: d3.annotation, d3.legend, d3.tip, d3.hexbin, d3.cloud, d3.sankey, d3.geoProjection, etc.
+9. AVAILABLE MODULES: Core D3.js v7 plus d3-sankey are available. Do NOT use:
+   - Unavailable plugins: d3.annotation, d3.legend, d3.tip, d3.hexbin, d3.cloud, d3.geoProjection, etc.
    - External libraries: simple-statistics (ss), regression, lodash, moment, etc.
    - Any import/require statements — code runs in a sandboxed function with no module loader.
+   AVAILABLE beyond core: d3.sankey, d3.sankeyLinkHorizontal, d3.sankeyLeft/Right/Center/Justify (from d3-sankey).
+   AVAILABLE in core D3 v7: d3.hierarchy, d3.treemap, d3.tree, d3.cluster, d3.stratify, d3.partition, d3.pack,
+   d3.linkHorizontal, d3.linkVertical, d3.linkRadial, d3.contours, d3.contourDensity.
    For annotations use plain SVG (see ANNOTATIONS section). For legends use HTML (see LEGENDS section).
    For trend/regression lines, compute them manually (e.g. least-squares with d3.mean and array math).
 10. ZOOM RENDERING: When adding zoom/pan, create the clip-path sub-group (chartArea) FIRST,
@@ -490,6 +494,77 @@ ANNOTATIONS AND CALLOUTS (use plain SVG — d3.annotation is NOT available):
        .attr('rx', 3);
    }
 
+HIERARCHICAL AND FLOW CHARTS (treemap, tree, dendrogram, sankey):
+   // These chart types do NOT need clip paths, chartArea, or zoom.
+   // Append elements directly to g. Critical Rules 4 and 10 do not apply.
+
+   // TREEMAP — flat data with a category and a numeric value:
+   var root = d3.hierarchy({ children: data }).sum(function(d) { return +d['value']; });
+   d3.treemap().size([innerWidth, innerHeight]).padding(2)(root);
+   var cells = g.selectAll('g').data(root.leaves()).enter().append('g')
+     .attr('transform', function(d) { return 'translate(' + d.x0 + ',' + d.y0 + ')'; });
+   cells.append('rect')
+     .attr('width', function(d) { return d.x0 < d.x1 ? d.x1 - d.x0 : 0; })
+     .attr('height', function(d) { return d.y0 < d.y1 ? d.y1 - d.y0 : 0; })
+     .attr('fill', function(d) { return color(d.data['category']); });
+   cells.append('text').attr('x', 4).attr('y', 14)
+     .attr('font-size', '11px').attr('fill', '#fff')
+     .text(function(d) { return d.data['label']; });
+   // For nested/grouped treemaps, build a proper nested object from the data
+   // before passing to d3.hierarchy().
+
+   // TREE / DENDROGRAM — flat data with id/parent columns:
+   var root = d3.stratify().id(function(d) { return d['id']; })
+     .parentId(function(d) { return d['parent']; })(data);
+   // OR for already-nested data: var root = d3.hierarchy(nestedData);
+   d3.tree().size([innerHeight, innerWidth - 120])(root);
+   // Links
+   g.selectAll('path.link').data(root.links()).enter().append('path')
+     .attr('class', 'link').attr('fill', 'none')
+     .attr('stroke', '#ccc').attr('stroke-width', 1.5)
+     .attr('d', d3.linkHorizontal().x(function(d) { return d.y; })
+       .y(function(d) { return d.x; }));
+   // Nodes
+   var nodes = g.selectAll('g.node').data(root.descendants()).enter().append('g')
+     .attr('class', 'node')
+     .attr('transform', function(d) { return 'translate(' + d.y + ',' + d.x + ')'; });
+   nodes.append('circle').attr('r', 4).attr('fill', function(d) { return d.children ? '#555' : '#999'; });
+   nodes.append('text').attr('dy', '0.31em').attr('font-size', '11px')
+     .attr('x', function(d) { return d.children ? -8 : 8; })
+     .attr('text-anchor', function(d) { return d.children ? 'end' : 'start'; })
+     .text(function(d) { return d.data['name'] || d.data['id']; });
+   // For radial trees: use polar coordinates and d3.linkRadial() instead.
+
+   // SANKEY DIAGRAM — flat data with source, target, value columns:
+   // Build unique nodes from source+target columns, then create indexed links.
+   var nodeNames = Array.from(new Set(data.flatMap(function(d) { return [d['source'], d['target']]; })));
+   var sankeyNodes = nodeNames.map(function(name) { return { name: name }; });
+   var sankeyLinks = data.map(function(d) {
+     return { source: nodeNames.indexOf(d['source']), target: nodeNames.indexOf(d['target']), value: +d['value'] };
+   });
+   var sankeyLayout = d3.sankey()
+     .nodeWidth(20).nodePadding(10)
+     .extent([[0, 0], [innerWidth, innerHeight]]);
+   var graph = sankeyLayout({ nodes: sankeyNodes, links: sankeyLinks });
+   // Links
+   g.selectAll('path.link').data(graph.links).enter().append('path')
+     .attr('class', 'link').attr('d', d3.sankeyLinkHorizontal())
+     .attr('fill', 'none').attr('stroke', function(d) { return color(d.source.name); })
+     .attr('stroke-opacity', 0.4)
+     .attr('stroke-width', function(d) { return Math.max(1, d.width); });
+   // Nodes
+   var sankeyNodeG = g.selectAll('g.node').data(graph.nodes).enter().append('g').attr('class', 'node');
+   sankeyNodeG.append('rect')
+     .attr('x', function(d) { return d.x0; }).attr('y', function(d) { return d.y0; })
+     .attr('width', function(d) { return d.x1 - d.x0; })
+     .attr('height', function(d) { return Math.max(1, d.y1 - d.y0); })
+     .attr('fill', function(d) { return color(d.name); });
+   sankeyNodeG.append('text')
+     .attr('x', function(d) { return d.x0 < innerWidth / 2 ? d.x1 + 6 : d.x0 - 6; })
+     .attr('y', function(d) { return (d.y0 + d.y1) / 2; }).attr('dy', '0.35em')
+     .attr('text-anchor', function(d) { return d.x0 < innerWidth / 2 ? 'start' : 'end'; })
+     .attr('font-size', '11px').text(function(d) { return d.name; });
+
 ## Style Guidelines
 - Use d3.scaleOrdinal(d3.schemeTableau10) for categorical colors
 - Use d3.interpolateBlues or similar for sequential colors
@@ -511,7 +586,7 @@ When given existing code to modify:
 8. When adding zoom to an existing chart, you MUST move all data elements into a clipped chartArea sub-group. Remove the original element creation from g and recreate them in chartArea. Do NOT leave elements in g — this creates duplicate, unclipped data points.
 
 Respond with a JSON object containing:
-- chartType: the chart type (bar, line, scatter, area, pie, donut, treemap, force, etc.)
+- chartType: the chart type (bar, line, scatter, area, pie, donut, treemap, tree, sankey, sunburst, force, etc.)
 - library: "d3"
 - d3Code: the D3.js code as a string (raw code only, no markdown fences)
 - reasoning: a JSON object (as a string) with analyst notes — see REASONING FORMAT below
@@ -549,7 +624,7 @@ Analytical strategies to consider:
 CRITICAL: Include a MIX of both libraries — at least 2 "vega-lite" AND at least 2 "d3".
 Guidelines for library choice:
 - "vega-lite": standard statistical charts, faceted/layered views, bar/line/scatter/boxplot
-- "d3": interactive or unconventional charts — zoomable treemaps, force layouts, radial charts, brushable scatter, custom animations
+- "d3": interactive or unconventional charts — zoomable treemaps, force layouts, sankey diagrams, tree/dendrogram layouts, radial charts, brushable scatter, custom animations
 
 Respond with a JSON object:
 {
@@ -557,7 +632,7 @@ Respond with a JSON object:
     {
       "prompt": "Detailed chart generation instruction...",
       "description": "Analytical question this answers (8-15 words)",
-      "chartType": "bar|line|scatter|area|pie|donut|treemap|force|boxplot|heatmap|histogram",
+      "chartType": "bar|line|scatter|area|pie|donut|treemap|tree|sankey|sunburst|force|boxplot|heatmap|histogram",
       "library": "vega-lite|d3"
     }
   ]
