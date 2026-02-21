@@ -513,10 +513,28 @@ HIERARCHICAL AND FLOW CHARTS (treemap, tree, dendrogram, sankey):
    // For nested/grouped treemaps, build a proper nested object from the data
    // before passing to d3.hierarchy().
 
-   // TREE / DENDROGRAM — flat data with id/parent columns:
-   var root = d3.stratify().id(function(d) { return d['id']; })
-     .parentId(function(d) { return d['parent']; })(data);
-   // OR for already-nested data: var root = d3.hierarchy(nestedData);
+   // TREE / DENDROGRAM:
+   // IMPORTANT: d3.stratify() ONLY works when data has explicit id and parent columns
+   // where every parentId value matches an existing id (root node has null/empty parent).
+   // Do NOT use stratify on arbitrary flat data — it throws "missing: [value]" errors.
+   //
+   // For MOST datasets (no id/parent columns), BUILD a nested object manually:
+   var grouped = d3.group(data, function(d) { return d['category']; });
+   var nestedData = {
+     name: 'Root',
+     children: Array.from(grouped, function(entry) {
+       return {
+         name: entry[0],
+         children: entry[1].map(function(d) { return { name: d['label'], value: +d['value'] }; })
+       };
+     })
+   };
+   var root = d3.hierarchy(nestedData).sum(function(d) { return d.value; });
+   //
+   // ONLY use stratify when data has explicit id/parent columns:
+   // var root = d3.stratify().id(function(d) { return d['id']; })
+   //   .parentId(function(d) { return d['parent']; })(data);
+   //
    d3.tree().size([innerHeight, innerWidth - 120])(root);
    // Links
    g.selectAll('path.link').data(root.links()).enter().append('path')
@@ -532,8 +550,9 @@ HIERARCHICAL AND FLOW CHARTS (treemap, tree, dendrogram, sankey):
    nodes.append('text').attr('dy', '0.31em').attr('font-size', '11px')
      .attr('x', function(d) { return d.children ? -8 : 8; })
      .attr('text-anchor', function(d) { return d.children ? 'end' : 'start'; })
-     .text(function(d) { return d.data['name'] || d.data['id']; });
+     .text(function(d) { return d.data.name; });
    // For radial trees: use polar coordinates and d3.linkRadial() instead.
+   // For sunburst: use d3.partition().size([2 * Math.PI, radius])(root) and draw arcs.
 
    // SANKEY DIAGRAM — flat data with source, target, value columns:
    // Build unique nodes from source+target columns, then create indexed links.
