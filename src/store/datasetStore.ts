@@ -16,7 +16,8 @@ interface DatasetState {
   setCurrentDataset: (dataset: Dataset | null) => void
   loadDatasetData: (dataset: Dataset) => Promise<unknown[] | null>
   getCachedSuggestions: (datasetId: string) => InsightSuggestion[] | undefined
-  cacheSuggestions: (datasetId: string, suggestions: InsightSuggestion[]) => void
+  getCachedSuggestionsBySchema: (schemaKey: string) => InsightSuggestion[] | undefined
+  cacheSuggestions: (datasetId: string, schemaKey: string, suggestions: InsightSuggestion[]) => void
 }
 
 export const useDatasetStore = create<DatasetState>((set, get) => ({
@@ -28,13 +29,46 @@ export const useDatasetStore = create<DatasetState>((set, get) => ({
   error: null,
 
   getCachedSuggestions: (datasetId: string) => {
-    return get().suggestionCache.get(datasetId)
+    // Check in-memory cache first
+    const memCached = get().suggestionCache.get(datasetId)
+    if (memCached) return memCached
+
+    // Check localStorage by dataset ID (set during cacheSuggestions)
+    try {
+      const stored = localStorage.getItem(`suggestions:${datasetId}`)
+      if (stored) {
+        const parsed = JSON.parse(stored) as InsightSuggestion[]
+        // Populate in-memory cache
+        const cache = new Map(get().suggestionCache)
+        cache.set(datasetId, parsed)
+        set({ suggestionCache: cache })
+        return parsed
+      }
+    } catch { /* ignore parse errors */ }
+
+    return undefined
   },
 
-  cacheSuggestions: (datasetId: string, suggestions: InsightSuggestion[]) => {
+  getCachedSuggestionsBySchema: (schemaKey: string) => {
+    try {
+      const stored = localStorage.getItem(`suggestions:schema:${schemaKey}`)
+      if (stored) return JSON.parse(stored) as InsightSuggestion[]
+    } catch { /* ignore */ }
+    return undefined
+  },
+
+  cacheSuggestions: (datasetId: string, schemaKey: string, suggestions: InsightSuggestion[]) => {
+    // In-memory cache
     const cache = new Map(get().suggestionCache)
     cache.set(datasetId, suggestions)
     set({ suggestionCache: cache })
+
+    // Persist to localStorage by both dataset ID and schema key
+    try {
+      const json = JSON.stringify(suggestions)
+      localStorage.setItem(`suggestions:${datasetId}`, json)
+      localStorage.setItem(`suggestions:schema:${schemaKey}`, json)
+    } catch { /* quota exceeded — non-critical */ }
   },
 
   fetchDatasets: async (projectId: string) => {
@@ -118,6 +152,7 @@ export const useDatasetStore = create<DatasetState>((set, get) => ({
 
       const cache = new Map(get().suggestionCache)
       cache.delete(id)
+      try { localStorage.removeItem(`suggestions:${id}`) } catch { /* ignore */ }
       set({
         datasets: get().datasets.filter((d) => d.id !== id),
         currentDataset: get().currentDataset?.id === id ? null : get().currentDataset,

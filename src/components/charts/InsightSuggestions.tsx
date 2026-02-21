@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
+import { getSampleSuggestions } from '../../lib/sampleData'
 import { AllSchemaEntry } from '../../store/chartStore'
 import { useDatasetStore } from '../../store/datasetStore'
 import { ChartLibrary, DatasetSchema, InsightSuggestion } from '../../types'
@@ -16,19 +17,49 @@ interface InsightSuggestionsProps {
   disabled?: boolean
 }
 
+function getSchemaKey(schema: DatasetSchema): string {
+  const cols = schema.columns
+    .map(c => `${c.name}:${c.type}`)
+    .sort()
+    .join('|')
+  return cols
+}
+
 export function InsightSuggestions({ datasetId, schema, allSchemas, onSelectSuggestion, disabled }: InsightSuggestionsProps) {
-  const { getCachedSuggestions, cacheSuggestions } = useDatasetStore()
-  const [suggestions, setSuggestions] = useState<InsightSuggestion[]>(() => getCachedSuggestions(datasetId) || [])
+  const { getCachedSuggestions, getCachedSuggestionsBySchema, cacheSuggestions } = useDatasetStore()
+  const schemaKey = getSchemaKey(schema)
+  const columnNames = schema.columns.map(c => c.name)
+  const [suggestions, setSuggestions] = useState<InsightSuggestion[]>(() => {
+    return getSampleSuggestions(columnNames) || getCachedSuggestions(datasetId) || getCachedSuggestionsBySchema(schemaKey) || []
+  })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [expanded, setExpanded] = useState(false)
 
   useEffect(() => {
+    // Check hardcoded sample suggestions first (zero API calls)
+    const sampleSuggestions = getSampleSuggestions(columnNames)
+    if (sampleSuggestions) {
+      setSuggestions(sampleSuggestions)
+      return
+    }
+
+    // Check dataset-level cache
     const cached = getCachedSuggestions(datasetId)
     if (cached) {
       setSuggestions(cached)
       return
     }
+
+    // Check schema-level cache (covers same data across projects)
+    const schemaCached = getCachedSuggestionsBySchema(schemaKey)
+    if (schemaCached) {
+      // Promote to dataset-level cache
+      cacheSuggestions(datasetId, schemaKey, schemaCached)
+      setSuggestions(schemaCached)
+      return
+    }
+
     if (schema.columns.length === 0) return
 
     let cancelled = false
@@ -45,7 +76,7 @@ export function InsightSuggestions({ datasetId, schema, allSchemas, onSelectSugg
         if (fnError) throw fnError
         if (!cancelled) {
           const results = data.suggestions || []
-          cacheSuggestions(datasetId, results)
+          cacheSuggestions(datasetId, schemaKey, results)
           setSuggestions(results)
           setExpanded(false)
         }
@@ -63,64 +94,56 @@ export function InsightSuggestions({ datasetId, schema, allSchemas, onSelectSugg
   const visibleSuggestions = expanded ? suggestions : suggestions.slice(0, INITIAL_VISIBLE)
   const hasMore = suggestions.length > INITIAL_VISIBLE
 
-  if (loading && suggestions.length === 0) {
-    return (
-      <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
-        <Spinner size="sm" />
-        <span>Generating visualization suggestions...</span>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="text-sm text-amber-400">
-        Could not generate suggestions: {error}
-      </div>
-    )
-  }
-
-  if (suggestions.length === 0) {
-    return null
-  }
-
   return (
-    <div className="space-y-3">
-      <h4 className="text-sm font-medium text-[var(--text-muted)]">Suggested Visualizations</h4>
-      <div className="flex flex-wrap gap-2">
-        {visibleSuggestions.map((suggestion, idx) => (
-          <Button
-            key={idx}
-            variant="secondary"
-            size="sm"
-            onClick={() => onSelectSuggestion(suggestion.prompt, suggestion.library)}
-            disabled={disabled}
-            className="text-left"
-          >
-            <span className="flex items-center gap-2">
-              <ChartTypeIcon type={suggestion.chartType} />
-              <span>{suggestion.description}</span>
-              {suggestion.library && (
-                <span className={`px-1.5 py-0.5 text-xs rounded-pill ${
-                  suggestion.library === 'd3'
-                    ? 'bg-orange-500/15 text-orange-400'
-                    : 'bg-[var(--surface-3)] text-[var(--text-muted)]'
-                }`}>
-                  {suggestion.library === 'd3' ? 'D3' : 'VL'}
+    <div className="min-h-[88px]">
+      {loading && suggestions.length === 0 ? (
+        <div className="flex items-center gap-2 text-sm text-[var(--text-muted)] py-2">
+          <Spinner size="sm" />
+          <span>Generating visualization suggestions...</span>
+        </div>
+      ) : error ? (
+        <div className="text-sm text-amber-400 py-2">
+          Could not generate suggestions: {error}
+        </div>
+      ) : suggestions.length === 0 ? null : (
+        <div className="space-y-3">
+          <h4 className="text-sm font-medium text-[var(--text-muted)]">Suggested Visualizations</h4>
+          <div className="flex flex-wrap gap-2">
+            {visibleSuggestions.map((suggestion, idx) => (
+              <Button
+                key={idx}
+                variant="secondary"
+                size="sm"
+                onClick={() => onSelectSuggestion(suggestion.prompt, suggestion.library)}
+                disabled={disabled}
+                className="text-left"
+              >
+                <span className="flex items-center gap-2">
+                  <ChartTypeIcon type={suggestion.chartType} />
+                  <span>{suggestion.description}</span>
+                  {suggestion.library && (
+                    <span className={`px-1.5 py-0.5 text-xs rounded-pill ${
+                      suggestion.library === 'd3'
+                        ? 'bg-orange-500/15 text-orange-400'
+                        : 'bg-[var(--surface-3)] text-[var(--text-muted)]'
+                    }`}>
+                      {suggestion.library === 'd3' ? 'D3' : 'VL'}
+                    </span>
+                  )}
                 </span>
-              )}
-            </span>
-          </Button>
-        ))}
-        {hasMore && !expanded && (
-          <button
-            onClick={() => setExpanded(true)}
-            className="text-xs text-[var(--text-subtle)] hover:text-[var(--text-muted)] px-2 py-1 transition-colors duration-fast"
-          >
-            Show {suggestions.length - INITIAL_VISIBLE} more...
-          </button>
-        )}
-      </div>
+              </Button>
+            ))}
+            {hasMore && !expanded && (
+              <button
+                onClick={() => setExpanded(true)}
+                className="text-xs text-[var(--text-subtle)] hover:text-[var(--text-muted)] px-2 py-1 transition-colors duration-fast"
+              >
+                Show {suggestions.length - INITIAL_VISIBLE} more...
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

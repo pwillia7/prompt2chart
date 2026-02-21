@@ -1,4 +1,4 @@
-import { Project } from '../types'
+import { Project, InsightSuggestion } from '../types'
 import { Dataset } from '../types'
 
 export interface SampleDataset {
@@ -34,6 +34,35 @@ export const SAMPLE_DATASETS: SampleDataset[] = [
     projectName: 'Exoplanet Exploration',
   },
 ]
+
+// Hardcoded suggestions for sample datasets — avoids API calls for every user
+export const SAMPLE_SUGGESTIONS: Record<string, InsightSuggestion[]> = {
+  titanic: [
+    { prompt: 'How do survival rates vary across different passenger classes?', description: 'Survival rates by passenger class', chartType: 'bar', library: 'vega-lite' },
+    { prompt: 'Is there a correlation between age, fare, and survival?', description: 'Age vs fare colored by survival', chartType: 'scatter', library: 'vega-lite' },
+    { prompt: 'What is the fare distribution and are there outliers by gender?', description: 'Fare distribution by gender', chartType: 'bar', library: 'vega-lite' },
+    { prompt: 'What is the composition of passengers by gender and survival?', description: 'Passenger composition by gender and survival', chartType: 'pie', library: 'd3' },
+    { prompt: 'Are there survival patterns among passengers with shared last names?', description: 'Survival patterns by shared last names', chartType: 'bar', library: 'd3' },
+  ],
+  planets: [
+    { prompt: 'How has the average mass of discoveries changed over time?', description: 'Average discovery mass over time', chartType: 'line', library: 'vega-lite' },
+    { prompt: 'Is there a correlation between distance and mass of discoveries?', description: 'Distance vs mass correlation', chartType: 'scatter', library: 'vega-lite' },
+    { prompt: 'What is the composition of discovery methods used?', description: 'Discovery methods composition', chartType: 'pie', library: 'd3' },
+    { prompt: 'What are the distributions and outliers of orbital periods by method?', description: 'Orbital period distributions by method', chartType: 'bar', library: 'vega-lite' },
+    { prompt: 'How do the number of discoveries vary by year?', description: 'Discovery count by year', chartType: 'bar', library: 'd3' },
+  ],
+}
+
+// Returns hardcoded suggestions if the schema matches a sample dataset, otherwise undefined
+export function getSampleSuggestions(columns: string[]): InsightSuggestion[] | undefined {
+  const sorted = [...columns].sort().join(',')
+  for (const sample of SAMPLE_DATASETS) {
+    if ([...sample.columns].sort().join(',') === sorted) {
+      return SAMPLE_SUGGESTIONS[sample.id]
+    }
+  }
+  return undefined
+}
 
 export async function loadSampleDataset(
   sample: SampleDataset,
