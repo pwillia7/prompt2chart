@@ -12,6 +12,110 @@ export interface ChartExample {
 }
 
 // ---------------------------------------------------------------------------
+// 0. Scatter — Revenue vs Customer Satisfaction (D3)
+// ---------------------------------------------------------------------------
+const scatterData = [
+  { company: 'Acme Corp', revenue: 2.4, satisfaction: 78, region: 'North America' },
+  { company: 'Globex', revenue: 1.8, satisfaction: 85, region: 'Europe' },
+  { company: 'Initech', revenue: 3.1, satisfaction: 69, region: 'North America' },
+  { company: 'Umbrella', revenue: 4.2, satisfaction: 65, region: 'Asia Pacific' },
+  { company: 'Wayne Ent', revenue: 5.8, satisfaction: 91, region: 'North America' },
+  { company: 'Stark Ind', revenue: 7.2, satisfaction: 88, region: 'North America' },
+  { company: 'Wonka Co', revenue: 1.2, satisfaction: 92, region: 'Europe' },
+  { company: 'Oscorp', revenue: 3.8, satisfaction: 71, region: 'Asia Pacific' },
+  { company: 'LexCorp', revenue: 6.1, satisfaction: 62, region: 'North America' },
+  { company: 'Cyberdyne', revenue: 2.9, satisfaction: 79, region: 'Asia Pacific' },
+  { company: 'Soylent', revenue: 0.9, satisfaction: 55, region: 'Europe' },
+  { company: 'Aperture', revenue: 4.5, satisfaction: 83, region: 'North America' },
+  { company: 'Tyrell', revenue: 5.2, satisfaction: 76, region: 'Europe' },
+  { company: 'Weyland', revenue: 8.1, satisfaction: 70, region: 'Asia Pacific' },
+  { company: 'Massive Dyn', revenue: 3.4, satisfaction: 87, region: 'Europe' },
+  { company: 'Virtucon', revenue: 1.5, satisfaction: 58, region: 'Asia Pacific' },
+  { company: 'Prestige', revenue: 2.1, satisfaction: 90, region: 'North America' },
+  { company: 'Nakatomi', revenue: 4.8, satisfaction: 74, region: 'Asia Pacific' },
+]
+
+const scatterCode = `
+var iw = width - margin.left - margin.right;
+var ih = height - margin.top - margin.bottom;
+var g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+var colorMap = { "North America": "#F97316", "Europe": "#94A3B8", "Asia Pacific": "#475569" };
+
+var x = d3.scaleLinear().domain([0, 9]).range([0, iw]);
+var y = d3.scaleLinear().domain([50, 100]).range([ih, 0]);
+
+g.append("g").selectAll("line").data(y.ticks(5)).join("line")
+  .attr("x1", 0).attr("x2", iw)
+  .attr("y1", function(d) { return y(d); }).attr("y2", function(d) { return y(d); })
+  .attr("stroke", "#f0f0f0");
+
+g.append("g").attr("transform", "translate(0," + ih + ")")
+  .call(d3.axisBottom(x).ticks(5).tickFormat(function(d) { return "$" + d + "M"; }));
+g.append("g").call(d3.axisLeft(y).ticks(5).tickFormat(function(d) { return d + "%"; }));
+
+svg.append("text").attr("x", width / 2).attr("y", height - 8)
+  .attr("text-anchor", "middle").attr("font-size", 12).attr("fill", "#888").text("Revenue ($M)");
+svg.append("text").attr("transform", "rotate(-90)")
+  .attr("x", -(height / 2)).attr("y", 16)
+  .attr("text-anchor", "middle").attr("font-size", 12).attr("fill", "#888").text("Customer Satisfaction (%)");
+svg.append("text").attr("x", width / 2).attr("y", 22)
+  .attr("text-anchor", "middle").attr("font-size", 14).attr("font-weight", "600").attr("fill", "#333")
+  .text("Revenue vs Customer Satisfaction by Region");
+
+var xMean = d3.mean(data, function(d) { return d.revenue; });
+var yMean = d3.mean(data, function(d) { return d.satisfaction; });
+var slope = d3.sum(data, function(d) { return (d.revenue - xMean) * (d.satisfaction - yMean); }) /
+            d3.sum(data, function(d) { return (d.revenue - xMean) * (d.revenue - xMean); });
+var intercept = yMean - slope * xMean;
+g.append("line")
+  .attr("x1", x(0.5)).attr("y1", y(intercept + slope * 0.5))
+  .attr("x2", x(8.5)).attr("y2", y(intercept + slope * 8.5))
+  .attr("stroke", "#ddd").attr("stroke-width", 1.5).attr("stroke-dasharray", "6,4");
+
+var tooltip = container.append("div")
+  .style("position", "absolute").style("display", "none")
+  .style("background", "#fff").style("border", "1px solid #e5e5e5")
+  .style("border-radius", "8px").style("padding", "8px 12px")
+  .style("font-size", "12px").style("line-height", "1.5")
+  .style("box-shadow", "0 4px 12px rgba(0,0,0,0.1)")
+  .style("pointer-events", "none").style("z-index", "10");
+
+g.selectAll("circle").data(data).join("circle")
+  .attr("cx", function(d) { return x(d.revenue); })
+  .attr("cy", function(d) { return y(d.satisfaction); })
+  .attr("r", 6).attr("fill", function(d) { return colorMap[d.region]; })
+  .attr("opacity", 0.85).attr("stroke", "#fff").attr("stroke-width", 1.5)
+  .style("cursor", "pointer")
+  .on("mouseenter", function(event, d) {
+    d3.select(this).transition().duration(150).attr("r", 9).attr("opacity", 1);
+    tooltip.style("display", "block")
+      .html("<strong style=\\"color:#171717\\">" + d.company + "</strong><br/>"
+        + "<span style=\\"color:#666\\">Revenue: $" + d.revenue + "M</span><br/>"
+        + "<span style=\\"color:#666\\">Satisfaction: " + d.satisfaction + "%</span><br/>"
+        + "<span style=\\"color:" + colorMap[d.region] + "\\">" + d.region + "</span>");
+  }).on("mousemove", function(event) {
+    var rect = event.currentTarget.closest("svg").parentElement.getBoundingClientRect();
+    tooltip.style("left", (event.clientX - rect.left + 15) + "px")
+      .style("top", (event.clientY - rect.top - 10) + "px");
+  }).on("mouseleave", function() {
+    d3.select(this).transition().duration(150).attr("r", 6).attr("opacity", 0.85);
+    tooltip.style("display", "none");
+  });
+
+var legend = container.append("div")
+  .style("display", "flex").style("justify-content", "center")
+  .style("gap", "20px").style("padding", "10px 0 6px").style("font-size", "13px");
+var regions = Object.keys(colorMap);
+regions.forEach(function(region) {
+  var item = legend.append("div").style("display", "flex").style("align-items", "center").style("gap", "6px");
+  item.append("div").style("width", "10px").style("height", "10px")
+    .style("border-radius", "50%").style("background", colorMap[region]);
+  item.append("span").style("color", "#666").text(region);
+});
+`
+
+// ---------------------------------------------------------------------------
 // 1. Grouped Bar — Coffee Consumption (Vega-Lite)
 // ---------------------------------------------------------------------------
 const coffeeData = [
@@ -1144,6 +1248,15 @@ svg.append("text")
 // Export all examples
 // ---------------------------------------------------------------------------
 export const exampleCharts: ChartExample[] = [
+  {
+    id: 'revenue-scatter',
+    title: 'Revenue vs Customer Satisfaction',
+    description: 'Create an interactive scatter plot of revenue vs customer satisfaction, colored by region, with a trend line and tooltips',
+    chartType: 'Scatter',
+    library: 'd3',
+    data: scatterData,
+    d3Code: scatterCode,
+  },
   {
     id: 'coffee-bar',
     title: 'Coffee Consumption by Country',
