@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useAuthStore } from '../../store/authStore'
 import type { Provider } from '@supabase/supabase-js'
+import { track } from '../../lib/analytics'
 
 export function SocialLoginButtons() {
   const { signInWithOAuth, loading } = useAuthStore()
@@ -8,6 +9,7 @@ export function SocialLoginButtons() {
 
   const handleOAuth = async (provider: Provider) => {
     setError('')
+    track('oauth-clicked', { provider })
     const { error } = await signInWithOAuth(provider)
     if (error) {
       setError(error.message)

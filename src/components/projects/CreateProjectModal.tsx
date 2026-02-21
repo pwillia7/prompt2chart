@@ -4,6 +4,7 @@ import { useProjectStore } from '../../store/projectStore'
 import { Modal } from '../ui/Modal'
 import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
+import { track } from '../../lib/analytics'
 
 interface CreateProjectModalProps {
   isOpen: boolean
@@ -21,6 +22,7 @@ export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps)
 
     const project = await createProject(name.trim())
     if (project) {
+      track('project-created')
       setName('')
       onClose()
       navigate(`/projects/${project.id}`)

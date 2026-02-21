@@ -16,10 +16,11 @@ interface ChartRendererProps {
   className?: string
   onRetry?: () => void
   onRenderError?: (error: string) => void
+  onRenderSuccess?: () => void
   creditRefunded?: boolean
 }
 
-export const ChartRenderer = forwardRef<VegaChartHandle, ChartRendererProps>(function ChartRenderer({ spec, data, className = '', onRetry, onRenderError, creditRefunded }, ref) {
+export const ChartRenderer = forwardRef<VegaChartHandle, ChartRendererProps>(function ChartRenderer({ spec, data, className = '', onRetry, onRenderError, onRenderSuccess, creditRefunded }, ref) {
   const containerRef = useRef<HTMLDivElement>(null)
   const viewRef = useRef<View | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -61,6 +62,7 @@ export const ChartRenderer = forwardRef<VegaChartHandle, ChartRendererProps>(fun
 
         if (isMounted) {
           setLoading(false)
+          onRenderSuccess?.()
         }
       } catch (vlError) {
         console.warn('Vega-Lite rendering failed, trying Vega fallback:', vlError)
@@ -80,6 +82,7 @@ export const ChartRenderer = forwardRef<VegaChartHandle, ChartRendererProps>(fun
           if (isMounted) {
             setUsedFallback(true)
             setLoading(false)
+            onRenderSuccess?.()
           }
         } catch (vgError) {
           if (isMounted) {

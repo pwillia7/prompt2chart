@@ -7,6 +7,7 @@ import { SampleDataCards } from '../components/projects/SampleDataCards'
 import { Button } from '../components/ui/Button'
 import { useBillingStore } from '../store/billingStore'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
+import { track } from '../lib/analytics'
 
 export function DashboardPage() {
   useDocumentTitle('Dashboard - Prompt2Chart')
@@ -18,6 +19,7 @@ export function DashboardPage() {
   useEffect(() => {
     const checkout = searchParams.get('checkout')
     if (checkout === 'success') {
+      track('checkout-completed')
       setCheckoutMessage('Payment successful! Your credits have been added.')
       fetchCredits()
       setSearchParams({}, { replace: true })

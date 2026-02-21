@@ -13,10 +13,11 @@ interface D3ChartRendererProps {
   className?: string
   onRetry?: () => void
   onRenderError?: (error: string) => void
+  onRenderSuccess?: () => void
   creditRefunded?: boolean
 }
 
-export const D3ChartRenderer = forwardRef<D3ChartHandle, D3ChartRendererProps>(function D3ChartRenderer({ code, data, className = '', onRetry, onRenderError, creditRefunded }, ref) {
+export const D3ChartRenderer = forwardRef<D3ChartHandle, D3ChartRendererProps>(function D3ChartRenderer({ code, data, className = '', onRetry, onRenderError, onRenderSuccess, creditRefunded }, ref) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -133,7 +134,10 @@ export const D3ChartRenderer = forwardRef<D3ChartHandle, D3ChartRendererProps>(f
         }
       }
 
-      if (isMounted) setLoading(false)
+      if (isMounted) {
+        setLoading(false)
+        onRenderSuccess?.()
+      }
     } catch (err) {
       console.error('D3 rendering error:', err)
       if (isMounted) {

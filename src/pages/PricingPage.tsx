@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Layout } from '../components/layout/Layout'
 import { useBillingStore } from '../store/billingStore'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
+import { track } from '../lib/analytics'
 
 export function PricingPage() {
   useDocumentTitle('Pricing - Prompt2Chart')
@@ -10,6 +11,7 @@ export function PricingPage() {
   const { credits, packs, purchasing, fetchCredits, purchaseCredits } = useBillingStore()
 
   useEffect(() => {
+    track('pricing-viewed')
     fetchCredits()
   }, [fetchCredits])
 
@@ -91,7 +93,7 @@ export function PricingPage() {
               <button
                 key={pack.id}
                 disabled={purchasing}
-                onClick={() => purchaseCredits(pack.id)}
+                onClick={() => { track('credit-pack-selected', { pack: pack.id }); purchaseCredits(pack.id) }}
                 className="w-full flex items-center justify-between p-4 border border-[var(--border)] rounded-card bg-[var(--surface-1)] hover:border-[var(--primary)]/40 hover:bg-[var(--surface-2)] transition-all duration-fast disabled:opacity-50 text-left"
               >
                 <div>

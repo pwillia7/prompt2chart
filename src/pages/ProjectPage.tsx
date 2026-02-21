@@ -219,7 +219,11 @@ export function ProjectPage() {
     }
 
     const library = libraryOverride ?? (currentChart ? currentChart.chart_library : selectedLibrary)
-    track('chart-generated', { library })
+    const isEdit = !!currentChart && !fromScratch
+    track('chart-generated', { library, isNew: isEdit ? 0 : 1 })
+    if (isEdit) {
+      track('chart-edited', { library })
+    }
 
     const chart = await generateChart({
       projectId,
@@ -246,10 +250,18 @@ export function ProjectPage() {
     handleGenerateChart(prompt, library)
   }
 
+  const handleRenderSuccess = useCallback(() => {
+    const chart = useChartStore.getState().currentChart
+    if (chart) {
+      track('chart-render-success', { library: chart.chart_library })
+    }
+  }, [])
+
   const handleRenderError = useCallback(async (errorMsg: string) => {
     // Read fresh state from the store to avoid stale closures
     const chart = useChartStore.getState().currentChart
     if (!chart) return
+    track('chart-render-error', { library: chart.chart_library })
     if (chart.id !== lastGeneratedIdRef.current) return
 
     // Always refund credit for render failures (once per chart)
@@ -350,9 +362,9 @@ export function ProjectPage() {
               <h2 className="text-lg font-semibold text-[var(--text)] mb-4">Upload Dataset</h2>
               <DatasetUploader
                 projectId={projectId!}
-                onUploadComplete={() => {
+                onUploadComplete={(fileType) => {
                   trackUsage({ eventType: 'dataset_upload', metadata: { projectId } })
-                  track('dataset-uploaded')
+                  track('dataset-uploaded', { fileType })
                 }}
               />
             </div>
@@ -438,9 +450,9 @@ export function ProjectPage() {
                   </div>
                   <div className="relative">
                     {currentChart.chart_library === 'd3' && currentChart.d3_code && renderData ? (
-                      <D3ChartRenderer ref={d3Ref} code={currentChart.d3_code} data={renderData} onRetry={() => handleGenerateChart(currentChart.prompt, undefined, true)} onRenderError={handleRenderError} creditRefunded={creditRefunded} />
+                      <D3ChartRenderer ref={d3Ref} code={currentChart.d3_code} data={renderData} onRetry={() => handleGenerateChart(currentChart.prompt, undefined, true)} onRenderError={handleRenderError} onRenderSuccess={handleRenderSuccess} creditRefunded={creditRefunded} />
                     ) : currentChart.vega_spec_json ? (
-                      <ChartRenderer ref={vegaRef} spec={currentChart.vega_spec_json} data={renderData ?? undefined} onRetry={() => handleGenerateChart(currentChart.prompt, undefined, true)} onRenderError={handleRenderError} creditRefunded={creditRefunded} />
+                      <ChartRenderer ref={vegaRef} spec={currentChart.vega_spec_json} data={renderData ?? undefined} onRetry={() => handleGenerateChart(currentChart.prompt, undefined, true)} onRenderError={handleRenderError} onRenderSuccess={handleRenderSuccess} creditRefunded={creditRefunded} />
                     ) : (
                       <div className="p-8 text-center text-[var(--text-subtle)]">
                         Unable to render chart: missing data

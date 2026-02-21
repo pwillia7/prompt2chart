@@ -4,6 +4,7 @@ import { useAuthStore } from '../../store/authStore'
 import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
 import { SocialLoginButtons } from './SocialLoginButtons'
+import { track } from '../../lib/analytics'
 
 export function SignupForm() {
   const [email, setEmail] = useState('')
@@ -27,10 +28,12 @@ export function SignupForm() {
       return
     }
 
+    track('signup-submitted')
     const { error } = await signUp(email, password)
     if (error) {
       setError(error.message)
     } else {
+      track('signup-completed')
       setSuccess(true)
     }
   }

@@ -3,6 +3,7 @@ import { Link, Navigate } from 'react-router-dom'
 import * as d3 from 'd3'
 import { useAuthStore } from '../store/authStore'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
+import { track } from '../lib/analytics'
 
 export function LandingPage() {
   const { session } = useAuthStore()
@@ -41,6 +42,7 @@ export function LandingPage() {
             </a>
             <Link
               to="/login"
+              onClick={() => track('signin-clicked')}
               className="text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text)] transition-colors duration-fast"
             >
               Sign in
@@ -69,6 +71,7 @@ export function LandingPage() {
           <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               to="/signup"
+              onClick={() => track('cta-hero-clicked')}
               className="px-8 py-3 bg-[var(--primary)] text-white text-base font-medium rounded-[10px] hover:bg-[var(--primary-hover)] transition-colors duration-fast shadow-soft"
             >
               Get Started Free →
@@ -335,6 +338,7 @@ export function LandingPage() {
           </p>
           <Link
             to="/signup"
+            onClick={() => track('cta-bottom-clicked')}
             className="mt-8 inline-block px-8 py-3 bg-white text-[var(--primary)] text-base font-medium rounded-[10px] hover:bg-white/90 transition-colors duration-fast shadow-soft"
           >
             Get Started Free →

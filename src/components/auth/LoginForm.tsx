@@ -4,6 +4,7 @@ import { useAuthStore } from '../../store/authStore'
 import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
 import { SocialLoginButtons } from './SocialLoginButtons'
+import { track } from '../../lib/analytics'
 
 export function LoginForm() {
   const [email, setEmail] = useState('')
@@ -16,6 +17,7 @@ export function LoginForm() {
     e.preventDefault()
     setError('')
 
+    track('login-submitted')
     const { error } = await signIn(email, password)
     if (error) {
       setError(error.message)
@@ -33,6 +35,7 @@ export function LoginForm() {
     if (error) {
       setError(error.message)
     } else {
+      track('login-magic-link-sent')
       setMagicLinkSent(true)
     }
   }

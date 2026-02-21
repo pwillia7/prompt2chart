@@ -4,7 +4,7 @@ import { Spinner } from '../ui/Spinner'
 
 interface DatasetUploaderProps {
   projectId: string
-  onUploadComplete?: () => void
+  onUploadComplete?: (fileType: string) => void
 }
 
 export function DatasetUploader({ projectId, onUploadComplete }: DatasetUploaderProps) {
@@ -27,7 +27,7 @@ export function DatasetUploader({ projectId, onUploadComplete }: DatasetUploader
 
     const result = await uploadDataset(projectId, file)
     if (result && onUploadComplete) {
-      onUploadComplete()
+      onUploadComplete(ext.replace('.', ''))
     }
   }, [projectId, uploadDataset, onUploadComplete])
 
