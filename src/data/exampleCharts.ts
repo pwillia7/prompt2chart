@@ -1245,6 +1245,307 @@ svg.append("text")
 `
 
 // ---------------------------------------------------------------------------
+// 13. Simple Bar Chart — Programming Languages (D3)
+// ---------------------------------------------------------------------------
+const langData = [
+  { language: 'JavaScript', users: 18.5 },
+  { language: 'Python', users: 16.8 },
+  { language: 'Java', users: 12.1 },
+  { language: 'TypeScript', users: 10.3 },
+  { language: 'C#', users: 7.8 },
+  { language: 'C++', users: 7.2 },
+  { language: 'Go', users: 4.5 },
+  { language: 'Rust', users: 3.6 },
+]
+
+const barCode = `
+var iw = width - margin.left - margin.right;
+var ih = height - margin.top - margin.bottom;
+var g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+var x = d3.scaleBand().domain(data.map(function(d) { return d.language; })).range([0, iw]).padding(0.3);
+var y = d3.scaleLinear().domain([0, d3.max(data, function(d) { return d.users; }) * 1.1]).nice().range([ih, 0]);
+
+g.selectAll("line.grid").data(y.ticks(5)).join("line").attr("class", "grid")
+  .attr("x1", 0).attr("x2", iw)
+  .attr("y1", function(d) { return y(d); }).attr("y2", function(d) { return y(d); })
+  .attr("stroke", "#f0f0f0");
+
+g.append("g").attr("transform", "translate(0," + ih + ")").call(d3.axisBottom(x))
+  .selectAll("text").attr("font-size", 10).attr("transform", "rotate(-25)").attr("text-anchor", "end");
+g.append("g").call(d3.axisLeft(y).ticks(5));
+
+var color = d3.scaleOrdinal().range(["#4E79A7","#F28E2B","#E15759","#76B7B2","#59A14F","#EDC948","#B07AA1","#FF9DA7"]);
+
+var tooltip = container.append("div")
+  .style("position", "absolute").style("display", "none")
+  .style("background", "#fff").style("border", "1px solid #e5e5e5")
+  .style("border-radius", "8px").style("padding", "6px 10px")
+  .style("font-size", "12px").style("box-shadow", "0 4px 12px rgba(0,0,0,0.1)")
+  .style("pointer-events", "none").style("z-index", "10");
+
+g.selectAll("rect").data(data).join("rect")
+  .attr("x", function(d) { return x(d.language); })
+  .attr("y", function(d) { return y(d.users); })
+  .attr("width", x.bandwidth())
+  .attr("height", function(d) { return ih - y(d.users); })
+  .attr("fill", function(d) { return color(d.language); })
+  .attr("rx", 4)
+  .style("cursor", "pointer")
+  .on("mouseenter", function(event, d) {
+    d3.select(this).attr("opacity", 0.8);
+    tooltip.style("display", "block")
+      .html("<strong>" + d.language + "</strong><br/>" + d.users + "M developers");
+  }).on("mousemove", function(event) {
+    var rect = event.currentTarget.closest("svg").parentElement.getBoundingClientRect();
+    tooltip.style("left", (event.clientX - rect.left + 12) + "px")
+      .style("top", (event.clientY - rect.top - 10) + "px");
+  }).on("mouseleave", function() {
+    d3.select(this).attr("opacity", 1);
+    tooltip.style("display", "none");
+  });
+
+svg.append("text").attr("x", width / 2).attr("y", 22)
+  .attr("text-anchor", "middle").attr("font-size", 14).attr("font-weight", "600").attr("fill", "#333")
+  .text("Top Programming Languages by Developers");
+
+svg.append("text").attr("transform", "rotate(-90)")
+  .attr("x", -(height / 2)).attr("y", 16)
+  .attr("text-anchor", "middle").attr("font-size", 12).attr("fill", "#888").text("Developers (millions)");
+`
+
+// ---------------------------------------------------------------------------
+// 14. Line Chart — Website Traffic (D3)
+// ---------------------------------------------------------------------------
+const trafficData = [
+  { month: 'Jan', visitors: 12400 },
+  { month: 'Feb', visitors: 14200 },
+  { month: 'Mar', visitors: 18900 },
+  { month: 'Apr', visitors: 21500 },
+  { month: 'May', visitors: 24800 },
+  { month: 'Jun', visitors: 22100 },
+  { month: 'Jul', visitors: 19700 },
+  { month: 'Aug', visitors: 23400 },
+  { month: 'Sep', visitors: 28600 },
+  { month: 'Oct', visitors: 32100 },
+  { month: 'Nov', visitors: 35800 },
+  { month: 'Dec', visitors: 31200 },
+]
+
+const lineCode = `
+var months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+var iw = width - margin.left - margin.right;
+var ih = height - margin.top - margin.bottom;
+var g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+var x = d3.scalePoint().domain(months).range([0, iw]).padding(0.5);
+var y = d3.scaleLinear().domain([0, d3.max(data, function(d) { return d.visitors; }) * 1.1]).nice().range([ih, 0]);
+
+g.selectAll("line.grid").data(y.ticks(5)).join("line").attr("class", "grid")
+  .attr("x1", 0).attr("x2", iw)
+  .attr("y1", function(d) { return y(d); }).attr("y2", function(d) { return y(d); })
+  .attr("stroke", "#f0f0f0");
+
+g.append("g").attr("transform", "translate(0," + ih + ")").call(d3.axisBottom(x));
+g.append("g").call(d3.axisLeft(y).ticks(5).tickFormat(function(d) { return d / 1000 + "K"; }));
+
+var area = d3.area()
+  .x(function(d) { return x(d.month); })
+  .y0(ih)
+  .y1(function(d) { return y(d.visitors); })
+  .curve(d3.curveMonotoneX);
+
+g.append("path").datum(data)
+  .attr("d", area).attr("fill", "#4E79A7").attr("opacity", 0.1);
+
+var line = d3.line()
+  .x(function(d) { return x(d.month); })
+  .y(function(d) { return y(d.visitors); })
+  .curve(d3.curveMonotoneX);
+
+g.append("path").datum(data)
+  .attr("d", line).attr("fill", "none")
+  .attr("stroke", "#4E79A7").attr("stroke-width", 2.5);
+
+var tooltip = container.append("div")
+  .style("position", "absolute").style("display", "none")
+  .style("background", "#fff").style("border", "1px solid #e5e5e5")
+  .style("border-radius", "8px").style("padding", "6px 10px")
+  .style("font-size", "12px").style("box-shadow", "0 4px 12px rgba(0,0,0,0.1)")
+  .style("pointer-events", "none").style("z-index", "10");
+
+g.selectAll("circle").data(data).join("circle")
+  .attr("cx", function(d) { return x(d.month); })
+  .attr("cy", function(d) { return y(d.visitors); })
+  .attr("r", 4).attr("fill", "#4E79A7")
+  .attr("stroke", "#fff").attr("stroke-width", 2)
+  .style("cursor", "pointer")
+  .on("mouseenter", function(event, d) {
+    d3.select(this).transition().duration(100).attr("r", 6);
+    tooltip.style("display", "block")
+      .html("<strong>" + d.month + "</strong><br/>" + d3.format(",")(d.visitors) + " visitors");
+  }).on("mousemove", function(event) {
+    var rect = event.currentTarget.closest("svg").parentElement.getBoundingClientRect();
+    tooltip.style("left", (event.clientX - rect.left + 12) + "px")
+      .style("top", (event.clientY - rect.top - 10) + "px");
+  }).on("mouseleave", function() {
+    d3.select(this).transition().duration(100).attr("r", 4);
+    tooltip.style("display", "none");
+  });
+
+svg.append("text").attr("x", width / 2).attr("y", 22)
+  .attr("text-anchor", "middle").attr("font-size", 14).attr("font-weight", "600").attr("fill", "#333")
+  .text("Monthly Website Traffic (2024)");
+
+svg.append("text").attr("transform", "rotate(-90)")
+  .attr("x", -(height / 2)).attr("y", 16)
+  .attr("text-anchor", "middle").attr("font-size", 12).attr("fill", "#888").text("Unique Visitors");
+`
+
+// ---------------------------------------------------------------------------
+// 15. Horizontal Bar — Top Grossing Films (D3)
+// ---------------------------------------------------------------------------
+const movieData = [
+  { title: 'Avatar', gross: 2923, year: 2009 },
+  { title: 'Avengers: Endgame', gross: 2799, year: 2019 },
+  { title: 'Avatar: Way of Water', gross: 2320, year: 2022 },
+  { title: 'Titanic', gross: 2264, year: 1997 },
+  { title: 'Star Wars: Force Awakens', gross: 2071, year: 2015 },
+  { title: 'Avengers: Infinity War', gross: 2048, year: 2018 },
+  { title: 'Spider-Man: No Way Home', gross: 1921, year: 2021 },
+  { title: 'Inside Out 2', gross: 1698, year: 2024 },
+]
+
+const hbarCode = `
+var lm = 160;
+var iw = width - lm - margin.right;
+var ih = height - margin.top - margin.bottom;
+var g = svg.append("g").attr("transform", "translate(" + lm + "," + margin.top + ")");
+
+var y = d3.scaleBand().domain(data.map(function(d) { return d.title; })).range([0, ih]).padding(0.25);
+var x = d3.scaleLinear().domain([0, d3.max(data, function(d) { return d.gross; })]).nice().range([0, iw]);
+
+g.selectAll("line.grid").data(x.ticks(5)).join("line").attr("class", "grid")
+  .attr("x1", function(d) { return x(d); }).attr("x2", function(d) { return x(d); })
+  .attr("y1", 0).attr("y2", ih)
+  .attr("stroke", "#f0f0f0");
+
+g.append("g").attr("transform", "translate(0," + ih + ")")
+  .call(d3.axisBottom(x).ticks(5).tickFormat(function(d) { return "$" + (d / 1000).toFixed(1) + "B"; }));
+g.append("g").call(d3.axisLeft(y)).selectAll("text").attr("font-size", 10);
+
+var color = d3.scaleOrdinal().range(["#E15759","#F28E2B","#EDC948","#76B7B2","#4E79A7","#59A14F","#B07AA1","#FF9DA7"]);
+
+var tooltip = container.append("div")
+  .style("position", "absolute").style("display", "none")
+  .style("background", "#fff").style("border", "1px solid #e5e5e5")
+  .style("border-radius", "8px").style("padding", "6px 10px")
+  .style("font-size", "12px").style("box-shadow", "0 4px 12px rgba(0,0,0,0.1)")
+  .style("pointer-events", "none").style("z-index", "10");
+
+g.selectAll("rect").data(data).join("rect")
+  .attr("x", 0)
+  .attr("y", function(d) { return y(d.title); })
+  .attr("width", function(d) { return x(d.gross); })
+  .attr("height", y.bandwidth())
+  .attr("fill", function(d, i) { return color(i); })
+  .attr("rx", 3)
+  .style("cursor", "pointer")
+  .on("mouseenter", function(event, d) {
+    d3.select(this).attr("opacity", 0.8);
+    tooltip.style("display", "block")
+      .html("<strong>" + d.title + "</strong> (" + d.year + ")<br/>$" + d3.format(",")(d.gross) + "M worldwide");
+  }).on("mousemove", function(event) {
+    var rect = event.currentTarget.closest("svg").parentElement.getBoundingClientRect();
+    tooltip.style("left", (event.clientX - rect.left + 12) + "px")
+      .style("top", (event.clientY - rect.top - 10) + "px");
+  }).on("mouseleave", function() {
+    d3.select(this).attr("opacity", 1);
+    tooltip.style("display", "none");
+  });
+
+svg.append("text").attr("x", width / 2 + 40).attr("y", 22)
+  .attr("text-anchor", "middle").attr("font-size", 14).attr("font-weight", "600").attr("fill", "#333")
+  .text("Top Grossing Films of All Time");
+`
+
+// ---------------------------------------------------------------------------
+// 16. Donut Chart — Monthly Budget (D3)
+// ---------------------------------------------------------------------------
+const budgetData = [
+  { category: 'Housing', amount: 1800 },
+  { category: 'Food', amount: 650 },
+  { category: 'Transport', amount: 420 },
+  { category: 'Utilities', amount: 280 },
+  { category: 'Entertainment', amount: 200 },
+  { category: 'Healthcare', amount: 350 },
+  { category: 'Savings', amount: 500 },
+]
+
+const donutCode = `
+var radius = Math.min(width, height) / 2 - 40;
+var g = svg.append("g").attr("transform", "translate(" + (width / 2) + "," + (height / 2 + 10) + ")");
+
+var color = d3.scaleOrdinal()
+  .domain(data.map(function(d) { return d.category; }))
+  .range(["#4E79A7","#F28E2B","#E15759","#76B7B2","#59A14F","#EDC948","#B07AA1"]);
+
+var pie = d3.pie().value(function(d) { return d.amount; }).sort(null).padAngle(0.02);
+var arc = d3.arc().innerRadius(radius * 0.55).outerRadius(radius);
+var arcHover = d3.arc().innerRadius(radius * 0.55).outerRadius(radius + 8);
+
+var total = d3.sum(data, function(d) { return d.amount; });
+
+var tooltip = container.append("div")
+  .style("position", "absolute").style("display", "none")
+  .style("background", "#fff").style("border", "1px solid #e5e5e5")
+  .style("border-radius", "8px").style("padding", "6px 10px")
+  .style("font-size", "12px").style("box-shadow", "0 4px 12px rgba(0,0,0,0.1)")
+  .style("pointer-events", "none").style("z-index", "10");
+
+g.selectAll("path").data(pie(data)).join("path")
+  .attr("d", arc)
+  .attr("fill", function(d) { return color(d.data.category); })
+  .attr("stroke", "#fff").attr("stroke-width", 2)
+  .style("cursor", "pointer")
+  .on("mouseenter", function(event, d) {
+    d3.select(this).transition().duration(150).attr("d", arcHover);
+    var pct = (d.data.amount / total * 100).toFixed(1);
+    tooltip.style("display", "block")
+      .html("<strong>" + d.data.category + "</strong><br/>$" + d3.format(",")(d.data.amount) + "<br/>" + pct + "% of total");
+  }).on("mousemove", function(event) {
+    var rect = event.currentTarget.closest("svg").parentElement.getBoundingClientRect();
+    tooltip.style("left", (event.clientX - rect.left + 12) + "px")
+      .style("top", (event.clientY - rect.top - 10) + "px");
+  }).on("mouseleave", function() {
+    d3.select(this).transition().duration(150).attr("d", arc);
+    tooltip.style("display", "none");
+  });
+
+g.append("text").attr("text-anchor", "middle").attr("dy", "-0.2em")
+  .attr("font-size", 22).attr("font-weight", "700").attr("fill", "#333")
+  .text("$" + d3.format(",")(total));
+g.append("text").attr("text-anchor", "middle").attr("dy", "1.2em")
+  .attr("font-size", 12).attr("fill", "#888").text("total budget");
+
+svg.append("text").attr("x", width / 2).attr("y", 22)
+  .attr("text-anchor", "middle").attr("font-size", 14).attr("font-weight", "600").attr("fill", "#333")
+  .text("Monthly Household Budget");
+
+var legend = container.append("div")
+  .style("display", "flex").style("justify-content", "center")
+  .style("flex-wrap", "wrap").style("gap", "14px")
+  .style("padding", "8px 0 4px").style("font-size", "12px");
+
+data.forEach(function(d) {
+  var item = legend.append("div").style("display", "flex").style("align-items", "center").style("gap", "5px");
+  item.append("div").style("width", "10px").style("height", "10px")
+    .style("border-radius", "50%").style("background", color(d.category));
+  item.append("span").style("color", "#666").text(d.category);
+});
+`
+
+// ---------------------------------------------------------------------------
 // Export all examples
 // ---------------------------------------------------------------------------
 export const exampleCharts: ChartExample[] = [
@@ -1364,5 +1665,41 @@ export const exampleCharts: ChartExample[] = [
     library: 'd3',
     data: tradeData,
     d3Code: chordCode,
+  },
+  {
+    id: 'lang-bar',
+    title: 'Programming Languages',
+    description: 'Show the top programming languages ranked by number of developers as a bar chart',
+    chartType: 'Bar',
+    library: 'd3',
+    data: langData,
+    d3Code: barCode,
+  },
+  {
+    id: 'traffic-line',
+    title: 'Website Traffic',
+    description: 'Plot monthly website traffic as a line chart with data points and area fill',
+    chartType: 'Line',
+    library: 'd3',
+    data: trafficData,
+    d3Code: lineCode,
+  },
+  {
+    id: 'movies-hbar',
+    title: 'Top Grossing Films',
+    description: 'Show the highest grossing movies of all time as a horizontal bar chart',
+    chartType: 'Horizontal Bar',
+    library: 'd3',
+    data: movieData,
+    d3Code: hbarCode,
+  },
+  {
+    id: 'budget-donut',
+    title: 'Monthly Budget',
+    description: 'Break down a monthly household budget as a donut chart with percentages',
+    chartType: 'Donut',
+    library: 'd3',
+    data: budgetData,
+    d3Code: donutCode,
   },
 ]
