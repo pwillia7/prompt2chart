@@ -393,7 +393,12 @@ function ExamplesCarousel() {
   const [activeIndex, setActiveIndex] = useState(0)
   const [isHovered, setIsHovered] = useState(false)
   const autoAdvanceInterval = 6000
-  const sorted = [...exampleCharts].sort((a, b) => (a.library === 'd3' ? 0 : 1) - (b.library === 'd3' ? 0 : 1))
+  const carouselIds = [
+    'revenue-scatter', 'traffic-line', 'salary-beeswarm', 'budget-donut',
+    'music-stream', 'phone-treemap', 'energy-sankey', 'trade-chord',
+    'gdp-scatter', 'revenue-area',
+  ]
+  const sorted = carouselIds.map(id => exampleCharts.find(c => c.id === id)!)
 
   const scrollToIndex = useCallback((idx: number) => {
     const el = scrollRef.current
