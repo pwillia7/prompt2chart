@@ -507,18 +507,6 @@ function ExamplesCarousel() {
               className="w-[85vw] max-w-[700px] shrink-0 bg-white rounded-card shadow-soft overflow-hidden border border-[var(--border)] flex flex-col"
               style={{ scrollSnapAlign: 'center' }}
             >
-              {/* Card header: sets context before the chart renders */}
-              <div className="flex items-center justify-between px-4 py-2.5 bg-[var(--surface-1)] border-b border-[var(--border)]">
-                <p className="text-sm font-semibold text-[var(--text)] truncate">{example.title}</p>
-                <span className={`ml-3 shrink-0 px-2 py-0.5 text-[10px] rounded-full font-medium ${
-                  example.library === 'd3'
-                    ? 'bg-orange-100 text-orange-700'
-                    : 'bg-blue-100 text-blue-700'
-                }`}>
-                  {example.library === 'd3' ? 'D3.js' : 'Vega-Lite'}
-                </span>
-              </div>
-
               <div className="overflow-hidden bg-white">
                 {example.library === 'd3' ? (
                   <D3ChartRenderer code={example.d3Code!} data={example.data as unknown[]} />
@@ -527,17 +515,32 @@ function ExamplesCarousel() {
                 )}
               </div>
 
-              {/* Prompt footer: the "aha" moment */}
-              <div className="px-4 py-3 border-t border-[var(--border)] bg-orange-50">
-                <div className="flex items-center gap-1.5 mb-1">
-                  <svg className="w-3.5 h-3.5 text-orange-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                  </svg>
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-orange-500">Prompt</span>
+              {/* Bottom section: prompt + metadata */}
+              <div className="p-4 border-t border-[var(--border)]">
+                {/* Prompt box */}
+                <div className="rounded-lg bg-orange-50 border border-orange-200 px-3 py-2.5 mb-3">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <svg className="w-3.5 h-3.5 text-orange-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                    </svg>
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-orange-500">Prompt</span>
+                  </div>
+                  <p className="text-sm text-[var(--text)] leading-snug line-clamp-2">
+                    &ldquo;{example.description}&rdquo;
+                  </p>
                 </div>
-                <p className="text-sm text-[var(--text)] leading-snug line-clamp-2">
-                  &ldquo;{example.description}&rdquo;
-                </p>
+                {/* Chart type + library */}
+                <div className="flex items-center gap-2">
+                  <p className="text-xs text-[var(--text-muted)] truncate">{example.title}</p>
+                  <span className="shrink-0 text-[var(--border-strong)]">·</span>
+                  <span className={`shrink-0 px-1.5 py-0.5 text-[10px] rounded-full font-medium ${
+                    example.library === 'd3'
+                      ? 'bg-orange-100 text-orange-700'
+                      : 'bg-blue-100 text-blue-700'
+                  }`}>
+                    {example.library === 'd3' ? 'D3.js' : 'Vega-Lite'}
+                  </span>
+                </div>
               </div>
             </div>
           ))}
