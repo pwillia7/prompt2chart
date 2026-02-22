@@ -1561,7 +1561,7 @@ export const exampleCharts: ChartExample[] = [
   {
     id: 'coffee-bar',
     title: 'Coffee Consumption by Country',
-    description: 'Show coffee consumption by type across countries as a grouped bar chart with warm brown tones',
+    description: 'Create a grouped bar chart of cups per day by country, grouped by type, using warm brown tones',
     chartType: 'Grouped Bar',
     library: 'vega-lite',
     data: coffeeData,
@@ -1570,7 +1570,7 @@ export const exampleCharts: ChartExample[] = [
   {
     id: 'temp-lines',
     title: 'Monthly City Temperatures',
-    description: 'Plot monthly average temperatures for major cities with connected lines and data points',
+    description: 'Plot temp by month for each city as a multi-line chart with data points',
     chartType: 'Multi-Line',
     library: 'vega-lite',
     data: tempData,
@@ -1579,7 +1579,7 @@ export const exampleCharts: ChartExample[] = [
   {
     id: 'gdp-scatter',
     title: 'GDP vs Life Expectancy',
-    description: 'Create a bubble chart of GDP vs life expectancy, sized by population, colored by continent, with a trend line',
+    description: 'Make a bubble chart with gdp on the x-axis and lifeExpectancy on y, size by population, color by continent, add a trend line',
     chartType: 'Scatter + Regression',
     library: 'vega-lite',
     data: gdpData,
@@ -1588,7 +1588,7 @@ export const exampleCharts: ChartExample[] = [
   {
     id: 'commit-heatmap',
     title: 'Weekly Commit Activity',
-    description: 'Make a heatmap of GitHub commit activity by hour and day of week',
+    description: 'Create a heatmap of commits by day and hour, use a green color scale',
     chartType: 'Heatmap',
     library: 'vega-lite',
     data: commitData,
@@ -1597,7 +1597,7 @@ export const exampleCharts: ChartExample[] = [
   {
     id: 'revenue-area',
     title: 'Revenue by Product Line',
-    description: 'Show quarterly revenue trends by product line as stacked areas with soft pastel colors',
+    description: 'Show revenue by quarter as stacked areas, broken down by product, with pastel colors',
     chartType: 'Stacked Area',
     library: 'vega-lite',
     data: revenueData,
@@ -1606,7 +1606,7 @@ export const exampleCharts: ChartExample[] = [
   {
     id: 'energy-sankey',
     title: 'Energy Flow Diagram',
-    description: 'Visualize energy flow from sources through sectors to end uses as a Sankey diagram',
+    description: 'Create a Sankey diagram showing flows from source to target, sized by value',
     chartType: 'Sankey',
     library: 'd3',
     data: energyData,
@@ -1615,7 +1615,7 @@ export const exampleCharts: ChartExample[] = [
   {
     id: 'phone-treemap',
     title: 'Smartphone Market Share',
-    description: 'Display global smartphone market share as a treemap with brand groupings',
+    description: 'Make a treemap of share grouped by brand, showing each model as a cell',
     chartType: 'Treemap',
     library: 'd3',
     data: smartphoneData,
@@ -1624,7 +1624,7 @@ export const exampleCharts: ChartExample[] = [
   {
     id: 'files-circles',
     title: 'Project File Sizes',
-    description: 'Show software project file sizes as nested circles with click-to-zoom',
+    description: 'Create a circle packing chart of value grouped by parent hierarchy, with click-to-zoom',
     chartType: 'Circle Packing',
     library: 'd3',
     data: fileData,
@@ -1633,7 +1633,7 @@ export const exampleCharts: ChartExample[] = [
   {
     id: 'salary-beeswarm',
     title: 'Salary Distribution',
-    description: 'Plot salary distributions across departments as a beeswarm with tooltips',
+    description: 'Plot salary by department as a beeswarm so I can see the distribution, with tooltips on hover',
     chartType: 'Beeswarm',
     library: 'd3',
     data: salaryData,
@@ -1642,7 +1642,7 @@ export const exampleCharts: ChartExample[] = [
   {
     id: 'animal-tree',
     title: 'Animal Classification',
-    description: 'Draw an animal classification tree diagram with horizontal branches',
+    description: 'Create a horizontal tree diagram using the name and parent columns to show the hierarchy',
     chartType: 'Tree',
     library: 'd3',
     data: animalData,
@@ -1651,7 +1651,7 @@ export const exampleCharts: ChartExample[] = [
   {
     id: 'music-stream',
     title: 'Music Genre Popularity',
-    description: 'Create a streamgraph showing music genre popularity from 1960 to 2020',
+    description: 'Make a streamgraph of listeners over year, with each genre as a flowing layer',
     chartType: 'Streamgraph',
     library: 'd3',
     data: musicData,
@@ -1660,7 +1660,7 @@ export const exampleCharts: ChartExample[] = [
   {
     id: 'trade-chord',
     title: 'International Trade Flows',
-    description: 'Visualize international trade flows between regions as a chord diagram',
+    description: 'Create a chord diagram of value flowing between source and target regions',
     chartType: 'Chord',
     library: 'd3',
     data: tradeData,
@@ -1669,7 +1669,7 @@ export const exampleCharts: ChartExample[] = [
   {
     id: 'lang-bar',
     title: 'Programming Languages',
-    description: 'Show the top programming languages ranked by number of developers as a bar chart',
+    description: 'Bar chart of users by language, sorted highest to lowest with tooltips',
     chartType: 'Bar',
     library: 'd3',
     data: langData,
@@ -1678,7 +1678,7 @@ export const exampleCharts: ChartExample[] = [
   {
     id: 'traffic-line',
     title: 'Website Traffic',
-    description: 'Plot monthly website traffic as a line chart with data points and area fill',
+    description: 'Line chart of visitors by month with data points and a subtle area fill underneath',
     chartType: 'Line',
     library: 'd3',
     data: trafficData,
@@ -1687,7 +1687,7 @@ export const exampleCharts: ChartExample[] = [
   {
     id: 'movies-hbar',
     title: 'Top Grossing Films',
-    description: 'Show the highest grossing movies of all time as a horizontal bar chart',
+    description: 'Horizontal bar chart of gross by title, show the year in the tooltips',
     chartType: 'Horizontal Bar',
     library: 'd3',
     data: movieData,
@@ -1696,7 +1696,7 @@ export const exampleCharts: ChartExample[] = [
   {
     id: 'budget-donut',
     title: 'Monthly Budget',
-    description: 'Break down a monthly household budget as a donut chart with percentages',
+    description: 'Donut chart of amount by category, show the total in the center and percentages on hover',
     chartType: 'Donut',
     library: 'd3',
     data: budgetData,
