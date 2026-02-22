@@ -151,11 +151,8 @@ function ExampleCard({ example }: { example: ChartExample }) {
         )}
       </div>
       <div className="p-4">
-        <div className="flex items-center gap-2 mb-2 flex-wrap">
+        <div className="flex items-center gap-2 mb-1 flex-wrap">
           <h3 className="text-base font-semibold text-[var(--text)]">{example.title}</h3>
-          <span className="px-2 py-0.5 text-xs rounded-full bg-[var(--surface-3)] text-[var(--text-muted)]">
-            {example.chartType}
-          </span>
           <span className={`px-2 py-0.5 text-xs rounded-full ${
             example.library === 'd3'
               ? 'bg-orange-100 text-orange-700'
@@ -164,6 +161,7 @@ function ExampleCard({ example }: { example: ChartExample }) {
             {example.library === 'd3' ? 'D3.js' : 'Vega-Lite'}
           </span>
         </div>
+        <p className="text-sm text-[var(--text-muted)] mb-2">{example.subtitle}</p>
         <p className="text-sm text-[var(--text-muted)] italic">
           &ldquo;{example.description}&rdquo;
         </p>

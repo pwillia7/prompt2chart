@@ -510,7 +510,7 @@ function ExamplesCarousel() {
                 )}
               </div>
               <div className="p-4 border-t border-[var(--border)]">
-                <div className="flex items-center gap-2 mb-1">
+                <div className="flex items-center gap-2 mb-0.5">
                   <p className="text-sm font-semibold text-[var(--text)]">{example.title}</p>
                   <span className={`px-2 py-0.5 text-[10px] rounded-full font-medium ${
                     example.library === 'd3'
@@ -520,6 +520,7 @@ function ExamplesCarousel() {
                     {example.library === 'd3' ? 'D3.js' : 'Vega-Lite'}
                   </span>
                 </div>
+                <p className="text-xs text-[var(--text-muted)] mb-1.5">{example.subtitle}</p>
                 <p className="text-xs text-[var(--text-muted)] italic line-clamp-2">
                   &ldquo;{example.description}&rdquo;
                 </p>
