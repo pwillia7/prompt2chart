@@ -525,7 +525,7 @@ function ExamplesCarousel() {
                     </svg>
                     <span className="text-[10px] font-semibold uppercase tracking-wider text-orange-500">Prompt</span>
                   </div>
-                  <p className="text-sm text-[var(--text)] leading-snug line-clamp-2">
+                  <p className="text-sm text-[var(--text)] leading-snug line-clamp-2 min-h-[2.4rem]">
                     &ldquo;{example.description}&rdquo;
                   </p>
                 </div>
