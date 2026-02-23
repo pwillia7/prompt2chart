@@ -13,6 +13,8 @@ import { ExamplesPage } from './pages/ExamplesPage'
 import { FeedbackPage } from './pages/FeedbackPage'
 import { PricingPage } from './pages/PricingPage'
 import { NotFoundPage } from './pages/NotFoundPage'
+import { BlogIndexPage } from './pages/BlogIndexPage'
+import { BlogPostPage } from './pages/BlogPostPage'
 import { Spinner } from './components/ui/Spinner'
 
 function App() {
@@ -70,6 +72,8 @@ function App() {
             </AuthGuard>
           }
         />
+        <Route path="/blog" element={<BlogIndexPage />} />
+        <Route path="/blog/:slug" element={<BlogPostPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </ErrorBoundary>

@@ -345,9 +345,14 @@ export function LandingPage() {
               </svg>
               <span className="text-sm font-medium text-[var(--text-subtle)]">Prompt2Chart</span>
             </div>
-            <p className="text-sm text-[var(--text-subtle)]">
-              &copy; {new Date().getFullYear()} Prompt2Chart. All rights reserved.
-            </p>
+            <div className="flex items-center gap-4">
+              <Link to="/blog" className="text-sm text-[var(--text-subtle)] hover:text-[var(--text-muted)] transition-colors duration-fast">
+                Blog
+              </Link>
+              <p className="text-sm text-[var(--text-subtle)]">
+                &copy; {new Date().getFullYear()} Prompt2Chart. All rights reserved.
+              </p>
+            </div>
           </div>
         </div>
       </footer>
