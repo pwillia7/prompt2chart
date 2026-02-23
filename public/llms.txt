@@ -1,0 +1,26 @@
+# Prompt2Chart
+
+> Prompt2Chart is an AI-powered web application that generates interactive data visualizations from natural language prompts. Users upload a CSV or JSON dataset, describe the chart they want in plain English, and receive fully interactive D3.js or Vega-Lite visualizations instantly.
+
+## Product
+
+- [Homepage](https://prompt2chart.com/): Landing page with feature overview, live examples, and pricing
+- [Examples](https://prompt2chart.com/examples): Gallery of charts generated from real prompts — scatter plots, beeswarms, Sankey diagrams, treemaps, chord diagrams, streamgraphs, and more
+- [Pricing](https://prompt2chart.com/pricing): Free tier with 100 signup credits and 25 monthly credits; additional credit packs available
+
+## Key capabilities
+
+- Natural language to chart: users describe what they want in plain English and the AI generates working D3.js or Vega-Lite code
+- Supports CSV and JSON data upload with automatic schema detection
+- Charts are fully interactive: zoom, pan, brush selection, tooltips, and hover effects
+- AI analyst: ask questions about your data and get automated insights
+- Export to PNG, SVG, or standalone HTML; no credits required for exports
+- Iterate with follow-up prompts to refine any chart
+
+## Pricing model
+
+- Free to sign up — no credit card required
+- 100 credits included on signup
+- 25 free credits added every month
+- 1 credit per chart generation or analyst chat message
+- Exports, uploads, and browsing are always free
