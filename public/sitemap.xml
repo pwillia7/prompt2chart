@@ -25,8 +25,14 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://prompt2chart.com/blog/how-to-make-a-scatter-plot-from-a-csv</loc>
+    <loc>https://prompt2chart.com/blog/from-data-to-insight-how-natural-language-transforms-data-viz</loc>
     <lastmod>2026-02-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://prompt2chart.com/blog/how-to-make-a-scatter-plot-from-a-csv</loc>
+    <lastmod>2026-01-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>

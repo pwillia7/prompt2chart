@@ -7,6 +7,12 @@
 - [Homepage](https://prompt2chart.com/): Landing page with feature overview, live examples, and pricing
 - [Examples](https://prompt2chart.com/examples): Gallery of charts generated from real prompts — scatter plots, beeswarms, Sankey diagrams, treemaps, chord diagrams, streamgraphs, and more
 - [Pricing](https://prompt2chart.com/pricing): Free tier with 100 signup credits and 25 monthly credits; additional credit packs available
+- [Blog](https://prompt2chart.com/blog): Guides and tips for data visualization
+
+## Blog posts
+
+- [From Data to Insight: How Natural Language Transforms Data-Viz](https://prompt2chart.com/blog/from-data-to-insight-how-natural-language-transforms-data-viz): How AI-powered natural language interfaces are changing the way people explore and communicate data
+- [How to Make a Scatter Plot from a CSV File](https://prompt2chart.com/blog/how-to-make-a-scatter-plot-from-a-csv): A guide to creating interactive scatter plots from CSV data, including the AI-powered approach with tooltips, zoom, and trend lines
 
 ## Key capabilities
 
