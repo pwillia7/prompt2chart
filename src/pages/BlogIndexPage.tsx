@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 import { getAllPosts, formatDate } from '../lib/blog'
+import { MarketingFooter } from '../components/layout/MarketingFooter'
 
 export function BlogIndexPage() {
   useDocumentTitle('Blog - Prompt2Chart')
@@ -70,23 +71,7 @@ export function BlogIndexPage() {
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="py-12 bg-[var(--surface-1)]">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <svg className="w-6 h-6" viewBox="0 0 100 100">
-              <rect x="10" y="60" width="15" height="30" fill="#FDBA74" />
-              <rect x="30" y="40" width="15" height="50" fill="#FB923C" />
-              <rect x="50" y="20" width="15" height="70" fill="#F97316" />
-              <rect x="70" y="35" width="15" height="55" fill="#EA580C" />
-            </svg>
-            <span className="text-sm font-medium text-[var(--text-subtle)]">Prompt2Chart</span>
-          </div>
-          <p className="text-sm text-[var(--text-subtle)]">
-            &copy; {new Date().getFullYear()} Prompt2Chart. All rights reserved.
-          </p>
-        </div>
-      </footer>
+      <MarketingFooter />
     </div>
   )
 }
