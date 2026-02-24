@@ -94,7 +94,7 @@ export function LandingPage() {
             </a>
           </div>
           <p className="mt-4 text-sm text-[var(--text-subtle)]">
-            No data handy? Sample datasets are included so you can try it out.
+            No data on hand? Sample datasets are included.
           </p>
 
         </div>
