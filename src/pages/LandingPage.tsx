@@ -84,7 +84,7 @@ export function LandingPage() {
               onClick={() => track('cta-hero-clicked')}
               className="px-8 py-3 bg-[var(--primary)] text-white text-base font-medium rounded-[10px] hover:bg-[var(--primary-hover)] transition-colors duration-fast shadow-soft"
             >
-              Get Started Free →
+              Generate Your First Chart →
             </Link>
             <a
               href="#how-it-works"
@@ -187,7 +187,7 @@ export function LandingPage() {
               How it works
             </h2>
             <p className="mt-4 text-lg text-[var(--text-muted)]">
-              Three steps from raw data to polished visualization.
+              Three steps from raw data to an interactive, exportable chart — in under a minute.
             </p>
           </div>
 
@@ -238,13 +238,13 @@ export function LandingPage() {
                   <svg className="w-5 h-5 text-green-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  <span><strong className="text-[var(--text)]">100 credits</strong> when you sign up</span>
+                  <span><strong className="text-[var(--text)]">100 free charts</strong> when you sign up</span>
                 </li>
                 <li className="flex items-start gap-3 text-sm text-[var(--text-muted)]">
                   <svg className="w-5 h-5 text-green-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  <span><strong className="text-[var(--text)]">25 free credits</strong> added every month</span>
+                  <span><strong className="text-[var(--text)]">25 free charts</strong> added every month</span>
                 </li>
                 <li className="flex items-start gap-3 text-sm text-[var(--text-muted)]">
                   <svg className="w-5 h-5 text-green-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -294,6 +294,10 @@ export function LandingPage() {
 
           <div className="space-y-4">
             <FaqCard
+              question="Do I need my own data to get started?"
+              answer="No. Prompt2Chart includes sample datasets so you can generate charts right away. When you're ready, upload your own CSV or JSON to visualize anything you want."
+            />
+            <FaqCard
               question="What if I run out of credits?"
               answer="You get 25 free credits every month, automatically. If you need more, you can buy credit packs anytime — no commitment, no subscription."
             />
@@ -321,17 +325,17 @@ export function LandingPage() {
       <section className="py-20 bg-[var(--primary)]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold text-white">
-            Ready to start visualizing?
+            Your data, described in plain English, turned into a chart.
           </h2>
           <p className="mt-4 text-lg text-white/70">
-            100 free credits included. No credit card required.
+            100 free charts included. No credit card required.
           </p>
           <Link
             to="/signup"
             onClick={() => track('cta-bottom-clicked')}
             className="mt-8 inline-block px-8 py-3 bg-white text-[var(--primary)] text-base font-medium rounded-[10px] hover:bg-white/90 transition-colors duration-fast shadow-soft"
           >
-            Get Started Free →
+            Generate Your First Chart →
           </Link>
         </div>
       </section>
