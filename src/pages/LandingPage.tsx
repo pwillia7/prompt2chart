@@ -93,6 +93,9 @@ export function LandingPage() {
               See How It Works
             </a>
           </div>
+          <p className="mt-4 text-sm text-[var(--text-subtle)]">
+            No data yet? Sample datasets included — start exploring immediately.
+          </p>
 
         </div>
 
@@ -192,7 +195,7 @@ export function LandingPage() {
             <StepCard
               number="1"
               title="Upload your data"
-              description="Drop a CSV or paste data directly. Prompt2Chart automatically detects columns, types, and patterns."
+              description="Drop a CSV or use one of the included sample datasets. Prompt2Chart automatically detects columns, types, and patterns."
             />
             <StepCard
               number="2"

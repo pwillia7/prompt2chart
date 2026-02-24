@@ -25,7 +25,7 @@ export function SignupPage() {
             Create your account
           </h2>
           <p className="mt-2 text-sm text-[var(--text-muted)]">
-            Start creating visualizations with AI
+            Bring your own data, or explore our included sample datasets
           </p>
         </div>
         <div className="bg-[var(--surface-1)] p-8 rounded-card shadow-soft border border-[var(--border)]">
