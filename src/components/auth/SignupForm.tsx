@@ -106,6 +106,9 @@ export function SignupForm() {
         <Button type="submit" className="w-full" loading={loading}>
           Create Account
         </Button>
+        <p className="text-center text-xs text-[var(--text-subtle)]">
+          No spam. Unsubscribe anytime.
+        </p>
       </form>
 
       <p className="text-center text-sm text-[var(--text-muted)]">

@@ -27,6 +27,9 @@ export function SignupPage() {
           <p className="mt-2 text-sm text-[var(--text-muted)]">
             Upload your own data, or start with a sample dataset.
           </p>
+          <p className="mt-3 text-sm font-medium text-[var(--primary)]">
+            100 free charts included · No credit card required
+          </p>
         </div>
         <div className="bg-[var(--surface-1)] p-8 rounded-card shadow-soft border border-[var(--border)]">
           <SignupForm />
