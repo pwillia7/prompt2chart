@@ -6,13 +6,44 @@ import { Spinner } from '../components/ui/Spinner'
 import { supabase } from '../lib/supabase'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 import { track } from '../lib/analytics'
-import type { SharedChart } from '../types'
+import { copyToClipboard, openD3InCodePen, openVegaLiteInCodePen } from '../lib/chartExporter'
+import type { SharedChart, VegaLiteSpec } from '../types'
+
+interface ParsedNotes {
+  chartInsights: string[]
+  dataInsights: string[]
+  suggestions: string[]
+}
+
+function parseNotes(raw: string): ParsedNotes | null {
+  try {
+    const parsed = JSON.parse(raw)
+    if (parsed.chartInsights && parsed.dataInsights) return parsed as ParsedNotes
+  } catch {
+    // not JSON
+  }
+  return null
+}
+
+function BulletList({ items }: { items: string[] }) {
+  return (
+    <ul className="space-y-1.5">
+      {items.map((item, i) => (
+        <li key={i} className="flex items-start gap-2 text-sm text-[var(--text-muted)] leading-snug">
+          <span className="flex-shrink-0 mt-1.5 w-1 h-1 rounded-full bg-[var(--text-subtle)]" />
+          <span>{item}</span>
+        </li>
+      ))}
+    </ul>
+  )
+}
 
 export function SharedChartPage() {
   const { shareId } = useParams<{ shareId: string }>()
   const [shared, setShared] = useState<SharedChart | null>(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
+  const [linkCopied, setLinkCopied] = useState(false)
   const d3Ref = useRef<D3ChartHandle>(null)
   const vegaRef = useRef<VegaChartHandle>(null)
 
@@ -44,6 +75,31 @@ export function SharedChartPage() {
     return () => { cancelled = true }
   }, [shareId])
 
+  async function handleCopyLink() {
+    try {
+      await copyToClipboard(window.location.href)
+      setLinkCopied(true)
+      setTimeout(() => setLinkCopied(false), 2000)
+    } catch {
+      // ignore
+    }
+  }
+
+  function handleCodePen() {
+    if (!shared) return
+    const data = (shared.data_snapshot as unknown[]) ?? []
+    if (shared.chart_library === 'd3' && shared.d3_code) {
+      openD3InCodePen(shared.d3_code, data, shared.prompt)
+    } else if (shared.vega_spec_json) {
+      const spec = shared.vega_spec_json as VegaLiteSpec
+      const exportSpec = spec.data && 'values' in spec.data && spec.data.values?.length
+        ? spec
+        : { ...spec, data: { values: data } }
+      openVegaLiteInCodePen(exportSpec, shared.prompt)
+    }
+    track('share-codepen-click', { library: shared.chart_library })
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-bg flex items-center justify-center">
@@ -68,6 +124,11 @@ export function SharedChartPage() {
   }
 
   const data = (shared.data_snapshot as unknown[]) ?? []
+  const notes = shared.explanation ? parseNotes(shared.explanation) : null
+  const pageUrl = window.location.href
+  const tweetText = encodeURIComponent(`Check out this chart I made with @prompt2chart: "${shared.prompt}"`)
+  const tweetUrl = `https://twitter.com/intent/tweet?text=${tweetText}&url=${encodeURIComponent(pageUrl)}`
+  const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(pageUrl)}`
 
   return (
     <div className="min-h-screen bg-bg pb-20">
@@ -88,7 +149,7 @@ export function SharedChartPage() {
             onClick={() => track('share-cta-header-click', {})}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-[10px] bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)] transition-colors duration-fast"
           >
-            Try it free
+            Make your own
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
@@ -98,44 +159,123 @@ export function SharedChartPage() {
 
       {/* Main content */}
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        {/* Prompt title */}
+        {/* Prompt title + library tag */}
         <div>
           <p className="text-xs font-medium text-[var(--text-subtle)] uppercase tracking-wider mb-1">Chart prompt</p>
-          <h1 className="text-xl font-semibold text-[var(--text)] leading-snug">{shared.prompt}</h1>
+          <div className="flex items-start gap-2 flex-wrap">
+            <h1 className="text-xl font-semibold text-[var(--text)] leading-snug">{shared.prompt}</h1>
+            <span className={`shrink-0 mt-0.5 px-2 py-0.5 text-xs font-medium rounded-full ${
+              shared.chart_library === 'd3'
+                ? 'bg-orange-500/15 text-orange-400'
+                : 'bg-[var(--surface-3)] text-[var(--text-muted)]'
+            }`}>
+              {shared.chart_library === 'd3' ? 'D3.js' : 'Vega-Lite'}
+            </span>
+          </div>
         </div>
 
-        {/* Chart card */}
+        {/* Chart card — constrained to match project page chart area */}
         <div className="bg-[var(--surface-1)] rounded-card border border-[var(--border)] p-6">
-          {shared.chart_library === 'd3' && shared.d3_code ? (
-            <D3ChartRenderer
-              ref={d3Ref}
-              code={shared.d3_code}
-              data={data}
-              onRetry={() => {}}
-              onRenderError={() => {}}
-              onRenderSuccess={() => {}}
-              creditRefunded={false}
-            />
-          ) : shared.vega_spec_json ? (
-            <ChartRenderer
-              ref={vegaRef}
-              spec={shared.vega_spec_json}
-              data={data.length > 0 ? data : undefined}
-              onRetry={() => {}}
-              onRenderError={() => {}}
-              onRenderSuccess={() => {}}
-              creditRefunded={false}
-            />
-          ) : (
-            <p className="text-center text-[var(--text-subtle)] py-8">Unable to render chart.</p>
-          )}
+          <div className="max-w-[740px]">
+            {shared.chart_library === 'd3' && shared.d3_code ? (
+              <D3ChartRenderer
+                ref={d3Ref}
+                code={shared.d3_code}
+                data={data}
+                onRetry={() => {}}
+                onRenderError={() => {}}
+                onRenderSuccess={() => {}}
+                creditRefunded={false}
+              />
+            ) : shared.vega_spec_json ? (
+              <ChartRenderer
+                ref={vegaRef}
+                spec={shared.vega_spec_json}
+                data={data.length > 0 ? data : undefined}
+                onRetry={() => {}}
+                onRenderError={() => {}}
+                onRenderSuccess={() => {}}
+                creditRefunded={false}
+              />
+            ) : (
+              <p className="text-center text-[var(--text-subtle)] py-8">Unable to render chart.</p>
+            )}
+          </div>
         </div>
 
-        {/* Explanation */}
+        {/* Social share buttons */}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs font-medium text-[var(--text-subtle)] uppercase tracking-wider mr-1">Share</span>
+
+          <button
+            onClick={handleCopyLink}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-[10px] bg-[var(--surface-2)] text-[var(--text-muted)] border border-[var(--border-strong)] hover:bg-[var(--surface-3)] transition-colors duration-fast"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+            {linkCopied ? 'Copied!' : 'Copy link'}
+          </button>
+
+          <a
+            href={tweetUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => track('share-twitter-click', {})}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-[10px] bg-[var(--surface-2)] text-[var(--text-muted)] border border-[var(--border-strong)] hover:bg-[var(--surface-3)] transition-colors duration-fast"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.836L2.25 2.25h6.907l4.258 5.627zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+            </svg>
+            Post on X
+          </a>
+
+          <a
+            href={linkedInUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => track('share-linkedin-click', {})}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-[10px] bg-[var(--surface-2)] text-[var(--text-muted)] border border-[var(--border-strong)] hover:bg-[var(--surface-3)] transition-colors duration-fast"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+            </svg>
+            LinkedIn
+          </a>
+
+          <button
+            onClick={handleCodePen}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-[10px] bg-[var(--surface-2)] text-[var(--text-muted)] border border-[var(--border-strong)] hover:bg-[var(--surface-3)] transition-colors duration-fast"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8.21 12L6.88 12.89V11.11L8.21 12zm2.79 1.84V16l-3.48-2.32 1.46-.97 2.02 1.13zm.5-3.68L8.56 8.5l2.94-1.96v2.18l-2.02 1.13 1.52 1.01v.3zM12 10.74L10.27 12 12 13.26 13.73 12 12 10.74zM22 12c0 5.52-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2s10 4.48 10 10zm-3.5-1.3l-.01-.02-5.99-4V6.5L12 6.34l-.5.16v.18l-5.99 4-.01.02-.5.33v2.94l.5.33.01.02 5.99 4v.18l.5.16.5-.16v-.18l5.99-4 .01-.02.5-.33V11.03l-.5-.33zm-5.5 5.12V18l3.48-2.32-1.46-.97-2.02 1.11zm3.32-3.93L17.78 12l-1.46-.89v1.78l-1.5.04z" />
+            </svg>
+            Edit in CodePen
+          </button>
+        </div>
+
+        {/* Explanation (parsed JSON or plain text) */}
         {shared.explanation && (
-          <div className="bg-[var(--surface-1)] rounded-card border border-[var(--border)] p-5">
-            <p className="text-xs font-medium text-[var(--text-subtle)] uppercase tracking-wider mb-2">About this chart</p>
-            <p className="text-sm text-[var(--text-muted)] leading-relaxed">{shared.explanation}</p>
+          <div className="bg-[var(--surface-1)] rounded-card border border-[var(--border)] p-5 space-y-4">
+            <p className="text-xs font-medium text-[var(--text-subtle)] uppercase tracking-wider">About this chart</p>
+            {notes ? (
+              <div className="space-y-4">
+                {notes.chartInsights.length > 0 && (
+                  <div>
+                    <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide mb-2">Chart Insights</p>
+                    <BulletList items={notes.chartInsights} />
+                  </div>
+                )}
+                {notes.dataInsights.length > 0 && (
+                  <div>
+                    <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide mb-2">Dataset Insights</p>
+                    <BulletList items={notes.dataInsights} />
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="text-sm text-[var(--text-muted)] leading-relaxed">{shared.explanation}</p>
+            )}
           </div>
         )}
 
@@ -150,7 +290,7 @@ export function SharedChartPage() {
             onClick={() => track('share-cta-midpage-click', {})}
             className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold rounded-[10px] bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)] transition-colors duration-fast whitespace-nowrap"
           >
-            Start for free
+            Visualize your data free
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
@@ -171,7 +311,7 @@ export function SharedChartPage() {
             onClick={() => track('share-cta-sticky-click', {})}
             className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-[10px] bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)] transition-colors duration-fast"
           >
-            Sign up free
+            Visualize your data free
           </Link>
         </div>
       </div>

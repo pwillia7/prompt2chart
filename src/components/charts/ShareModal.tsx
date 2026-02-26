@@ -3,6 +3,7 @@ import type { Chart } from '../../types'
 import { Modal } from '../ui/Modal'
 import { supabase } from '../../lib/supabase'
 import { track } from '../../lib/analytics'
+import { copyToClipboard } from '../../lib/chartExporter'
 
 const MAX_SHARE_ROWS = 2000
 
@@ -64,12 +65,15 @@ export function ShareModal({ chart, data, onClose }: ShareModalProps) {
     createShare()
   }, [])
 
-  function handleCopy() {
+  async function handleCopy() {
     if (!shareUrl) return
-    navigator.clipboard.writeText(shareUrl).then(() => {
+    try {
+      await copyToClipboard(shareUrl)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
-    })
+    } catch {
+      // ignore
+    }
     inputRef.current?.select()
   }
 
