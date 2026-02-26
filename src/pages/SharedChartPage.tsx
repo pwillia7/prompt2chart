@@ -134,15 +134,15 @@ export function SharedChartPage() {
     <div className="min-h-screen bg-bg pb-20">
       {/* Minimal header */}
       <header className="border-b border-[var(--border)] bg-[var(--surface-1)]">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-2.5">
             <svg className="w-7 h-7" viewBox="0 0 100 100">
               <rect x="10" y="60" width="15" height="30" fill="#FDBA74" />
               <rect x="30" y="40" width="15" height="50" fill="#FB923C" />
               <rect x="50" y="20" width="15" height="70" fill="#F97316" />
               <rect x="70" y="35" width="15" height="55" fill="#EA580C" />
             </svg>
-            <span className="font-semibold text-[var(--text)] text-sm">Prompt2Chart</span>
+            <span className="text-lg font-semibold text-[var(--text)]">Prompt2Chart</span>
           </Link>
           <Link
             to="/signup"
@@ -174,33 +174,31 @@ export function SharedChartPage() {
           </div>
         </div>
 
-        {/* Chart card — constrained to match project page chart area */}
-        <div className="bg-[var(--surface-1)] rounded-card border border-[var(--border)] p-6">
-          <div className="max-w-[740px]">
-            {shared.chart_library === 'd3' && shared.d3_code ? (
-              <D3ChartRenderer
-                ref={d3Ref}
-                code={shared.d3_code}
-                data={data}
-                onRetry={() => {}}
-                onRenderError={() => {}}
-                onRenderSuccess={() => {}}
-                creditRefunded={false}
-              />
-            ) : shared.vega_spec_json ? (
-              <ChartRenderer
-                ref={vegaRef}
-                spec={shared.vega_spec_json}
-                data={data.length > 0 ? data : undefined}
-                onRetry={() => {}}
-                onRenderError={() => {}}
-                onRenderSuccess={() => {}}
-                creditRefunded={false}
-              />
-            ) : (
-              <p className="text-center text-[var(--text-subtle)] py-8">Unable to render chart.</p>
-            )}
-          </div>
+        {/* Chart card — max-w matches project page lg:col-span-2 of lg:grid-cols-3 in max-w-7xl (~802px) */}
+        <div className="bg-[var(--surface-1)] rounded-card border border-[var(--border)] p-6 max-w-[820px]">
+          {shared.chart_library === 'd3' && shared.d3_code ? (
+            <D3ChartRenderer
+              ref={d3Ref}
+              code={shared.d3_code}
+              data={data}
+              onRetry={() => {}}
+              onRenderError={() => {}}
+              onRenderSuccess={() => {}}
+              creditRefunded={false}
+            />
+          ) : shared.vega_spec_json ? (
+            <ChartRenderer
+              ref={vegaRef}
+              spec={shared.vega_spec_json}
+              data={data.length > 0 ? data : undefined}
+              onRetry={() => {}}
+              onRenderError={() => {}}
+              onRenderSuccess={() => {}}
+              creditRefunded={false}
+            />
+          ) : (
+            <p className="text-center text-[var(--text-subtle)] py-8">Unable to render chart.</p>
+          )}
         </div>
 
         {/* Social share buttons */}
