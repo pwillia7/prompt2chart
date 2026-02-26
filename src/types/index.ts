@@ -100,3 +100,16 @@ export interface ChartEditHistory {
   chartId: string
   messages: ConversationMessage[]
 }
+
+export interface SharedChart {
+  id: string
+  chart_id: string | null
+  created_by: string
+  prompt: string
+  chart_library: ChartLibrary
+  d3_code: string | null
+  vega_spec_json: VegaLiteSpec | null
+  explanation: string | null
+  data_snapshot: unknown[] | null
+  created_at: string
+}

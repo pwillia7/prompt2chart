@@ -15,6 +15,7 @@ import { PricingPage } from './pages/PricingPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { BlogIndexPage } from './pages/BlogIndexPage'
 import { BlogPostPage } from './pages/BlogPostPage'
+import { SharedChartPage } from './pages/SharedChartPage'
 import { Spinner } from './components/ui/Spinner'
 
 function App() {
@@ -74,6 +75,7 @@ function App() {
         />
         <Route path="/blog" element={<BlogIndexPage />} />
         <Route path="/blog/:slug" element={<BlogPostPage />} />
+        <Route path="/share/:shareId" element={<SharedChartPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </ErrorBoundary>
