@@ -49,6 +49,44 @@ export function SharedChartPage() {
 
   useDocumentTitle(shared ? `${shared.prompt} — Prompt2Chart` : 'Shared Chart — Prompt2Chart')
 
+  // Set OG/Twitter meta tags dynamically for JS-capable crawlers (e.g. Twitterbot)
+  useEffect(() => {
+    if (!shared) return
+
+    function setMeta(nameOrProp: string, content: string, useProp = false) {
+      const attr = useProp ? 'property' : 'name'
+      let el = document.querySelector<HTMLMetaElement>(`meta[${attr}="${nameOrProp}"]`)
+      if (!el) {
+        el = document.createElement('meta')
+        el.setAttribute(attr, nameOrProp)
+        document.head.appendChild(el)
+      }
+      el.content = content
+    }
+
+    const title = `${shared.prompt} — Prompt2Chart`
+    const description = 'An AI-generated chart made with Prompt2Chart. View the interactive visualization and create your own from your data — free.'
+
+    setMeta('description', description)
+    setMeta('og:type', 'website', true)
+    setMeta('og:title', title, true)
+    setMeta('og:description', description, true)
+    setMeta('og:url', window.location.href, true)
+    setMeta('og:site_name', 'Prompt2Chart', true)
+    setMeta('twitter:title', title)
+    setMeta('twitter:description', description)
+
+    if (shared.og_image_url) {
+      setMeta('og:image', shared.og_image_url, true)
+      setMeta('og:image:width', '1400', true)
+      setMeta('og:image:height', '900', true)
+      setMeta('twitter:card', 'summary_large_image')
+      setMeta('twitter:image', shared.og_image_url)
+    } else {
+      setMeta('twitter:card', 'summary')
+    }
+  }, [shared])
+
   useEffect(() => {
     if (!shareId) return
     let cancelled = false
@@ -128,7 +166,7 @@ export function SharedChartPage() {
   const pageUrl = window.location.href
   const tweetText = encodeURIComponent(`Check out this chart I made with @prompt2chart: "${shared.prompt}"`)
   const tweetUrl = `https://twitter.com/intent/tweet?text=${tweetText}&url=${encodeURIComponent(pageUrl)}`
-  const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(pageUrl)}`
+  const linkedInUrl = `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(pageUrl)}&title=${encodeURIComponent(shared.prompt)}&summary=${encodeURIComponent('AI-generated chart made with Prompt2Chart — turn your data into interactive visualizations for free.')}&source=Prompt2Chart`
 
   return (
     <div className="min-h-screen bg-bg pb-20">
@@ -149,7 +187,7 @@ export function SharedChartPage() {
             onClick={() => track('share-cta-header-click', {})}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-[10px] bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)] transition-colors duration-fast"
           >
-            Make your own
+            Sign up
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>

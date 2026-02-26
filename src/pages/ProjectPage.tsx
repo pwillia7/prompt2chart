@@ -20,6 +20,7 @@ import { useChartStore } from '../store/chartStore'
 import { trackUsage } from '../lib/usageTracker'
 import { track } from '../lib/analytics'
 import { sampleData } from '../lib/dataSampler'
+import { d3SvgToPng, vegaToPng } from '../lib/chartExporter'
 import { supabase } from '../lib/supabase'
 import { useBillingStore } from '../store/billingStore'
 import { Chart, ChartLibrary } from '../types'
@@ -244,6 +245,22 @@ export function ProjectPage() {
 
   const handleStartNewChart = () => {
     setCurrentChart(null)
+  }
+
+  const generateShareImage = async (): Promise<Blob | null> => {
+    try {
+      if (currentChart?.chart_library === 'd3') {
+        const svgEl = d3Ref.current?.getSvgEl()
+        const containerEl = d3Ref.current?.getContainerEl() ?? undefined
+        if (svgEl) return await d3SvgToPng(svgEl, containerEl)
+      } else {
+        const view = vegaRef.current?.getView()
+        if (view) return await vegaToPng(view)
+      }
+    } catch {
+      // best-effort
+    }
+    return null
   }
 
   const handleSuggestionSelect = (prompt: string, library?: ChartLibrary) => {
@@ -677,6 +694,7 @@ export function ProjectPage() {
           chart={currentChart}
           data={renderData}
           onClose={() => setShareModalOpen(false)}
+          generateImage={generateShareImage}
         />
       )}
     </Layout>

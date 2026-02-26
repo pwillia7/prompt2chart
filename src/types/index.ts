@@ -111,5 +111,6 @@ export interface SharedChart {
   vega_spec_json: VegaLiteSpec | null
   explanation: string | null
   data_snapshot: unknown[] | null
+  og_image_url: string | null
   created_at: string
 }

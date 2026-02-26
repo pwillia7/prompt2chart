@@ -11,9 +11,11 @@ interface ShareModalProps {
   chart: Chart
   data: unknown[] | null
   onClose: () => void
+  /** Optional: async fn that resolves to a chart PNG blob for the OG image */
+  generateImage?: () => Promise<Blob | null>
 }
 
-export function ShareModal({ chart, data, onClose }: ShareModalProps) {
+export function ShareModal({ chart, data, onClose, generateImage }: ShareModalProps) {
   const [status, setStatus] = useState<'creating' | 'ready' | 'error'>('creating')
   const [shareUrl, setShareUrl] = useState('')
   const [errorMsg, setErrorMsg] = useState('')
@@ -56,10 +58,30 @@ export function ShareModal({ chart, data, onClose }: ShareModalProps) {
         return
       }
 
-      const url = `${window.location.origin}/share/${row.id}`
+      const shareId = row.id
+      const url = `${window.location.origin}/share/${shareId}`
       setShareUrl(url)
       setStatus('ready')
       track('share-created', { library: chart.chart_library })
+
+      // Upload chart PNG as OG image in the background (best-effort)
+      if (generateImage) {
+        generateImage().then(async (blob) => {
+          if (!blob) return
+          const path = `${shareId}.png`
+          const { error: uploadErr } = await supabase.storage
+            .from('share-images')
+            .upload(path, blob, { contentType: 'image/png', upsert: true })
+          if (uploadErr) return
+          const { data: { publicUrl } } = supabase.storage
+            .from('share-images')
+            .getPublicUrl(path)
+          await supabase
+            .from('shared_charts')
+            .update({ og_image_url: publicUrl })
+            .eq('id', shareId)
+        }).catch(() => { /* best-effort, never block the share link */ })
+      }
     }
 
     createShare()
