@@ -332,9 +332,9 @@ export function SharedChartPage() {
           )}
         </div>
 
-        {/* Action bar — two groups: share | export+code */}
-        <div className="flex flex-wrap items-center justify-between gap-y-2 gap-x-3">
-          {/* Share group */}
+        {/* Action bar — share row, then code/export row below */}
+        <div className="flex flex-col gap-2">
+          {/* Share row */}
           <div className="flex flex-wrap items-center gap-2">
             <button onClick={handleCopyLink} className={btnBase}>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -379,7 +379,7 @@ export function SharedChartPage() {
             </a>
           </div>
 
-          {/* Export + CodePen group — stays right when space allows, wraps as a unit */}
+          {/* Code/export row — left-aligned below share row */}
           <div className="flex items-center gap-2">
             <button onClick={handleCodePen} className={btnBase}>
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
