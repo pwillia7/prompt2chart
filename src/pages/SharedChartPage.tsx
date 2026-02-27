@@ -446,7 +446,7 @@ export function SharedChartPage() {
         {shared.project_name && (
           <div className="flex items-start gap-3 border-l-2 border-[var(--primary)] bg-[var(--surface-2)] rounded-r-card pl-4 pr-4 py-3 max-w-[820px]">
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-semibold text-[var(--primary)] uppercase tracking-wider mb-1">Prompt used</p>
+              <p className="text-xs font-semibold text-[var(--primary)] uppercase tracking-wider mb-1">Last prompt used</p>
               <p className="text-sm text-[var(--text-muted)] leading-relaxed">{shared.prompt}</p>
             </div>
             <span className={`shrink-0 mt-0.5 px-2 py-0.5 text-xs font-medium rounded-full ${
