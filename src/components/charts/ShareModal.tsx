@@ -11,11 +11,13 @@ interface ShareModalProps {
   chart: Chart
   data: unknown[] | null
   onClose: () => void
+  /** Dataset filename shown on the share page */
+  datasetName?: string
   /** Optional: async fn that resolves to a chart PNG blob for the OG image */
   generateImage?: () => Promise<Blob | null>
 }
 
-export function ShareModal({ chart, data, onClose, generateImage }: ShareModalProps) {
+export function ShareModal({ chart, data, onClose, datasetName, generateImage }: ShareModalProps) {
   const [status, setStatus] = useState<'creating' | 'ready' | 'error'>('creating')
   const [shareUrl, setShareUrl] = useState('')
   const [errorMsg, setErrorMsg] = useState('')
@@ -48,6 +50,7 @@ export function ShareModal({ chart, data, onClose, generateImage }: ShareModalPr
           vega_spec_json: chart.vega_spec_json ?? null,
           explanation: chart.explanation ?? null,
           data_snapshot: snapshot,
+          dataset_name: datasetName ?? null,
         })
         .select('id')
         .single()

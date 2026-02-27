@@ -293,16 +293,23 @@ export function SharedChartPage() {
       {/* Main content */}
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-5">
 
-        {/* Prompt title + library tag */}
-        <div className="flex items-start gap-2 flex-wrap">
-          <h1 className="text-xl font-semibold text-[var(--text)] leading-snug">{shared.prompt}</h1>
-          <span className={`shrink-0 mt-0.5 px-2 py-0.5 text-xs font-medium rounded-full ${
-            shared.chart_library === 'd3'
-              ? 'bg-orange-500/15 text-orange-400'
-              : 'bg-[var(--surface-3)] text-[var(--text-muted)]'
-          }`}>
-            {shared.chart_library === 'd3' ? 'D3.js' : 'Vega-Lite'}
-          </span>
+        {/* Dataset name + prompt title + library tag */}
+        <div>
+          {shared.dataset_name && (
+            <p className="text-xs font-medium text-[var(--text-subtle)] uppercase tracking-wider mb-1">
+              {shared.dataset_name}
+            </p>
+          )}
+          <div className="flex items-start gap-2 flex-wrap">
+            <h1 className="text-xl font-semibold text-[var(--text)] leading-snug">{shared.prompt}</h1>
+            <span className={`shrink-0 mt-0.5 px-2 py-0.5 text-xs font-medium rounded-full ${
+              shared.chart_library === 'd3'
+                ? 'bg-orange-500/15 text-orange-400'
+                : 'bg-[var(--surface-3)] text-[var(--text-muted)]'
+            }`}>
+              {shared.chart_library === 'd3' ? 'D3.js' : 'Vega-Lite'}
+            </span>
+          </div>
         </div>
 
         {/* Chart card */}
@@ -381,13 +388,6 @@ export function SharedChartPage() {
 
           {/* Code/export row — left-aligned below share row */}
           <div className="flex items-center gap-2">
-            <button onClick={handleCodePen} className={btnBase}>
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M8.21 12L6.88 12.89V11.11L8.21 12zm2.79 1.84V16l-3.48-2.32 1.46-.97 2.02 1.13zm.5-3.68L8.56 8.5l2.94-1.96v2.18l-2.02 1.13 1.52 1.01v.3zM12 10.74L10.27 12 12 13.26 13.73 12 12 10.74zM22 12c0 5.52-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2s10 4.48 10 10zm-3.5-1.3l-.01-.02-5.99-4V6.5L12 6.34l-.5.16v.18l-5.99 4-.01.02-.5.33v2.94l.5.33.01.02 5.99 4v.18l.5.16.5-.16v-.18l5.99-4 .01-.02.5-.33V11.03l-.5-.33zm-5.5 5.12V18l3.48-2.32-1.46-.97-2.02 1.11zm3.32-3.93L17.78 12l-1.46-.89v1.78l-1.5.04z" />
-              </svg>
-              CodePen
-            </button>
-
             <div ref={exportMenuRef} className="relative">
               <button
                 onClick={() => setExportOpen(o => !o)}
@@ -431,6 +431,13 @@ export function SharedChartPage() {
                 </div>
               )}
             </div>
+
+            <button onClick={handleCodePen} className={btnBase}>
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M8.21 12L6.88 12.89V11.11L8.21 12zm2.79 1.84V16l-3.48-2.32 1.46-.97 2.02 1.13zm.5-3.68L8.56 8.5l2.94-1.96v2.18l-2.02 1.13 1.52 1.01v.3zM12 10.74L10.27 12 12 13.26 13.73 12 12 10.74zM22 12c0 5.52-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2s10 4.48 10 10zm-3.5-1.3l-.01-.02-5.99-4V6.5L12 6.34l-.5.16v.18l-5.99 4-.01.02-.5.33v2.94l.5.33.01.02 5.99 4v.18l.5.16.5-.16v-.18l5.99-4 .01-.02.5-.33V11.03l-.5-.33zm-5.5 5.12V18l3.48-2.32-1.46-.97-2.02 1.11zm3.32-3.93L17.78 12l-1.46-.89v1.78l-1.5.04z" />
+              </svg>
+              CodePen
+            </button>
           </div>
         </div>
 
