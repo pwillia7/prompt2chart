@@ -28,9 +28,9 @@ function esc(s: string): string {
 
 function buildDescription(projectName?: string): string {
   if (projectName) {
-    return esc(`"${projectName}" — an AI-generated chart made with Prompt2Chart. Upload your own data, describe what you want to see, and get an interactive visualization in seconds. Free to start.`)
+    return esc(`Check out "${projectName}" — a chart I built with Prompt2Chart by typing what I wanted to see from my data. Try it free.`)
   }
-  return esc('An AI-generated chart made with Prompt2Chart. Upload your CSV or JSON data, describe what you want to see, and get an interactive D3.js or Vega-Lite chart instantly. Free to start.')
+  return esc('Check out this chart I built with Prompt2Chart — just described what I wanted to see from my data and AI built it instantly. Try it free.')
 }
 
 function ogHtml(title: string, description: string, pageUrl: string, imageUrl?: string): Response {
