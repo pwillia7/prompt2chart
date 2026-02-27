@@ -118,6 +118,7 @@ export function SharedChartPage() {
       await copyToClipboard(window.location.href)
       setLinkCopied(true)
       setTimeout(() => setLinkCopied(false), 2000)
+      track('share-copylink-click', {})
     } catch {
       // ignore
     }
@@ -166,7 +167,7 @@ export function SharedChartPage() {
   const pageUrl = window.location.href
   const tweetText = encodeURIComponent(`Check out this chart I made with @prompt2chart: "${shared.prompt}"`)
   const tweetUrl = `https://twitter.com/intent/tweet?text=${tweetText}&url=${encodeURIComponent(pageUrl)}`
-  const linkedInUrl = `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(pageUrl)}&title=${encodeURIComponent(shared.prompt)}&summary=${encodeURIComponent('AI-generated chart made with Prompt2Chart — turn your data into interactive visualizations for free.')}&source=Prompt2Chart`
+  const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(pageUrl)}`
 
   return (
     <div className="min-h-screen bg-bg pb-20">
