@@ -299,27 +299,28 @@ export function SharedChartPage() {
       </header>
 
       {/* Main content */}
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-5">
+
+        {/* Project name title — full width above both columns */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text)] leading-tight">
+            {shared.project_name ?? shared.prompt}
+          </h1>
+          {!shared.project_name && (
+            <span className={`shrink-0 px-2 py-0.5 text-xs font-medium rounded-full ${
+              shared.chart_library === 'd3'
+                ? 'bg-orange-500/15 text-orange-400'
+                : 'bg-[var(--surface-3)] text-[var(--text-muted)]'
+            }`}>
+              {shared.chart_library === 'd3' ? 'D3.js' : 'Vega-Lite'}
+            </span>
+          )}
+        </div>
+
         <div className="flex gap-8 items-start">
 
           {/* Left: primary content */}
           <div className="flex-1 min-w-0 space-y-5">
-
-            {/* Project name title */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text)] leading-tight">
-                {shared.project_name ?? shared.prompt}
-              </h1>
-              {!shared.project_name && (
-                <span className={`shrink-0 px-2 py-0.5 text-xs font-medium rounded-full ${
-                  shared.chart_library === 'd3'
-                    ? 'bg-orange-500/15 text-orange-400'
-                    : 'bg-[var(--surface-3)] text-[var(--text-muted)]'
-                }`}>
-                  {shared.chart_library === 'd3' ? 'D3.js' : 'Vega-Lite'}
-                </span>
-              )}
-            </div>
 
             {/* Chart card */}
             <div className="bg-[var(--surface-1)] rounded-card border border-[var(--border)] p-6">
