@@ -296,33 +296,14 @@ export function SharedChartPage() {
       {/* Main content */}
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-5">
 
-        {/* Project name + prompt callout */}
-        <div className="space-y-3">
-          {/* Project name — prominent title */}
+        {/* Project name title */}
+        <div className="flex items-center gap-2 flex-wrap">
           <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text)] leading-tight">
             {shared.project_name ?? shared.prompt}
           </h1>
-
-          {/* Prompt callout — only shown when we have a project name to distinguish them */}
-          {shared.project_name && (
-            <div className="flex items-start gap-3 border-l-2 border-[var(--primary)] bg-[var(--surface-2)] rounded-r-card pl-4 pr-4 py-3 max-w-[820px]">
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold text-[var(--primary)] uppercase tracking-wider mb-1">Prompt used</p>
-                <p className="text-sm text-[var(--text-muted)] leading-relaxed">{shared.prompt}</p>
-              </div>
-              <span className={`shrink-0 mt-0.5 px-2 py-0.5 text-xs font-medium rounded-full ${
-                shared.chart_library === 'd3'
-                  ? 'bg-orange-500/15 text-orange-400'
-                  : 'bg-[var(--surface-3)] text-[var(--text-muted)]'
-              }`}>
-                {shared.chart_library === 'd3' ? 'D3.js' : 'Vega-Lite'}
-              </span>
-            </div>
-          )}
-
-          {/* Library badge standalone — only when no project name (prompt is the title) */}
+          {/* Library badge inline with title when no project name (prompt is the title) */}
           {!shared.project_name && (
-            <span className={`inline-block px-2 py-0.5 text-xs font-medium rounded-full ${
+            <span className={`shrink-0 px-2 py-0.5 text-xs font-medium rounded-full ${
               shared.chart_library === 'd3'
                 ? 'bg-orange-500/15 text-orange-400'
                 : 'bg-[var(--surface-3)] text-[var(--text-muted)]'
@@ -461,7 +442,24 @@ export function SharedChartPage() {
           </div>
         </div>
 
-        {/* About this chart — before CTA so users engage with insights first */}
+        {/* Prompt callout — shown after the chart so it doesn't delay seeing the viz */}
+        {shared.project_name && (
+          <div className="flex items-start gap-3 border-l-2 border-[var(--primary)] bg-[var(--surface-2)] rounded-r-card pl-4 pr-4 py-3 max-w-[820px]">
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-semibold text-[var(--primary)] uppercase tracking-wider mb-1">Prompt used</p>
+              <p className="text-sm text-[var(--text-muted)] leading-relaxed">{shared.prompt}</p>
+            </div>
+            <span className={`shrink-0 mt-0.5 px-2 py-0.5 text-xs font-medium rounded-full ${
+              shared.chart_library === 'd3'
+                ? 'bg-orange-500/15 text-orange-400'
+                : 'bg-[var(--surface-3)] text-[var(--text-muted)]'
+            }`}>
+              {shared.chart_library === 'd3' ? 'D3.js' : 'Vega-Lite'}
+            </span>
+          </div>
+        )}
+
+        {/* About this chart */}
         {shared.explanation && (
           <div className="bg-[var(--surface-1)] rounded-card border border-[var(--border)] p-5 space-y-4 max-w-[820px]">
             <p className="text-xs font-medium text-[var(--text-subtle)] uppercase tracking-wider">About this chart</p>
