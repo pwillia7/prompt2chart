@@ -306,15 +306,13 @@ export function SharedChartPage() {
           <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text)] leading-tight">
             {shared.project_name ?? shared.prompt}
           </h1>
-          {!shared.project_name && (
-            <span className={`shrink-0 px-2 py-0.5 text-xs font-medium rounded-full ${
-              shared.chart_library === 'd3'
-                ? 'bg-orange-500/15 text-orange-400'
-                : 'bg-[var(--surface-3)] text-[var(--text-muted)]'
-            }`}>
-              {shared.chart_library === 'd3' ? 'D3.js' : 'Vega-Lite'}
-            </span>
-          )}
+          <span className={`shrink-0 px-2 py-0.5 text-xs font-medium rounded-full ${
+            shared.chart_library === 'd3'
+              ? 'bg-orange-500/15 text-orange-400'
+              : 'bg-[var(--surface-3)] text-[var(--text-muted)]'
+          }`}>
+            {shared.chart_library === 'd3' ? 'D3.js' : 'Vega-Lite'}
+          </span>
         </div>
 
         <div className="flex gap-8 items-start">
@@ -566,13 +564,6 @@ export function SharedChartPage() {
                         <p className={`text-xs leading-relaxed break-words ${isCurrent ? 'text-[var(--text)] font-medium' : 'text-[var(--text-muted)]'}`}>
                           {step.prompt}
                         </p>
-                        <span className={`inline-block mt-1 px-1.5 py-0.5 text-[10px] font-medium rounded-full ${
-                          step.chart_library === 'd3'
-                            ? 'bg-orange-500/15 text-orange-400'
-                            : 'bg-[var(--surface-3)] text-[var(--text-muted)]'
-                        }`}>
-                          {step.chart_library === 'd3' ? 'D3.js' : 'Vega-Lite'}
-                        </span>
                       </div>
                     </li>
                   )
