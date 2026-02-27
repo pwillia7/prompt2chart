@@ -694,7 +694,7 @@ export function ProjectPage() {
           chart={currentChart}
           data={renderData}
           onClose={() => setShareModalOpen(false)}
-          datasetName={currentDataset?.file_path.split('/').pop()}
+          projectName={currentProject?.name}
           generateImage={generateShareImage}
         />
       )}

@@ -112,6 +112,6 @@ export interface SharedChart {
   explanation: string | null
   data_snapshot: unknown[] | null
   og_image_url: string | null
-  dataset_name: string | null
+  project_name: string | null
   created_at: string
 }
