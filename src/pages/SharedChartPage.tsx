@@ -6,7 +6,20 @@ import { Spinner } from '../components/ui/Spinner'
 import { supabase } from '../lib/supabase'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 import { track } from '../lib/analytics'
-import { copyToClipboard, openD3InCodePen, openVegaLiteInCodePen } from '../lib/chartExporter'
+import {
+  copyToClipboard,
+  openD3InCodePen,
+  openVegaLiteInCodePen,
+  d3SvgToString,
+  d3SvgToPng,
+  vegaToPng,
+  vegaToSvg,
+  downloadPng,
+  downloadSvg,
+  downloadHtml,
+  buildStandaloneHtmlD3,
+  buildStandaloneHtmlVegaLite,
+} from '../lib/chartExporter'
 import type { SharedChart, VegaLiteSpec } from '../types'
 
 interface ParsedNotes {
@@ -44,6 +57,9 @@ export function SharedChartPage() {
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [linkCopied, setLinkCopied] = useState(false)
+  const [exportOpen, setExportOpen] = useState(false)
+  const [exportToast, setExportToast] = useState<string | null>(null)
+  const exportMenuRef = useRef<HTMLDivElement>(null)
   const d3Ref = useRef<D3ChartHandle>(null)
   const vegaRef = useRef<VegaChartHandle>(null)
 
@@ -114,6 +130,76 @@ export function SharedChartPage() {
     return () => { cancelled = true }
   }, [shareId])
 
+  // Close export dropdown on outside click
+  useEffect(() => {
+    if (!exportOpen) return
+    function handleClick(e: MouseEvent) {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(e.target as Node)) {
+        setExportOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [exportOpen])
+
+  // Auto-dismiss export toast
+  useEffect(() => {
+    if (!exportToast) return
+    const t = setTimeout(() => setExportToast(null), 2000)
+    return () => clearTimeout(t)
+  }, [exportToast])
+
+  async function handleExport(action: 'png' | 'svg' | 'html') {
+    if (!shared) return
+    setExportOpen(false)
+    track('share-export-click', { format: action, library: shared.chart_library })
+    const data = (shared.data_snapshot as unknown[]) ?? []
+    try {
+      if (shared.chart_library === 'd3' && shared.d3_code) {
+        const svgEl = d3Ref.current?.getSvgEl()
+        const containerEl = d3Ref.current?.getContainerEl() ?? undefined
+        if (action === 'png') {
+          if (!svgEl) throw new Error('Chart not ready')
+          const blob = await d3SvgToPng(svgEl, containerEl)
+          downloadPng(blob, 'chart')
+          setExportToast('PNG downloaded')
+        } else if (action === 'svg') {
+          if (!svgEl) throw new Error('Chart not ready')
+          const str = d3SvgToString(svgEl, containerEl)
+          downloadSvg(str, 'chart')
+          setExportToast('SVG downloaded')
+        } else if (action === 'html') {
+          const html = buildStandaloneHtmlD3(shared.d3_code, data)
+          downloadHtml(html, 'chart')
+          setExportToast('HTML downloaded')
+        }
+      } else if (shared.vega_spec_json) {
+        const view = vegaRef.current?.getView()
+        const spec = shared.vega_spec_json as VegaLiteSpec
+        const exportSpec = spec.data && 'values' in spec.data && spec.data.values?.length
+          ? spec
+          : { ...spec, data: { values: data } }
+        if (action === 'png') {
+          if (!view) throw new Error('Chart not ready')
+          const blob = await vegaToPng(view)
+          downloadPng(blob, 'chart')
+          setExportToast('PNG downloaded')
+        } else if (action === 'svg') {
+          if (!view) throw new Error('Chart not ready')
+          const str = await vegaToSvg(view)
+          downloadSvg(str, 'chart')
+          setExportToast('SVG downloaded')
+        } else if (action === 'html') {
+          const html = buildStandaloneHtmlVegaLite(exportSpec)
+          downloadHtml(html, 'chart')
+          setExportToast('HTML downloaded')
+        }
+      }
+    } catch (err) {
+      setExportToast('Export failed: ' + (err as Error).message)
+    }
+  }
+
   async function handleCopyLink() {
     try {
       await copyToClipboard(window.location.href)
@@ -172,6 +258,8 @@ export function SharedChartPage() {
   const whatsappText = encodeURIComponent(`Check out this chart: "${shared.prompt}" — ${pageUrl}`)
   const whatsappUrl = `https://wa.me/?text=${whatsappText}`
   const redditUrl = `https://www.reddit.com/submit?url=${encodeURIComponent(pageUrl)}&title=${encodeURIComponent(shared.prompt)}`
+  const blueskyText = encodeURIComponent(`Check out this chart I made with Prompt2Chart: "${shared.prompt}" ${pageUrl}`)
+  const blueskyUrl = `https://bsky.app/intent/compose?text=${blueskyText}`
 
   return (
     <div className="min-h-screen bg-bg pb-20">
@@ -310,6 +398,19 @@ export function SharedChartPage() {
             Reddit
           </a>
 
+          <a
+            href={blueskyUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => track('share-bluesky-click', {})}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-[10px] bg-[var(--surface-2)] text-[var(--text-muted)] border border-[var(--border-strong)] hover:bg-[var(--surface-3)] transition-colors duration-fast"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 568 501" fill="currentColor">
+              <path d="M123.121 33.664C188.241 82.553 258.281 181.68 284 234.873c25.719-53.192 95.759-152.32 160.879-201.209C491.866-1.611 568-28.906 568 57.947c0 17.346-9.945 145.713-15.778 166.555-20.275 72.453-94.155 90.933-159.875 79.748C507.222 328.795 536.444 394.112 484.888 459.43c-96.607 124.206-138.469-31.126-149.489-70.951-2.041-7.543-3.013-11.103-3.399-11.206-.386.103-1.358 3.663-3.399 11.206-11.02 39.825-52.882 195.157-149.489 70.951-51.556-65.318-22.334-130.635 92.654-155.18-65.72 11.185-139.6-7.295-159.875-79.748C105.945 203.66 96 75.293 96 57.947c0-86.853 76.134-59.558 27.121-24.283z" />
+            </svg>
+            Bluesky
+          </a>
+
           <button
             onClick={handleCodePen}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-[10px] bg-[var(--surface-2)] text-[var(--text-muted)] border border-[var(--border-strong)] hover:bg-[var(--surface-3)] transition-colors duration-fast"
@@ -319,6 +420,60 @@ export function SharedChartPage() {
             </svg>
             Edit in CodePen
           </button>
+
+          {/* Export dropdown */}
+          <div ref={exportMenuRef} className="relative ml-auto">
+            <button
+              onClick={() => setExportOpen(o => !o)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-[10px] bg-[var(--surface-2)] text-[var(--text-muted)] border border-[var(--border-strong)] hover:bg-[var(--surface-3)] transition-colors duration-fast"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Export
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {exportOpen && (
+              <div className="absolute right-0 mt-1 w-44 bg-[var(--surface-1)] rounded-card border border-[var(--border)] shadow-medium z-50 py-1">
+                <button
+                  onClick={() => handleExport('png')}
+                  className="w-full text-left px-3 py-2 text-sm text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text)] flex items-center gap-2 transition-colors duration-fast"
+                >
+                  <svg className="w-4 h-4 text-[var(--text-subtle)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  PNG Image
+                </button>
+                <button
+                  onClick={() => handleExport('svg')}
+                  className="w-full text-left px-3 py-2 text-sm text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text)] flex items-center gap-2 transition-colors duration-fast"
+                >
+                  <svg className="w-4 h-4 text-[var(--text-subtle)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                  SVG Vector
+                </button>
+                <button
+                  onClick={() => handleExport('html')}
+                  className="w-full text-left px-3 py-2 text-sm text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text)] flex items-center gap-2 transition-colors duration-fast"
+                >
+                  <svg className="w-4 h-4 text-[var(--text-subtle)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                  </svg>
+                  Download HTML
+                </button>
+              </div>
+            )}
+
+            {exportToast && (
+              <div className="absolute right-0 mt-2 px-3 py-2 bg-[var(--surface-1)] text-[var(--text)] text-sm rounded-card shadow-medium border border-[var(--border)] whitespace-nowrap z-50">
+                {exportToast}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Explanation (parsed JSON or plain text) */}
