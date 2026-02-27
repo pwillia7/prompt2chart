@@ -285,7 +285,7 @@ export function SharedChartPage() {
             onClick={() => track('share-cta-header-click', {})}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-[10px] bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)] transition-colors duration-fast"
           >
-            Try free
+            Sign up
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
@@ -516,7 +516,7 @@ export function SharedChartPage() {
               onClick={() => track('share-cta-midpage-click', {})}
               className="shrink-0 inline-flex items-center gap-2 px-5 py-3 text-sm font-semibold rounded-[10px] bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)] transition-colors duration-fast whitespace-nowrap shadow-sm"
             >
-              Start for free
+              Get Started
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
@@ -537,7 +537,7 @@ export function SharedChartPage() {
             onClick={() => track('share-cta-sticky-click', {})}
             className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-[10px] bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)] transition-colors duration-fast"
           >
-            Start for free
+            Try now
           </Link>
         </div>
       </div>
