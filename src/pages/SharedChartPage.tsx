@@ -511,16 +511,25 @@ export function SharedChartPage() {
                 </span>
               </div>
             </div>
-            <Link
-              to="/signup"
-              onClick={() => track('share-cta-midpage-click', {})}
-              className="shrink-0 inline-flex items-center gap-2 px-5 py-3 text-sm font-semibold rounded-[10px] bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)] transition-colors duration-fast whitespace-nowrap shadow-sm"
-            >
-              Get Started
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
+            <div className="shrink-0 flex flex-col items-center gap-2">
+              <Link
+                to="/signup"
+                onClick={() => track('share-cta-midpage-click', {})}
+                className="inline-flex items-center gap-2 px-5 py-3 text-sm font-semibold rounded-[10px] bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)] transition-colors duration-fast whitespace-nowrap shadow-sm"
+              >
+                Make my first chart
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
+              <Link
+                to="/signup"
+                onClick={() => track('share-cta-sampledata-click', {})}
+                className="text-xs text-[var(--text-subtle)] hover:text-[var(--primary)] transition-colors duration-fast whitespace-nowrap"
+              >
+                No dataset? Start with sample data →
+              </Link>
+            </div>
           </div>
         </div>
       </main>
