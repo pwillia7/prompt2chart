@@ -8,6 +8,8 @@ const BOT_PATTERNS = [
   'pinterest', 'googlebot', 'bingbot', 'applebot',
   'rogerbot', 'embedly', 'quora link preview', 'outbrain',
   'ia_archiver', 'vkshare', 'w3c_validator', 'redditbot',
+  // Bluesky link preview crawler
+  'bsky', 'cardyb',
 ]
 
 function isBot(ua: string, agentCategory: string): boolean {
@@ -24,8 +26,14 @@ function esc(s: string): string {
     .replace(/"/g, '&quot;')
 }
 
+function buildDescription(projectName?: string): string {
+  if (projectName) {
+    return esc(`"${projectName}" — an AI-generated chart made with Prompt2Chart. Upload your own data, describe what you want to see, and get an interactive visualization in seconds. Free to start.`)
+  }
+  return esc('An AI-generated chart made with Prompt2Chart. Upload your CSV or JSON data, describe what you want to see, and get an interactive D3.js or Vega-Lite chart instantly. Free to start.')
+}
+
 function ogHtml(title: string, description: string, pageUrl: string, imageUrl?: string): Response {
-  // Always fall back to static site OG image so Twitter always gets an image
   const imgSrc = imageUrl || STATIC_OG_IMAGE
   const imgAlt = esc('AI-generated data visualization from Prompt2Chart')
 
@@ -70,7 +78,7 @@ export default async (request: Request, context: Context) => {
 
   const pageUrl = esc(request.url)
   const genericTitle = esc('Shared Chart — Prompt2Chart')
-  const genericDesc = esc('An AI-generated chart made with Prompt2Chart. View the interactive visualization and create your own from your data — free.')
+  const genericDesc = buildDescription()
 
   // Without env vars, return generic OG tags with static image fallback
   const supabaseUrl = Deno.env.get('SUPABASE_URL')
@@ -79,18 +87,20 @@ export default async (request: Request, context: Context) => {
     return ogHtml(genericTitle, genericDesc, pageUrl)
   }
 
-  // Fetch chart-specific data
+  // Fetch chart-specific data including project_name
   try {
     const res = await fetch(
-      `${supabaseUrl}/rest/v1/shared_charts?id=eq.${encodeURIComponent(shareId)}&select=prompt,og_image_url&limit=1`,
+      `${supabaseUrl}/rest/v1/shared_charts?id=eq.${encodeURIComponent(shareId)}&select=prompt,project_name,og_image_url&limit=1`,
       { headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` } }
     )
     if (res.ok) {
       const rows = await res.json()
       if (rows.length > 0) {
         const share = rows[0]
-        const title = esc(`${share.prompt} — Prompt2Chart`)
-        const desc = esc('An AI-generated chart made with Prompt2Chart. View the interactive visualization and create your own from your data — free.')
+        // Use project name as title when available — the prompt is often long and reads poorly as a social title
+        const displayName = share.project_name || null
+        const title = esc(displayName ? `${displayName} — Prompt2Chart` : `${share.prompt} — Prompt2Chart`)
+        const desc = buildDescription(displayName ?? undefined)
         const imageUrl = share.og_image_url ? esc(share.og_image_url) : undefined
         return ogHtml(title, desc, pageUrl, imageUrl)
       }

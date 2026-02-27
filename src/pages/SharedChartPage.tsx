@@ -84,7 +84,9 @@ export function SharedChartPage() {
     }
 
     const title = `${shared.project_name ?? shared.prompt} — Prompt2Chart`
-    const description = 'An AI-generated chart made with Prompt2Chart. View the interactive visualization and create your own from your data — free.'
+    const description = shared.project_name
+      ? `"${shared.project_name}" — an AI-generated chart made with Prompt2Chart. Upload your own data, describe what you want to see, and get an interactive visualization in seconds. Free to start.`
+      : 'An AI-generated chart made with Prompt2Chart. Upload your CSV or JSON data, describe what you want to see, and get an interactive D3.js or Vega-Lite chart instantly. Free to start.'
 
     setMeta('description', description)
     setMeta('og:type', 'website', true)
