@@ -83,12 +83,9 @@ export function SharedChartPage() {
       setMeta('twitter:card', 'summary_large_image')
       setMeta('twitter:image', shared.og_image_url)
     } else {
-      // Remove the static site-level og:image from index.html so it doesn't bleed through
-      document.querySelector('meta[property="og:image"]')?.remove()
-      document.querySelector('meta[property="og:image:width"]')?.remove()
-      document.querySelector('meta[property="og:image:height"]')?.remove()
-      document.querySelector('meta[name="twitter:image"]')?.remove()
-      setMeta('twitter:card', 'summary')
+      // No chart image yet — leave the static site og:image from index.html as fallback
+      // so social previews show something rather than nothing
+      setMeta('twitter:card', 'summary_large_image')
     }
   }, [shared])
 
