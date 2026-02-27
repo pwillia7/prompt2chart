@@ -444,22 +444,72 @@ export function SharedChartPage() {
           </div>
         </div>
 
-        {/* Prompt callout — shown after the chart so it doesn't delay seeing the viz */}
-        {shared.project_name && (
-          <div className="flex items-start gap-3 border-l-2 border-[var(--primary)] bg-[var(--surface-2)] rounded-r-card pl-4 pr-4 py-3 max-w-[820px]">
-            <div className="min-w-0 flex-1">
-              <p className="text-xs font-semibold text-[var(--primary)] uppercase tracking-wider mb-1">Last prompt used</p>
-              <p className="text-sm text-[var(--text-muted)] leading-relaxed">{shared.prompt}</p>
+        {/* Prompt history — shown after the chart so the viz is the first thing seen */}
+        {(() => {
+          const history = shared.prompt_history
+          if (history && history.length >= 2) {
+            return (
+              <div className="bg-[var(--surface-1)] rounded-card border border-[var(--border)] p-5 max-w-[820px]">
+                <p className="text-xs font-medium text-[var(--text-subtle)] uppercase tracking-wider mb-4">
+                  How this chart evolved · {history.length} prompts
+                </p>
+                <ol className="space-y-0">
+                  {history.map((step, i) => {
+                    const isCurrent = i === history.length - 1
+                    return (
+                      <li key={i} className="flex gap-3">
+                        {/* Step indicator + connector line */}
+                        <div className="flex flex-col items-center">
+                          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold shrink-0 ${
+                            isCurrent
+                              ? 'bg-[var(--primary)] text-white'
+                              : 'bg-[var(--surface-3)] text-[var(--text-muted)]'
+                          }`}>
+                            {i + 1}
+                          </div>
+                          {!isCurrent && (
+                            <div className="w-px flex-1 bg-[var(--border)] my-1" style={{ minHeight: '1rem' }} />
+                          )}
+                        </div>
+                        {/* Step content */}
+                        <div className={`flex-1 ${isCurrent ? 'pb-0' : 'pb-4'}`}>
+                          <div className="flex items-start gap-2 flex-wrap">
+                            <p className={`text-sm leading-relaxed flex-1 ${isCurrent ? 'text-[var(--text)] font-medium' : 'text-[var(--text-muted)]'}`}>
+                              {step.prompt}
+                            </p>
+                            <span className={`shrink-0 px-2 py-0.5 text-xs font-medium rounded-full ${
+                              step.chart_library === 'd3'
+                                ? 'bg-orange-500/15 text-orange-400'
+                                : 'bg-[var(--surface-3)] text-[var(--text-muted)]'
+                            }`}>
+                              {step.chart_library === 'd3' ? 'D3.js' : 'Vega-Lite'}
+                            </span>
+                          </div>
+                        </div>
+                      </li>
+                    )
+                  })}
+                </ol>
+              </div>
+            )
+          }
+          // Single prompt or no history — show simple callout (only when there's a project name)
+          return shared.project_name ? (
+            <div className="flex items-start gap-3 border-l-2 border-[var(--primary)] bg-[var(--surface-2)] rounded-r-card pl-4 pr-4 py-3 max-w-[820px]">
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-semibold text-[var(--primary)] uppercase tracking-wider mb-1">Last prompt used</p>
+                <p className="text-sm text-[var(--text-muted)] leading-relaxed">{shared.prompt}</p>
+              </div>
+              <span className={`shrink-0 mt-0.5 px-2 py-0.5 text-xs font-medium rounded-full ${
+                shared.chart_library === 'd3'
+                  ? 'bg-orange-500/15 text-orange-400'
+                  : 'bg-[var(--surface-3)] text-[var(--text-muted)]'
+              }`}>
+                {shared.chart_library === 'd3' ? 'D3.js' : 'Vega-Lite'}
+              </span>
             </div>
-            <span className={`shrink-0 mt-0.5 px-2 py-0.5 text-xs font-medium rounded-full ${
-              shared.chart_library === 'd3'
-                ? 'bg-orange-500/15 text-orange-400'
-                : 'bg-[var(--surface-3)] text-[var(--text-muted)]'
-            }`}>
-              {shared.chart_library === 'd3' ? 'D3.js' : 'Vega-Lite'}
-            </span>
-          </div>
-        )}
+          ) : null
+        })()}
 
         {/* About this chart */}
         {shared.explanation && (

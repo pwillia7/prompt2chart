@@ -29,6 +29,26 @@ export function ShareModal({ chart, data, onClose, projectName, generateImage }:
     if (createdRef.current) return
     createdRef.current = true
 
+    async function buildPromptHistory(): Promise<{ prompt: string; chart_library: string }[]> {
+      const ancestors: { prompt: string; chart_library: string }[] = []
+      let parentId = chart.parent_chart_id
+      const MAX_DEPTH = 20
+      let depth = 0
+      while (parentId && depth < MAX_DEPTH) {
+        const { data: parent } = await supabase
+          .from('charts')
+          .select('id, prompt, chart_library, parent_chart_id')
+          .eq('id', parentId)
+          .single()
+        if (!parent) break
+        ancestors.unshift({ prompt: parent.prompt, chart_library: parent.chart_library })
+        parentId = parent.parent_chart_id
+        depth++
+      }
+      ancestors.push({ prompt: chart.prompt, chart_library: chart.chart_library })
+      return ancestors
+    }
+
     async function createShare() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
@@ -38,6 +58,7 @@ export function ShareModal({ chart, data, onClose, projectName, generateImage }:
       }
 
       const snapshot = data ? data.slice(0, MAX_SHARE_ROWS) : null
+      const promptHistory = await buildPromptHistory()
 
       const { data: row, error } = await supabase
         .from('shared_charts')
@@ -51,6 +72,7 @@ export function ShareModal({ chart, data, onClose, projectName, generateImage }:
           explanation: chart.explanation ?? null,
           data_snapshot: snapshot,
           project_name: projectName ?? null,
+          prompt_history: promptHistory,
         })
         .select('id')
         .single()

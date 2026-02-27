@@ -113,5 +113,6 @@ export interface SharedChart {
   data_snapshot: unknown[] | null
   og_image_url: string | null
   project_name: string | null
+  prompt_history: { prompt: string; chart_library: string }[] | null
   created_at: string
 }
