@@ -1,15 +1,18 @@
 import type { Context } from "https://edge.netlify.com"
 
+const STATIC_OG_IMAGE = 'https://prompt2chart.com/og-image.png'
+
 const BOT_PATTERNS = [
   'twitterbot', 'linkedinbot', 'facebookexternalhit', 'facebookbot',
   'whatsapp', 'slackbot', 'discordbot', 'telegrambot',
   'pinterest', 'googlebot', 'bingbot', 'applebot',
   'rogerbot', 'embedly', 'quora link preview', 'outbrain',
-  'ia_archiver', 'vkshare', 'w3c_validator',
+  'ia_archiver', 'vkshare', 'w3c_validator', 'redditbot',
 ]
 
-function isBot(ua: string): boolean {
+function isBot(ua: string, agentCategory: string): boolean {
   const lower = ua.toLowerCase()
+  if (agentCategory.toLowerCase().includes('social')) return true
   return BOT_PATTERNS.some(p => lower.includes(p))
 }
 
@@ -22,13 +25,9 @@ function esc(s: string): string {
 }
 
 function ogHtml(title: string, description: string, pageUrl: string, imageUrl?: string): Response {
-  const img = imageUrl
-    ? `  <meta property="og:image" content="${imageUrl}">
-  <meta property="og:image:width" content="1400">
-  <meta property="og:image:height" content="900">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:image" content="${imageUrl}">`
-    : `  <meta name="twitter:card" content="summary">`
+  // Always fall back to static site OG image so Twitter always gets an image
+  const imgSrc = imageUrl || STATIC_OG_IMAGE
+  const imgAlt = esc('AI-generated data visualization from Prompt2Chart')
 
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -41,10 +40,14 @@ function ogHtml(title: string, description: string, pageUrl: string, imageUrl?: 
   <meta property="og:title" content="${title}">
   <meta property="og:description" content="${description}">
   <meta property="og:url" content="${pageUrl}">
-${img}
+  <meta property="og:image" content="${imgSrc}">
+  <meta property="og:image:alt" content="${imgAlt}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@prompt2chart">
   <meta name="twitter:title" content="${title}">
   <meta name="twitter:description" content="${description}">
-  <meta name="twitter:site" content="@prompt2chart">
+  <meta name="twitter:image" content="${imgSrc}">
+  <meta name="twitter:image:alt" content="${imgAlt}">
 </head>
 <body>Loading chart...</body>
 </html>`
@@ -56,7 +59,8 @@ ${img}
 
 export default async (request: Request, context: Context) => {
   const ua = request.headers.get('user-agent') ?? ''
-  if (!isBot(ua)) return context.next()
+  const agentCategory = request.headers.get('netlify-agent-category') ?? ''
+  if (!isBot(ua, agentCategory)) return context.next()
 
   // Extract shareId: /share/<shareId>
   const url = new URL(request.url)
@@ -68,7 +72,7 @@ export default async (request: Request, context: Context) => {
   const genericTitle = esc('Shared Chart — Prompt2Chart')
   const genericDesc = esc('An AI-generated chart made with Prompt2Chart. View the interactive visualization and create your own from your data — free.')
 
-  // Without env vars, return generic OG tags so LinkedIn/Twitter still get something
+  // Without env vars, return generic OG tags with static image fallback
   const supabaseUrl = Deno.env.get('SUPABASE_URL')
   const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY')
   if (!supabaseUrl || !supabaseKey) {
