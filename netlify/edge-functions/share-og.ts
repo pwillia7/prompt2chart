@@ -28,9 +28,9 @@ function esc(s: string): string {
 
 function buildDescription(projectName?: string): string {
   if (projectName) {
-    return esc(`Check out "${projectName}" — a chart I built with Prompt2Chart by typing what I wanted to see from my data. Try it free.`)
+    return esc(`Check out "${projectName}" — a chart I built with Prompt2Chart by typing what I wanted to see from my data.`)
   }
-  return esc('Check out this chart I built with Prompt2Chart — just described what I wanted to see from my data and AI built it instantly. Try it free.')
+  return esc('Check out this chart I built with Prompt2Chart — just described what I wanted to see from my data and AI built it instantly.')
 }
 
 function ogHtml(title: string, description: string, pageUrl: string, imageUrl?: string): Response {

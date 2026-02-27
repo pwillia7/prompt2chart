@@ -85,8 +85,8 @@ export function SharedChartPage() {
 
     const title = `${shared.project_name ?? shared.prompt} — Prompt2Chart`
     const description = shared.project_name
-      ? `Check out "${shared.project_name}" — a chart I built with Prompt2Chart by typing what I wanted to see from my data. Try it free.`
-      : 'Check out this chart I built with Prompt2Chart — just described what I wanted to see from my data and AI built it instantly. Try it free.'
+      ? `Check out "${shared.project_name}" — a chart I built with Prompt2Chart by typing what I wanted to see from my data.`
+      : 'Check out this chart I built with Prompt2Chart — just described what I wanted to see from my data and AI built it instantly.'
 
     setMeta('description', description)
     setMeta('og:type', 'website', true)
