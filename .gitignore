@@ -36,3 +36,7 @@ yarn-error.log*
 supabase/.env
 .vercel
 .env*
+
+# Next.js
+.next/
+next-env.d.ts
