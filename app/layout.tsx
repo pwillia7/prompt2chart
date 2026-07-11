@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import Script from 'next/script'
 import { Inter, JetBrains_Mono } from 'next/font/google'
+import { Providers } from './providers'
 import './globals.css'
 
 const inter = Inter({
@@ -113,7 +114,7 @@ export default function RootLayout({
           data-website-id="2ba65615-111b-46d4-bcf4-c96a926c2b67"
           strategy="afterInteractive"
         />
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   )
