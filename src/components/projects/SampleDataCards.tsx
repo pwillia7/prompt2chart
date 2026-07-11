@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useRouter } from 'next/navigation'
 import { SAMPLE_DATASETS, loadSampleDataset, SampleDataset } from '../../lib/sampleData'
 import { useProjectStore } from '../../store/projectStore'
 import { useDatasetStore } from '../../store/datasetStore'
@@ -8,7 +8,7 @@ import { track } from '../../lib/analytics'
 export function SampleDataCards() {
   const [loadingId, setLoadingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const navigate = useNavigate()
+  const router = useRouter()
   const { createProject } = useProjectStore()
   const { uploadDataset } = useDatasetStore()
 
@@ -20,7 +20,7 @@ export function SampleDataCards() {
     try {
       track('sample-data-selected', { dataset: sample.id })
       const { projectId } = await loadSampleDataset(sample, createProject, uploadDataset)
-      navigate(`/projects/${projectId}`)
+      router.push(`/projects/${projectId}`)
     } catch (err) {
       setError((err as Error).message || 'Something went wrong. Please try again.')
       setLoadingId(null)

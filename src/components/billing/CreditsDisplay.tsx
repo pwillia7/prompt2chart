@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import Link from 'next/link'
 import { useBillingStore } from '../../store/billingStore'
 
 interface CreditsDisplayProps {
@@ -34,7 +34,7 @@ export function CreditsDisplay({ onUpgrade }: CreditsDisplayProps) {
         {credits ?? '...'} credits
       </button>
       <Link
-        to="/pricing"
+        href="/pricing"
         className="text-[var(--text-subtle)] hover:text-[var(--text-muted)] transition-colors duration-fast p-1"
         title="How credits work"
       >

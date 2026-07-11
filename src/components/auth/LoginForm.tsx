@@ -1,5 +1,5 @@
 import { useState, FormEvent } from 'react'
-import { Link } from 'react-router-dom'
+import Link from 'next/link'
 import { useAuthStore } from '../../store/authStore'
 import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
@@ -98,7 +98,7 @@ export function LoginForm() {
 
         <div className="flex justify-end">
           <Link
-            to="/forgot-password"
+            href="/forgot-password"
             className="text-sm text-[var(--primary)] hover:text-primary-400"
           >
             Forgot password?
@@ -122,7 +122,7 @@ export function LoginForm() {
 
       <p className="text-center text-sm text-[var(--text-muted)]">
         Don't have an account?{' '}
-        <Link to="/signup" className="text-[var(--primary)] hover:text-primary-400 font-medium">
+        <Link href="/signup" className="text-[var(--primary)] hover:text-primary-400 font-medium">
           Sign up
         </Link>
       </p>

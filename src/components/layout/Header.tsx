@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import Link from 'next/link'
 import { useAuthStore } from '../../store/authStore'
 import { Button } from '../ui/Button'
 import { CreditsDisplay } from '../billing/CreditsDisplay'
@@ -21,7 +21,7 @@ export function Header() {
       <header className="border-b border-[var(--border)] bg-[var(--surface-1)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <Link to="/dashboard" className="flex items-center gap-2.5">
+            <Link href="/dashboard" className="flex items-center gap-2.5">
               <svg className="w-7 h-7" viewBox="0 0 100 100">
                 <rect x="10" y="60" width="15" height="30" fill="#FDBA74" />
                 <rect x="30" y="40" width="15" height="50" fill="#FB923C" />

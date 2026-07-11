@@ -1,5 +1,5 @@
 import { useState, FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useRouter } from 'next/navigation'
 import { useProjectStore } from '../../store/projectStore'
 import { Modal } from '../ui/Modal'
 import { Button } from '../ui/Button'
@@ -14,7 +14,7 @@ interface CreateProjectModalProps {
 export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps) {
   const [name, setName] = useState('')
   const { createProject, loading } = useProjectStore()
-  const navigate = useNavigate()
+  const router = useRouter()
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -25,7 +25,7 @@ export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps)
       track('project-created')
       setName('')
       onClose()
-      navigate(`/projects/${project.id}`)
+      router.push(`/projects/${project.id}`)
     }
   }
 

@@ -1,5 +1,5 @@
 import { useState, FormEvent } from 'react'
-import { Link } from 'react-router-dom'
+import Link from 'next/link'
 import { useAuthStore } from '../../store/authStore'
 import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
@@ -31,7 +31,7 @@ export function ForgotPasswordForm() {
           </p>
         </div>
         <Link
-          to="/login"
+          href="/login"
           className="text-[var(--primary)] hover:text-primary-400 font-medium text-sm"
         >
           Back to login
@@ -66,7 +66,7 @@ export function ForgotPasswordForm() {
       </Button>
 
       <p className="text-center text-sm text-[var(--text-muted)]">
-        <Link to="/login" className="text-[var(--primary)] hover:text-primary-400 font-medium">
+        <Link href="/login" className="text-[var(--primary)] hover:text-primary-400 font-medium">
           Back to login
         </Link>
       </p>

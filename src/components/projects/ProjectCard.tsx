@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import Link from 'next/link'
 import { Project } from '../../types'
 import { useProjectStore } from '../../store/projectStore'
 import { Button } from '../ui/Button'
@@ -28,7 +28,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
   return (
     <div className="bg-[var(--surface-1)] rounded-card border border-[var(--border)] p-6 hover:border-[var(--border-strong)] hover:shadow-soft transition-all duration-normal">
       <div className="flex justify-between items-start">
-        <Link to={`/projects/${project.id}`} className="flex-1">
+        <Link href={`/projects/${project.id}`} className="flex-1">
           <h3 className="text-base font-semibold text-[var(--text)] hover:text-[var(--primary)] transition-colors duration-fast">
             {project.name}
           </h3>

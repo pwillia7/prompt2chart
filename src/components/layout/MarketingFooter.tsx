@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import Link from 'next/link'
 
 export function MarketingFooter() {
   return (
@@ -8,7 +8,7 @@ export function MarketingFooter() {
 
           {/* Brand */}
           <div>
-            <Link to="/" className="flex items-center gap-2 mb-3">
+            <Link href="/" className="flex items-center gap-2 mb-3">
               <svg className="w-6 h-6 shrink-0" viewBox="0 0 100 100">
                 <rect x="10" y="60" width="15" height="30" fill="#FDBA74" />
                 <rect x="30" y="40" width="15" height="50" fill="#FB923C" />
@@ -26,11 +26,11 @@ export function MarketingFooter() {
           <div>
             <h4 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-subtle)] mb-4">Product</h4>
             <ul className="space-y-2.5">
-              <li><Link to="/examples" className="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors duration-fast">Examples</Link></li>
+              <li><Link href="/examples" className="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors duration-fast">Examples</Link></li>
               <li><a href="/#pricing" className="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors duration-fast">Pricing</a></li>
               <li><a href="/#how-it-works" className="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors duration-fast">How It Works</a></li>
               <li><a href="/#faq" className="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors duration-fast">FAQ</a></li>
-              <li><Link to="/blog" className="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors duration-fast">Blog</Link></li>
+              <li><Link href="/blog" className="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors duration-fast">Blog</Link></li>
             </ul>
           </div>
 
@@ -39,12 +39,12 @@ export function MarketingFooter() {
             <h4 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-subtle)] mb-4">Account</h4>
             <ul className="space-y-2.5">
               <li>
-                <Link to="/signup" className="text-sm text-[var(--primary)] font-medium hover:text-[var(--primary-hover)] transition-colors duration-fast">
+                <Link href="/signup" className="text-sm text-[var(--primary)] font-medium hover:text-[var(--primary-hover)] transition-colors duration-fast">
                   Get Started Free →
                 </Link>
               </li>
-              <li><Link to="/login" className="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors duration-fast">Sign In</Link></li>
-              <li><Link to="/feedback" className="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors duration-fast">Feedback</Link></li>
+              <li><Link href="/login" className="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors duration-fast">Sign In</Link></li>
+              <li><Link href="/feedback" className="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors duration-fast">Feedback</Link></li>
             </ul>
           </div>
 

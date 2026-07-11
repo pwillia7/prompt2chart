@@ -1,5 +1,7 @@
-import { ReactNode } from 'react'
-import { Navigate, useLocation } from 'react-router-dom'
+'use client'
+
+import { ReactNode, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { useAuthStore } from '../../store/authStore'
 import { Spinner } from '../ui/Spinner'
 
@@ -9,18 +11,20 @@ interface AuthGuardProps {
 
 export function AuthGuard({ children }: AuthGuardProps) {
   const { session, initialized } = useAuthStore()
-  const location = useLocation()
+  const router = useRouter()
 
-  if (!initialized) {
+  useEffect(() => {
+    if (initialized && !session) {
+      router.replace('/login')
+    }
+  }, [initialized, session, router])
+
+  if (!initialized || !session) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-bg">
         <Spinner size="lg" />
       </div>
     )
-  }
-
-  if (!session) {
-    return <Navigate to="/login" state={{ from: location }} replace />
   }
 
   return <>{children}</>
