@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useRouter } from 'next/navigation'
 import { Layout } from '../components/layout/Layout'
 import { useBillingStore } from '../store/billingStore'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
@@ -7,7 +7,7 @@ import { track } from '../lib/analytics'
 
 export function PricingPage() {
   useDocumentTitle('Pricing - Prompt2Chart')
-  const navigate = useNavigate()
+  const router = useRouter()
   const { credits, packs, purchasing, fetchCredits, purchaseCredits } = useBillingStore()
 
   useEffect(() => {
@@ -19,7 +19,7 @@ export function PricingPage() {
     <Layout>
       <div className="max-w-2xl mx-auto">
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => router.back()}
           className="flex items-center text-[var(--text-muted)] hover:text-[var(--text)] mb-6 text-sm transition-colors duration-fast"
         >
           <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import Link from 'next/link'
 import { MarketingFooter } from '../components/layout/MarketingFooter'
 import { D3ChartRenderer } from '../components/charts/D3ChartRenderer'
 import { ChartRenderer } from '../components/charts/ChartRenderer'
@@ -22,7 +22,7 @@ export function ExamplesPage() {
       {/* Nav */}
       <nav className="border-b border-[var(--border)]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2.5">
+          <Link href="/" className="flex items-center gap-2.5">
             <svg className="w-7 h-7" viewBox="0 0 100 100">
               <rect x="10" y="60" width="15" height="30" fill="#FDBA74" />
               <rect x="30" y="40" width="15" height="50" fill="#FB923C" />
@@ -33,19 +33,19 @@ export function ExamplesPage() {
           </Link>
           <div className="flex items-center gap-3 sm:gap-4">
             <Link
-              to="/examples"
+              href="/examples"
               className="text-sm font-medium text-[var(--text)] transition-colors duration-fast hidden sm:inline"
             >
               Examples
             </Link>
             <Link
-              to="/login"
+              href="/login"
               className="text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text)] transition-colors duration-fast"
             >
               Sign in
             </Link>
             <Link
-              to="/signup"
+              href="/signup"
               className="px-4 py-2 bg-[var(--primary)] text-white text-sm font-medium rounded-[10px] hover:bg-[var(--primary-hover)] transition-colors duration-fast"
             >
               Get Started Free
@@ -95,7 +95,7 @@ export function ExamplesPage() {
             Describe what you want in plain English. AI builds it in seconds.
           </p>
           <Link
-            to="/signup"
+            href="/signup"
             className="mt-8 inline-block px-8 py-3 bg-white text-[var(--primary)] text-base font-medium rounded-[10px] hover:bg-white/90 transition-colors duration-fast shadow-soft"
           >
             Get Started Free →

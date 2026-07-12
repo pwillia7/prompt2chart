@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import Link from 'next/link'
+import { useParams, useRouter } from 'next/navigation'
 import { Layout } from '../components/layout/Layout'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 import { DatasetUploader } from '../components/datasets/DatasetUploader'
@@ -133,7 +134,7 @@ function ChartTreeItem({
 export function ProjectPage() {
   useDocumentTitle('Project - Prompt2Chart')
   const { projectId } = useParams<{ projectId: string }>()
-  const navigate = useNavigate()
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState<'data' | 'charts'>('data')
   const [selectedLibrary, setSelectedLibrary] = useState<ChartLibrary>('d3')
   const [shareModalOpen, setShareModalOpen] = useState(false)
@@ -328,7 +329,7 @@ export function ProjectPage() {
       <Layout>
         <div className="text-center py-12">
           <h2 className="text-xl font-semibold text-[var(--text)]">Project not found</h2>
-          <Button variant="secondary" className="mt-4" onClick={() => navigate('/dashboard')}>
+          <Button variant="secondary" className="mt-4" onClick={() => router.push('/dashboard')}>
             Back to Dashboard
           </Button>
         </div>
@@ -340,7 +341,7 @@ export function ProjectPage() {
     <Layout>
       <div className="mb-6">
         <button
-          onClick={() => navigate('/dashboard')}
+          onClick={() => router.push('/dashboard')}
           className="flex items-center text-[var(--text-muted)] hover:text-[var(--text)] mb-4 transition-colors duration-fast"
         >
           <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -677,7 +678,7 @@ export function ProjectPage() {
               )}
             </div>
             <Link
-              to="/feedback"
+              href="/feedback"
               className="flex items-center gap-1.5 text-xs text-[var(--text-subtle)] hover:text-[var(--text-muted)] transition-colors duration-fast"
             >
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

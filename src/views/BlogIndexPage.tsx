@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import Link from 'next/link'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 import { getAllPosts, formatDate } from '../lib/blog'
 import { MarketingFooter } from '../components/layout/MarketingFooter'
@@ -12,7 +12,7 @@ export function BlogIndexPage() {
       {/* Nav */}
       <nav className="border-b border-[var(--border)]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2.5">
+          <Link href="/" className="flex items-center gap-2.5">
             <svg className="w-7 h-7" viewBox="0 0 100 100">
               <rect x="10" y="60" width="15" height="30" fill="#FDBA74" />
               <rect x="30" y="40" width="15" height="50" fill="#FB923C" />
@@ -23,13 +23,13 @@ export function BlogIndexPage() {
           </Link>
           <div className="flex items-center gap-3 sm:gap-4">
             <Link
-              to="/login"
+              href="/login"
               className="text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text)] transition-colors duration-fast"
             >
               Sign in
             </Link>
             <Link
-              to="/signup"
+              href="/signup"
               className="px-4 py-2 bg-[var(--primary)] text-white text-sm font-medium rounded-[10px] hover:bg-[var(--primary-hover)] transition-colors duration-fast"
             >
               Get Started Free
@@ -50,7 +50,7 @@ export function BlogIndexPage() {
           <div className="space-y-8">
             {posts.map(post => (
               <article key={post.slug} className="group">
-                <Link to={`/blog/${post.slug}`} className="block">
+                <Link href={`/blog/${post.slug}`} className="block">
                   <time className="text-xs text-[var(--text-subtle)] mb-1 block">
                     {formatDate(post.date)}
                   </time>

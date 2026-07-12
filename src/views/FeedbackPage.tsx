@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useRouter } from 'next/navigation'
 import { Layout } from '../components/layout/Layout'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
@@ -8,7 +8,7 @@ import { useDocumentTitle } from '../lib/useDocumentTitle'
 
 export function FeedbackPage() {
   useDocumentTitle('Feedback & Support - Prompt2Chart')
-  const navigate = useNavigate()
+  const router = useRouter()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [category, setCategory] = useState('feedback')
@@ -57,7 +57,7 @@ export function FeedbackPage() {
           </svg>
           <h2 className="mt-4 text-xl font-semibold text-[var(--text)]">Thanks for your feedback!</h2>
           <p className="mt-2 text-sm text-[var(--text-muted)]">We'll review your message and get back to you if needed.</p>
-          <Button variant="secondary" className="mt-6" onClick={() => navigate(-1)}>
+          <Button variant="secondary" className="mt-6" onClick={() => router.back()}>
             Go Back
           </Button>
         </div>
@@ -69,7 +69,7 @@ export function FeedbackPage() {
     <Layout>
       <div className="max-w-lg mx-auto">
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => router.back()}
           className="flex items-center text-[var(--text-muted)] hover:text-[var(--text)] mb-6 transition-colors duration-fast"
         >
           <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">

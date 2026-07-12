@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { Layout } from '../components/layout/Layout'
 import { ProjectList } from '../components/projects/ProjectList'
 import { CreateProjectModal } from '../components/projects/CreateProjectModal'
@@ -13,7 +13,9 @@ export function DashboardPage() {
   useDocumentTitle('Dashboard - Prompt2Chart')
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [checkoutMessage, setCheckoutMessage] = useState<string | null>(null)
-  const [searchParams, setSearchParams] = useSearchParams()
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const pathname = usePathname()
   const { fetchCredits } = useBillingStore()
 
   useEffect(() => {
@@ -22,12 +24,12 @@ export function DashboardPage() {
       track('checkout-completed')
       setCheckoutMessage('Payment successful! Your credits have been added.')
       fetchCredits()
-      setSearchParams({}, { replace: true })
+      router.replace(pathname)
     } else if (checkout === 'cancelled') {
       setCheckoutMessage('Checkout was cancelled.')
-      setSearchParams({}, { replace: true })
+      router.replace(pathname)
     }
-  }, [searchParams, setSearchParams, fetchCredits])
+  }, [searchParams, router, pathname, fetchCredits])
 
   return (
     <Layout>

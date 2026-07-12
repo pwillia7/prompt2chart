@@ -1,3 +1,5 @@
-export default function HomePage() {
-  return <div>Migration in progress</div>
-}
+'use client'
+
+import { LandingPage } from '@/views/LandingPage'
+
+export default LandingPage

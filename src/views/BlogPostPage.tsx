@@ -1,5 +1,7 @@
 import { useMemo, useEffect } from 'react'
-import { Link, useParams, Navigate } from 'react-router-dom'
+import Link from 'next/link'
+import { useParams } from 'next/navigation'
+import { Navigate } from '@/lib/router-compat'
 import { marked } from 'marked'
 import { getPost, formatDate } from '../lib/blog'
 import { MarketingFooter } from '../components/layout/MarketingFooter'
@@ -28,7 +30,7 @@ export function BlogPostPage() {
       {/* Nav */}
       <nav className="border-b border-[var(--border)]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2.5">
+          <Link href="/" className="flex items-center gap-2.5">
             <svg className="w-7 h-7" viewBox="0 0 100 100">
               <rect x="10" y="60" width="15" height="30" fill="#FDBA74" />
               <rect x="30" y="40" width="15" height="50" fill="#FB923C" />
@@ -39,13 +41,13 @@ export function BlogPostPage() {
           </Link>
           <div className="flex items-center gap-3 sm:gap-4">
             <Link
-              to="/login"
+              href="/login"
               className="text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text)] transition-colors duration-fast"
             >
               Sign in
             </Link>
             <Link
-              to="/signup"
+              href="/signup"
               className="px-4 py-2 bg-[var(--primary)] text-white text-sm font-medium rounded-[10px] hover:bg-[var(--primary-hover)] transition-colors duration-fast"
             >
               Get Started Free
@@ -58,7 +60,7 @@ export function BlogPostPage() {
         {/* Breadcrumb */}
         <nav className="mb-8">
           <Link
-            to="/blog"
+            href="/blog"
             className="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors duration-fast"
           >
             ← Blog
@@ -95,7 +97,7 @@ export function BlogPostPage() {
             Upload your data and describe the chart you want. 100 free credits included, no credit card required.
           </p>
           <Link
-            to="/signup"
+            href="/signup"
             className="inline-block px-6 py-2.5 bg-[var(--primary)] text-white text-sm font-medium rounded-[10px] hover:bg-[var(--primary-hover)] transition-colors duration-fast"
           >
             Get Started Free →

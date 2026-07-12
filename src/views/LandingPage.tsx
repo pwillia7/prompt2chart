@@ -1,5 +1,6 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
-import { Link, Navigate } from 'react-router-dom'
+import Link from 'next/link'
+import { Navigate } from '@/lib/router-compat'
 import { MarketingFooter } from '../components/layout/MarketingFooter'
 import { useAuthStore } from '../store/authStore'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
@@ -45,20 +46,20 @@ export function LandingPage() {
               FAQ
             </a>
             <Link
-              to="/examples"
+              href="/examples"
               className="text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text)] transition-colors duration-fast hidden sm:inline"
             >
               Examples
             </Link>
             <Link
-              to="/login"
+              href="/login"
               onClick={() => track('signin-clicked')}
               className="text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text)] transition-colors duration-fast"
             >
               Sign in
             </Link>
             <Link
-              to="/signup"
+              href="/signup"
               className="px-4 py-2 bg-[var(--primary)] text-white text-sm font-medium rounded-[10px] hover:bg-[var(--primary-hover)] transition-colors duration-fast"
             >
               Start for Free
@@ -80,7 +81,7 @@ export function LandingPage() {
           </p>
           <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
             <Link
-              to="/signup"
+              href="/signup"
               onClick={() => track('cta-hero-clicked')}
               className="px-8 py-3 bg-[var(--primary)] text-white text-base font-medium rounded-[10px] hover:bg-[var(--primary-hover)] transition-colors duration-fast shadow-soft"
             >
@@ -331,7 +332,7 @@ export function LandingPage() {
             100 free charts included. No credit card required.
           </p>
           <Link
-            to="/signup"
+            href="/signup"
             onClick={() => track('cta-bottom-clicked')}
             className="mt-8 inline-block px-8 py-3 bg-white text-[var(--primary)] text-base font-medium rounded-[10px] hover:bg-white/90 transition-colors duration-fast shadow-soft"
           >
@@ -448,7 +449,7 @@ function ExamplesCarousel() {
         </h3>
         <p className="mt-3 text-base text-[var(--text-muted)]">
           Every visualization below was generated from a single prompt.{' '}
-          <Link to="/examples" className="text-[var(--primary)] font-medium hover:underline">
+          <Link href="/examples" className="text-[var(--primary)] font-medium hover:underline">
             View all examples →
           </Link>
         </p>

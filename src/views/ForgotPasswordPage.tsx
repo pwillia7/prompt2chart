@@ -1,4 +1,4 @@
-import { Navigate } from 'react-router-dom'
+import { Navigate } from '@/lib/router-compat'
 import { ForgotPasswordForm } from '../components/auth/ForgotPasswordForm'
 import { useAuthStore } from '../store/authStore'
 import { useDocumentTitle } from '../lib/useDocumentTitle'

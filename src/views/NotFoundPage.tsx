@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import Link from 'next/link'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 
 export function NotFoundPage() {
@@ -12,7 +12,7 @@ export function NotFoundPage() {
           The page you're looking for doesn't exist or has been moved.
         </p>
         <Link
-          to="/dashboard"
+          href="/dashboard"
           className="inline-flex px-4 py-2 bg-[var(--primary)] text-white rounded-[10px] text-sm font-medium hover:bg-[var(--primary-hover)] transition-colors duration-fast"
         >
           Back to Dashboard
