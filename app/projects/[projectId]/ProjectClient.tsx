@@ -20,14 +20,14 @@ import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/ui/Spinner'
 import { useProjectStore } from '@/store/projectStore'
 import { useDatasetStore } from '@/store/datasetStore'
-import { useChartStore } from '@/store/chartStore'
+import { useChartStore, normalizeChart } from '@/store/chartStore'
 import { trackUsage } from '@/lib/usageTracker'
 import { track } from '@/lib/analytics'
 import { sampleData } from '@/lib/dataSampler'
 import { d3SvgToPng, vegaToPng } from '@/lib/chartExporter'
 import { supabase } from '@/lib/supabase'
 import { useBillingStore } from '@/store/billingStore'
-import { Chart, ChartLibrary } from '@/types'
+import { Chart, ChartLibrary, Dataset, Project } from '@/types'
 
 interface ChartTreeNode {
   chart: Chart
@@ -134,19 +134,34 @@ function ChartTreeItem({
   )
 }
 
-export function ProjectPage() {
+interface ProjectPageProps {
+  initialProject: Project
+  initialCharts: Chart[]
+  initialDatasets: Dataset[]
+}
+
+export function ProjectPage({ initialProject, initialCharts, initialDatasets }: ProjectPageProps) {
   useDocumentTitle('Project - Prompt2Chart')
   const { projectId } = useParams<{ projectId: string }>()
   const router = useRouter()
+
+  // Seed the stores once per mount from the server-fetched rows. A useState lazy
+  // initializer runs exactly once, so navigating between projects re-seeds with
+  // the new project's data and clears any stale current-chart/dataset selection.
+  useState(() => {
+    useProjectStore.setState({ currentProject: initialProject, loading: false, error: null })
+    useChartStore.setState({ charts: initialCharts.map((c) => normalizeChart(c as unknown as Record<string, unknown>)), currentChart: null, loading: false, error: null })
+    useDatasetStore.setState({ datasets: initialDatasets, currentDataset: null, parsedData: null, loading: false, error: null })
+  })
   const [activeTab, setActiveTab] = useState<'data' | 'charts'>('data')
   const [selectedLibrary, setSelectedLibrary] = useState<ChartLibrary>('d3')
   const [shareModalOpen, setShareModalOpen] = useState(false)
   const d3Ref = useRef<D3ChartHandle>(null)
   const vegaRef = useRef<VegaChartHandle>(null)
 
-  const { currentProject, fetchProject, loading: projectLoading } = useProjectStore()
-  const { datasets, currentDataset, parsedData, fetchDatasets, loadDatasetData, setCurrentDataset } = useDatasetStore()
-  const { charts, currentChart, generating, generateChart, fetchCharts, setCurrentChart, error: chartError } = useChartStore()
+  const { currentProject, loading: projectLoading } = useProjectStore()
+  const { datasets, currentDataset, parsedData, loadDatasetData, setCurrentDataset } = useDatasetStore()
+  const { charts, currentChart, generating, generateChart, setCurrentChart, error: chartError } = useChartStore()
 
   const renderData = useMemo(() => parsedData ? sampleData(parsedData) : null, [parsedData])
   const chartTree = useMemo(() => buildChartTree(charts), [charts])
@@ -168,16 +183,6 @@ export function ProjectPage() {
     })),
     [datasets]
   )
-
-  useEffect(() => {
-    if (projectId) {
-      setCurrentDataset(null)
-      setCurrentChart(null)
-      fetchProject(projectId)
-      fetchDatasets(projectId)
-      fetchCharts(projectId)
-    }
-  }, [projectId, fetchProject, fetchDatasets, fetchCharts, setCurrentDataset, setCurrentChart])
 
   useEffect(() => {
     if (datasets.length > 0 && !currentDataset) {
@@ -706,6 +711,14 @@ export function ProjectPage() {
   )
 }
 
-export default function ProjectClient() {
-  return <AuthGuard><ProjectPage /></AuthGuard>
+export default function ProjectClient({ initialProject, initialCharts, initialDatasets }: ProjectPageProps) {
+  return (
+    <AuthGuard>
+      <ProjectPage
+        initialProject={initialProject}
+        initialCharts={initialCharts}
+        initialDatasets={initialDatasets}
+      />
+    </AuthGuard>
+  )
 }

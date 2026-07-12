@@ -240,7 +240,7 @@ export const useChartStore = create<ChartState>((set, get) => ({
 }))
 
 // Normalize chart data from DB (handles missing columns for older rows)
-function normalizeChart(row: Record<string, unknown>): Chart {
+export function normalizeChart(row: Record<string, unknown>): Chart {
   return {
     id: row.id as string,
     project_id: row.project_id as string,
