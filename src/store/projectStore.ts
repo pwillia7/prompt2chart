@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { supabase } from '../lib/supabase'
+import { bustUserProjects, bustProject } from '../lib/cacheActions'
 import { Project } from '../types'
 
 interface ProjectState {
@@ -71,6 +72,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       if (error) throw error
 
       set({ projects: [data, ...get().projects] })
+      await bustUserProjects()
       return data
     } catch (error) {
       set({ error: (error as Error).message })
@@ -98,6 +100,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
           ? { ...get().currentProject!, name }
           : get().currentProject,
       })
+      await Promise.all([bustUserProjects(), bustProject(id)])
     } catch (error) {
       set({ error: (error as Error).message })
     } finally {
@@ -119,6 +122,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         projects: get().projects.filter((p) => p.id !== id),
         currentProject: get().currentProject?.id === id ? null : get().currentProject,
       })
+      await bustUserProjects()
     } catch (error) {
       set({ error: (error as Error).message })
     } finally {

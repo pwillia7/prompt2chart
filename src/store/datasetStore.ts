@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { supabase } from '../lib/supabase'
+import { bustProjectDatasets } from '../lib/cacheActions'
 import { Dataset, DatasetSchema, InsightSuggestion } from '../types'
 import { generateSchema, parseData } from '../lib/schemaGenerator'
 
@@ -126,6 +127,7 @@ export const useDatasetStore = create<DatasetState>((set, get) => ({
         currentDataset: data,
         parsedData,
       })
+      await bustProjectDatasets(projectId)
       return data
     } catch (error) {
       set({ error: (error as Error).message })
@@ -149,6 +151,8 @@ export const useDatasetStore = create<DatasetState>((set, get) => ({
         .eq('id', id)
 
       if (error) throw error
+
+      if (dataset) await bustProjectDatasets(dataset.project_id)
 
       const cache = new Map(get().suggestionCache)
       cache.delete(id)

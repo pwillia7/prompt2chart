@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { supabase } from '../lib/supabase'
+import { bustProjectCharts } from '../lib/cacheActions'
 import { Chart, ChartLibrary, VegaLiteSpec, ConversationMessage, ChartEditHistory, DatasetSchema, ChartGenerationResponse } from '../types'
 import { useBillingStore } from './billingStore'
 
@@ -153,6 +154,7 @@ export const useChartStore = create<ChartState>((set, get) => ({
         charts: [chart, ...get().charts],
         currentChart: chart,
       })
+      await bustProjectCharts(projectId)
       return chart
     } catch (error) {
       set({ error: (error as Error).message })
@@ -165,6 +167,7 @@ export const useChartStore = create<ChartState>((set, get) => ({
   updateChart: async (id: string, updates: Partial<Chart>) => {
     set({ loading: true, error: null })
     try {
+      const projectId = get().charts.find((c) => c.id === id)?.project_id
       const { error } = await supabase
         .from('charts')
         .update(updates)
@@ -180,6 +183,7 @@ export const useChartStore = create<ChartState>((set, get) => ({
           ? { ...get().currentChart!, ...updates }
           : get().currentChart,
       })
+      if (projectId) await bustProjectCharts(projectId)
     } catch (error) {
       set({ error: (error as Error).message })
     } finally {
@@ -190,6 +194,7 @@ export const useChartStore = create<ChartState>((set, get) => ({
   deleteChart: async (id: string) => {
     set({ loading: true, error: null })
     try {
+      const projectId = get().charts.find((c) => c.id === id)?.project_id
       const { error } = await supabase
         .from('charts')
         .delete()
@@ -205,6 +210,7 @@ export const useChartStore = create<ChartState>((set, get) => ({
         currentChart: get().currentChart?.id === id ? null : get().currentChart,
         editHistories,
       })
+      if (projectId) await bustProjectCharts(projectId)
     } catch (error) {
       set({ error: (error as Error).message })
     } finally {
