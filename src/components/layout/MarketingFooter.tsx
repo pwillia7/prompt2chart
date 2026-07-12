@@ -27,9 +27,9 @@ export function MarketingFooter() {
             <h4 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-subtle)] mb-4">Product</h4>
             <ul className="space-y-2.5">
               <li><Link href="/examples" className="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors duration-fast">Examples</Link></li>
-              <li><a href="/#pricing" className="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors duration-fast">Pricing</a></li>
-              <li><a href="/#how-it-works" className="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors duration-fast">How It Works</a></li>
-              <li><a href="/#faq" className="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors duration-fast">FAQ</a></li>
+              <li><Link href="/#pricing" className="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors duration-fast">Pricing</Link></li>
+              <li><Link href="/#how-it-works" className="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors duration-fast">How It Works</Link></li>
+              <li><Link href="/#faq" className="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors duration-fast">FAQ</Link></li>
               <li><Link href="/blog" className="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors duration-fast">Blog</Link></li>
             </ul>
           </div>
