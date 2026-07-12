@@ -1,5 +1,7 @@
 import Link from 'next/link'
 
+const CURRENT_YEAR = new Date().getFullYear()
+
 export function MarketingFooter() {
   return (
     <footer className="bg-[var(--surface-1)] border-t border-[var(--border)]">
@@ -52,7 +54,7 @@ export function MarketingFooter() {
 
         <div className="mt-10 pt-6 border-t border-[var(--border)]">
           <p className="text-xs text-[var(--text-subtle)]">
-            &copy; {new Date().getFullYear()} Prompt2Chart. All rights reserved.
+            &copy; {CURRENT_YEAR} Prompt2Chart. All rights reserved.
           </p>
         </div>
       </div>
