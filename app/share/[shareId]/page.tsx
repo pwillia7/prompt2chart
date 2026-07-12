@@ -1,20 +1,15 @@
-import type { Metadata } from 'next'
+import { cacheLife, cacheTag } from 'next/cache'
 import Link from 'next/link'
 import { SharedChartInteractive } from './SharedChartInteractive'
 import type { SharedChart } from '@/types'
 
 type Params = Promise<{ shareId: string }>
 
-const STATIC_OG_IMAGE = 'https://prompt2chart.com/og-image.png'
-
-function buildDescription(projectName?: string | null): string {
-  if (projectName) {
-    return `Check out "${projectName}" — a chart I built with Prompt2Chart by typing what I wanted to see from my data.`
-  }
-  return 'Check out this chart I built with Prompt2Chart — just described what I wanted to see from my data and AI built it instantly.'
-}
-
 async function fetchShare(shareId: string): Promise<SharedChart | null> {
+  'use cache'
+  cacheLife('days')
+  cacheTag(`share-${shareId}`)
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   if (!supabaseUrl || !supabaseKey) return null
@@ -29,40 +24,6 @@ async function fetchShare(shareId: string): Promise<SharedChart | null> {
     return rows[0] ?? null
   } catch {
     return null
-  }
-}
-
-export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
-  const { shareId } = await params
-  const share = await fetchShare(shareId)
-
-  const displayName = share?.project_name ?? null
-  const title = displayName
-    ? `${displayName} — Prompt2Chart`
-    : share
-      ? `${share.prompt} — Prompt2Chart`
-      : 'Shared Chart — Prompt2Chart'
-  const description = buildDescription(displayName)
-  const imageUrl = share?.og_image_url ?? STATIC_OG_IMAGE
-  const imageAlt = 'AI-generated data visualization from Prompt2Chart'
-
-  return {
-    title,
-    description,
-    openGraph: {
-      type: 'website',
-      siteName: 'Prompt2Chart',
-      title,
-      description,
-      images: [{ url: imageUrl, alt: imageAlt }],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      site: '@prompt2chart',
-      title,
-      description,
-      images: [{ url: imageUrl, alt: imageAlt }],
-    },
   }
 }
 

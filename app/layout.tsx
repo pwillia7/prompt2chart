@@ -19,7 +19,6 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 const SITE_URL = 'https://prompt2chart.com'
-const SITE_NAME = 'Prompt2Chart'
 const TITLE = 'Prompt2Chart - AI-Powered Data Visualizations'
 const DESCRIPTION =
   'Turn your data into interactive charts and visualizations with AI. Upload CSV or JSON, describe what you want to see, and get D3.js charts instantly.'
@@ -28,30 +27,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: TITLE,
   description: DESCRIPTION,
-  alternates: { canonical: '/' },
   icons: { icon: [{ url: '/favicon.svg', type: 'image/svg+xml' }] },
-  openGraph: {
-    type: 'website',
-    url: SITE_URL,
-    siteName: SITE_NAME,
-    title: TITLE,
-    description: DESCRIPTION,
-    images: [
-      {
-        url: '/og-image.png',
-        width: 1200,
-        height: 630,
-        alt: 'Prompt2Chart — AI-generated data visualizations',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    site: '@prompt2chart',
-    title: TITLE,
-    description: DESCRIPTION,
-    images: ['/og-image.png'],
-  },
 }
 
 export const viewport: Viewport = {
