@@ -1,14 +1,10 @@
-import { useEffect } from 'react'
 import { useProjectStore } from '../../store/projectStore'
 import { ProjectCard } from './ProjectCard'
 import { Spinner } from '../ui/Spinner'
 
 export function ProjectList() {
-  const { projects, loading, error, fetchProjects } = useProjectStore()
-
-  useEffect(() => {
-    fetchProjects()
-  }, [fetchProjects])
+  // Projects are seeded into the store server-side by DashboardClient.
+  const { projects, loading, error } = useProjectStore()
 
   if (loading && projects.length === 0) {
     return (

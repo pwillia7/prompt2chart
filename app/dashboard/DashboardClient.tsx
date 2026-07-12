@@ -9,11 +9,21 @@ import { CreateProjectModal } from '@/components/projects/CreateProjectModal'
 import { SampleDataCards } from '@/components/projects/SampleDataCards'
 import { Button } from '@/components/ui/Button'
 import { useBillingStore } from '@/store/billingStore'
+import { useProjectStore } from '@/store/projectStore'
 import { useDocumentTitle } from '@/lib/useDocumentTitle'
 import { track } from '@/lib/analytics'
+import { Project } from '@/types'
 
-export function DashboardPage() {
+export function DashboardPage({ initialProjects }: { initialProjects: Project[] }) {
   useDocumentTitle('Dashboard - Prompt2Chart')
+
+  // Seed the store once per mount from the server-fetched projects so
+  // ProjectList renders immediately without a client round-trip. A useState
+  // lazy initializer runs exactly once and avoids a fetch-on-mount flash.
+  useState(() => {
+    useProjectStore.setState({ projects: initialProjects, loading: false, error: null })
+  })
+
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [checkoutMessage, setCheckoutMessage] = useState<string | null>(null)
   const searchParams = useSearchParams()
@@ -83,6 +93,6 @@ export function DashboardPage() {
   )
 }
 
-export default function DashboardClient() {
-  return <AuthGuard><DashboardPage /></AuthGuard>
+export default function DashboardClient({ initialProjects }: { initialProjects: Project[] }) {
+  return <AuthGuard><DashboardPage initialProjects={initialProjects} /></AuthGuard>
 }
