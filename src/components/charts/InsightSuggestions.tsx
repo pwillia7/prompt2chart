@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { supabase } from '../../lib/supabase'
 import { getSampleSuggestions } from '../../lib/sampleData'
 import { AllSchemaEntry } from '../../store/chartStore'
 import { useDatasetStore } from '../../store/datasetStore'
@@ -69,13 +68,16 @@ export function InsightSuggestions({ datasetId, schema, allSchemas, onSelectSugg
       setError(null)
 
       try {
-        const { data, error: fnError } = await supabase.functions.invoke('suggest-insights', {
-          body: { schema, allSchemas },
+        const res = await fetch('/api/suggest-insights', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ schema, allSchemas }),
         })
 
-        if (fnError) throw fnError
+        const payload = await res.json().catch(() => ({}))
+        if (!res.ok) throw new Error(payload?.error || `Request failed (${res.status})`)
         if (!cancelled) {
-          const results = data.suggestions || []
+          const results = payload.suggestions || []
           cacheSuggestions(datasetId, schemaKey, results)
           setSuggestions(results)
           setExpanded(false)

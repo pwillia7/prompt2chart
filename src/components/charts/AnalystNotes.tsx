@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import ReactMarkdown from 'react-markdown'
-import { supabase } from '../../lib/supabase'
 import { track } from '../../lib/analytics'
 import { useChartStore, AllSchemaEntry } from '../../store/chartStore'
 import type { Chart, DatasetSchema } from '../../types'
@@ -129,8 +128,10 @@ export function AnalystNotes({ explanation, chart, schema, allSchemas, onSuggest
         content: m.content,
       }))
 
-      const { data, error } = await supabase.functions.invoke('analyst-chat', {
-        body: {
+      const res = await fetch('/api/analyst-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           message: text,
           schema,
           chartLibrary: chart.chart_library,
@@ -141,12 +142,13 @@ export function AnalystNotes({ explanation, chart, schema, allSchemas, onSuggest
           explanation: chart.explanation ?? undefined,
           conversationHistory,
           allSchemas,
-        },
+        }),
       })
 
-      if (error) throw error
+      const payload = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(payload?.error || `Request failed (${res.status})`)
 
-      updateMessages(chart.id, prev => [...prev, { role: 'analyst', content: data.reply }])
+      updateMessages(chart.id, prev => [...prev, { role: 'analyst', content: payload.reply }])
     } catch (err) {
       updateMessages(chart.id, prev => [...prev, { role: 'analyst', content: `Error: ${(err as Error).message}` }])
     } finally {
