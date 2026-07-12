@@ -9,8 +9,14 @@ serve(async (req) => {
   }
 
   const stripeKey = Deno.env.get('STRIPE_SECRET_KEY')
-  const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET')
-  if (!stripeKey || !webhookSecret) {
+  // Accept both the live and sandbox/test webhook signing secrets so a single
+  // endpoint grants credits from either Stripe mode. Live is tried first, so
+  // live behavior is unchanged; STRIPE_WEBHOOK_SECRET_SANDBOX is optional.
+  const webhookSecrets = [
+    Deno.env.get('STRIPE_WEBHOOK_SECRET'),
+    Deno.env.get('STRIPE_WEBHOOK_SECRET_SANDBOX'),
+  ].filter((s): s is string => !!s)
+  if (!stripeKey || webhookSecrets.length === 0) {
     return new Response('Stripe not configured', { status: 503 })
   }
 
@@ -24,13 +30,21 @@ serve(async (req) => {
     return new Response('Missing stripe-signature header', { status: 400 })
   }
 
-  let event: Stripe.Event
-  try {
-    // Must use async version in Deno (SubtleCrypto is async-only)
-    event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret)
-  } catch (err) {
-    console.error('Webhook signature verification failed:', err)
-    return new Response(`Webhook Error: ${(err as Error).message}`, { status: 400 })
+  // Must use async version in Deno (SubtleCrypto is async-only). Try each
+  // configured signing secret; the event validates under whichever mode sent it.
+  let event: Stripe.Event | null = null
+  let lastErr: unknown = null
+  for (const secret of webhookSecrets) {
+    try {
+      event = await stripe.webhooks.constructEventAsync(body, signature, secret)
+      break
+    } catch (err) {
+      lastErr = err
+    }
+  }
+  if (!event) {
+    console.error('Webhook signature verification failed:', lastErr)
+    return new Response(`Webhook Error: ${(lastErr as Error).message}`, { status: 400 })
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!
