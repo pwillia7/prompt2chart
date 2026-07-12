@@ -62,6 +62,43 @@ export function SharedChartInteractive({ shared }: { shared: SharedChart }) {
     track('share-viewed', { library: shared.chart_library })
   }, [shared.chart_library])
 
+  // Set OG/Twitter meta tags on the client so JS-capable crawlers
+  // (Twitterbot, LinkedIn, etc.) get per-share previews. Server-side
+  // generateMetadata is not viable here under cacheComponents when
+  // metadata reads params — the runtime dynamic-metadata check trips
+  // the prerender contract. Fixed root-layout OG serves as fallback
+  // for HTML-only crawlers.
+  useEffect(() => {
+    function setMeta(nameOrProp: string, content: string, useProp = false) {
+      const attr = useProp ? 'property' : 'name'
+      let el = document.querySelector<HTMLMetaElement>(`meta[${attr}="${nameOrProp}"]`)
+      if (!el) {
+        el = document.createElement('meta')
+        el.setAttribute(attr, nameOrProp)
+        document.head.appendChild(el)
+      }
+      el.content = content
+    }
+
+    const title = `${shared.project_name ?? shared.prompt} — Prompt2Chart`
+    const description = shared.project_name
+      ? `Check out "${shared.project_name}" — a chart I built with Prompt2Chart by typing what I wanted to see from my data.`
+      : 'Check out this chart I built with Prompt2Chart — just described what I wanted to see from my data and AI built it instantly.'
+
+    document.title = title
+    setMeta('description', description)
+    setMeta('og:title', title, true)
+    setMeta('og:description', description, true)
+    setMeta('og:url', window.location.href, true)
+    setMeta('twitter:title', title)
+    setMeta('twitter:description', description)
+
+    if (shared.og_image_url) {
+      setMeta('og:image', shared.og_image_url, true)
+      setMeta('twitter:image', shared.og_image_url)
+    }
+  }, [shared])
+
   // Close export dropdown on outside click
   useEffect(() => {
     if (!exportOpen) return
