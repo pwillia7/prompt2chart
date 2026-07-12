@@ -1,3 +1,6 @@
+import { readdirSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
+
 export interface BlogPost {
   slug: string
   date: string
@@ -6,9 +9,7 @@ export interface BlogPost {
   raw: string
 }
 
-// Import all markdown files at build time — content lands in the JS bundle
-// so Google's first-pass crawl sees the full article text.
-const modules = import.meta.glob('../blog/*.md', { query: '?raw', import: 'default', eager: true })
+const BLOG_DIR = join(process.cwd(), 'src', 'blog')
 
 function extractTitle(raw: string): string {
   const match = raw.match(/^#\s+(.+)$/m)
@@ -16,7 +17,6 @@ function extractTitle(raw: string): string {
 }
 
 function extractDescription(raw: string): string {
-  // Skip heading lines and blank lines, take the first real paragraph
   const lines = raw.split('\n')
   const paragraphLines: string[] = []
   let inParagraph = false
@@ -36,15 +36,16 @@ function extractDescription(raw: string): string {
 }
 
 export function getAllPosts(): BlogPost[] {
+  const files = readdirSync(BLOG_DIR).filter(f => f.endsWith('.md'))
   const posts: BlogPost[] = []
 
-  for (const [path, raw] of Object.entries(modules) as [string, string][]) {
-    // path is like ../blog/2026-02-23-how-to-make-a-scatter-plot.md
-    const filename = path.split('/').pop()!.replace('.md', '')
+  for (const file of files) {
+    const filename = file.replace(/\.md$/, '')
     const dateMatch = filename.match(/^(\d{4}-\d{2}-\d{2})-(.+)$/)
     if (!dateMatch) continue
 
     const [, date, slug] = dateMatch
+    const raw = readFileSync(join(BLOG_DIR, file), 'utf8')
 
     posts.push({
       slug,
@@ -55,7 +56,6 @@ export function getAllPosts(): BlogPost[] {
     })
   }
 
-  // Newest first
   return posts.sort((a, b) => b.date.localeCompare(a.date))
 }
 

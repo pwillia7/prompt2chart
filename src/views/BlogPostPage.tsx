@@ -1,29 +1,14 @@
-import { useMemo, useEffect } from 'react'
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
-import { Navigate } from '@/lib/router-compat'
+import { notFound } from 'next/navigation'
 import { marked } from 'marked'
 import { getPost, formatDate } from '../lib/blog'
 import { MarketingFooter } from '../components/layout/MarketingFooter'
 
-export function BlogPostPage() {
-  const { slug } = useParams<{ slug: string }>()
-  const post = slug ? getPost(slug) : undefined
+export function BlogPostPage({ slug }: { slug: string }) {
+  const post = getPost(slug)
+  if (!post) notFound()
 
-  const html = useMemo(() => {
-    if (!post) return ''
-    return marked.parse(post.raw) as string
-  }, [post])
-
-  // Set document title and meta description dynamically
-  useEffect(() => {
-    if (!post) return
-    document.title = `${post.title} - Prompt2Chart`
-    let meta = document.querySelector<HTMLMetaElement>('meta[name="description"]')
-    if (meta) meta.content = post.description
-  }, [post])
-
-  if (!post) return <Navigate to="/blog" replace />
+  const html = marked.parse(post.raw) as string
 
   return (
     <div className="min-h-screen bg-bg">

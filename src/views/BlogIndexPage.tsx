@@ -1,10 +1,8 @@
 import Link from 'next/link'
-import { useDocumentTitle } from '../lib/useDocumentTitle'
 import { getAllPosts, formatDate } from '../lib/blog'
 import { MarketingFooter } from '../components/layout/MarketingFooter'
 
 export function BlogIndexPage() {
-  useDocumentTitle('Blog - Prompt2Chart')
   const posts = getAllPosts()
 
   return (
