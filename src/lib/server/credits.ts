@@ -8,6 +8,13 @@ export const CREDIT_COSTS = {
 
 export type CreditOperation = keyof typeof CREDIT_COSTS
 
+// Stripe credit pack definitions (ported from the Supabase _shared/credits.ts)
+export const CREDIT_PACKS = [
+  { id: 'starter', name: 'Starter', credits: 100, priceUsd: 500 },
+  { id: 'pro', name: 'Pro', credits: 300, priceUsd: 1500 },
+  { id: 'power', name: 'Power', credits: 800, priceUsd: 3000 },
+] as const
+
 export class InsufficientCreditsError extends Error {
   status = 402
   remaining: number
@@ -27,6 +34,13 @@ export async function getCredits(userId: string): Promise<number> {
     .single()
   if (error || !data) return 0
   return data.balance
+}
+
+/** Lazily grant monthly free credits if eligible. Non-blocking (logs on error). */
+export async function grantMonthlyCredits(userId: string): Promise<void> {
+  const admin = createSupabaseAdminClient()
+  const { error } = await admin.rpc('grant_monthly_credits', { p_user_id: userId })
+  if (error) console.error('Monthly credit grant failed (non-blocking):', error)
 }
 
 /** Verify balance without deducting. Throws InsufficientCreditsError if short. */
