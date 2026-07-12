@@ -75,31 +75,29 @@ export const useChartStore = create<ChartState>((set, get) => ({
   generateChart: async ({ projectId, datasetId, prompt, schema, library, existingCode, allSchemas, parentChartId }: GenerateChartOptions) => {
     set({ generating: true, error: null })
     try {
-      const { data: responseData, error: fnError } = await supabase.functions.invoke('generate-chart', {
-        body: {
+      const res = await fetch('/api/generate-chart', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           prompt,
           schema,
           library,
           existingCode: existingCode || null,
           allSchemas: allSchemas || undefined,
-        },
+        }),
       })
 
-      if (fnError) {
-        // Try to extract a meaningful error message from the edge function response
-        try {
-          const body = await (fnError as any).context?.json?.()
-          if (body?.creditsRemaining !== undefined) {
-            useBillingStore.getState().setCredits(body.creditsRemaining)
-          }
-          if (body?.error) throw new Error(body.error)
-        } catch (e) {
-          if (e instanceof Error && e.message !== (fnError as Error).message) throw e
+      const payload = await res.json().catch(() => ({})) as ChartGenerationResponse & { creditsRemaining?: number; error?: string }
+
+      if (!res.ok) {
+        // Surface the credit balance the server returned (e.g. 402 insufficient)
+        if (payload?.creditsRemaining !== undefined) {
+          useBillingStore.getState().setCredits(payload.creditsRemaining)
         }
-        throw fnError
+        throw new Error(payload?.error || `Chart generation failed (${res.status})`)
       }
 
-      const response = responseData as ChartGenerationResponse & { creditsRemaining?: number }
+      const response = payload as ChartGenerationResponse & { creditsRemaining?: number }
 
       // Update credit balance from response
       if (response.creditsRemaining !== undefined) {
