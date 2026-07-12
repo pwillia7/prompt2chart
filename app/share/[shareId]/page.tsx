@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { SharedChartPage } from '@/views/SharedChartPage'
+import { SharedChartPage } from './SharedChart'
 
 type Params = Promise<{ shareId: string }>
 

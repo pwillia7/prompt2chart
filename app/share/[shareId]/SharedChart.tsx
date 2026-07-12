@@ -3,12 +3,12 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
-import { D3ChartRenderer, D3ChartHandle } from '../components/charts/D3ChartRenderer'
-import { ChartRenderer, VegaChartHandle } from '../components/charts/ChartRenderer'
-import { Spinner } from '../components/ui/Spinner'
-import { supabase } from '../lib/supabase'
-import { useDocumentTitle } from '../lib/useDocumentTitle'
-import { track } from '../lib/analytics'
+import { D3ChartRenderer, D3ChartHandle } from '@/components/charts/D3ChartRenderer'
+import { ChartRenderer, VegaChartHandle } from '@/components/charts/ChartRenderer'
+import { Spinner } from '@/components/ui/Spinner'
+import { supabase } from '@/lib/supabase'
+import { useDocumentTitle } from '@/lib/useDocumentTitle'
+import { track } from '@/lib/analytics'
 import {
   copyToClipboard,
   openD3InCodePen,
@@ -22,8 +22,8 @@ import {
   downloadHtml,
   buildStandaloneHtmlD3,
   buildStandaloneHtmlVegaLite,
-} from '../lib/chartExporter'
-import type { SharedChart, VegaLiteSpec } from '../types'
+} from '@/lib/chartExporter'
+import type { SharedChart, VegaLiteSpec } from '@/types'
 
 interface ParsedNotes {
   chartInsights: string[]
