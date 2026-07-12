@@ -28,7 +28,7 @@ The three LLM edge functions + the coupled `refund-credit` are now Next Route Ha
 - **Privileged ops** (rate limit, credit deduct/refund, usage log) use a **service-role** admin client → requires `SUPABASE_SERVICE_ROLE_KEY` on Vercel (server-only; never shipped to client).
 - **Structured output:** `generateObject` with `output: 'no-schema'` = unconstrained JSON, matching the original edge behavior 1:1 (safe for arbitrary Vega specs). Mapping mirrors the old `parseChartResponse`/`parseInsightsResponse`.
 - **No `runtime` segment export** — `cacheComponents` rejects it; Node is the route-handler default. `maxDuration` set per route.
-- **Models** are env-overridable: `LLM_MODEL` (default `anthropic/claude-sonnet-5`), `LLM_CHAT_MODEL` (default `anthropic/claude-haiku-4.5`). Live gateway model list confirmed at build time.
+- **Models** match the original prompt2chart config: `LLM_MODEL` default `openai/gpt-4o`, `LLM_CHAT_MODEL` default `openai/gpt-4o-mini` (the original ran `LLM_PROVIDER=openai` with those models; now routed through the gateway for a faithful cutover). Env-overridable to try other providers (e.g. `anthropic/claude-sonnet-5`). All three verified reachable through the gateway via OIDC.
 
 ## Required setup (do this before the routes work at runtime)
 

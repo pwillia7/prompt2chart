@@ -14,8 +14,11 @@ import {
   formatOtherSchemas,
 } from './prompts'
 
-const GEN_MODEL = process.env.LLM_MODEL || 'anthropic/claude-sonnet-5'
-const CHAT_MODEL = process.env.LLM_CHAT_MODEL || 'anthropic/claude-haiku-4.5'
+// Defaults match the original prompt2chart config (OpenAI gpt-4o / gpt-4o-mini),
+// now routed through AI Gateway. Override per-deploy with LLM_MODEL / LLM_CHAT_MODEL
+// (e.g. anthropic/claude-sonnet-5) to try other providers.
+const GEN_MODEL = process.env.LLM_MODEL || 'openai/gpt-4o'
+const CHAT_MODEL = process.env.LLM_CHAT_MODEL || 'openai/gpt-4o-mini'
 const TIMEOUT_MS = 45_000
 
 function gatewayOptions(feature: string, userId?: string) {
