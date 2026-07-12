@@ -32,6 +32,20 @@ export async function POST(req: Request) {
       .single()
 
     let customerId = credits?.stripe_customer_id as string | undefined
+
+    // Verify the stored customer still exists in the ACTIVE Stripe mode. A
+    // customer created in live mode (e.g. from a past purchase) does not exist
+    // under a sandbox/test key — and vice versa — which throws "No such
+    // customer". Also handles deleted customers. Recreate when missing.
+    if (customerId) {
+      try {
+        const existing = await stripe.customers.retrieve(customerId)
+        if ('deleted' in existing && existing.deleted) customerId = undefined
+      } catch {
+        customerId = undefined
+      }
+    }
+
     if (!customerId) {
       const customer = await stripe.customers.create({
         email: user.email ?? undefined,
