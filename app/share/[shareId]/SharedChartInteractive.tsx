@@ -2,12 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
 import { D3ChartRenderer, D3ChartHandle } from '@/components/charts/D3ChartRenderer'
 import { ChartRenderer, VegaChartHandle } from '@/components/charts/ChartRenderer'
-import { Spinner } from '@/components/ui/Spinner'
-import { supabase } from '@/lib/supabase'
-import { useDocumentTitle } from '@/lib/useDocumentTitle'
 import { track } from '@/lib/analytics'
 import {
   copyToClipboard,
@@ -54,11 +50,7 @@ function BulletList({ items }: { items: string[] }) {
   )
 }
 
-export function SharedChartPage() {
-  const { shareId } = useParams<{ shareId: string }>()
-  const [shared, setShared] = useState<SharedChart | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [notFound, setNotFound] = useState(false)
+export function SharedChartInteractive({ shared }: { shared: SharedChart }) {
   const [linkCopied, setLinkCopied] = useState(false)
   const [exportOpen, setExportOpen] = useState(false)
   const [exportToast, setExportToast] = useState<string | null>(null)
@@ -66,77 +58,9 @@ export function SharedChartPage() {
   const d3Ref = useRef<D3ChartHandle>(null)
   const vegaRef = useRef<VegaChartHandle>(null)
 
-  useDocumentTitle(shared
-    ? `${shared.project_name ?? shared.prompt} — Prompt2Chart`
-    : 'Shared Chart — Prompt2Chart'
-  )
-
-  // Set OG/Twitter meta tags dynamically for JS-capable crawlers (e.g. Twitterbot)
   useEffect(() => {
-    if (!shared) return
-
-    function setMeta(nameOrProp: string, content: string, useProp = false) {
-      const attr = useProp ? 'property' : 'name'
-      let el = document.querySelector<HTMLMetaElement>(`meta[${attr}="${nameOrProp}"]`)
-      if (!el) {
-        el = document.createElement('meta')
-        el.setAttribute(attr, nameOrProp)
-        document.head.appendChild(el)
-      }
-      el.content = content
-    }
-
-    const title = `${shared.project_name ?? shared.prompt} — Prompt2Chart`
-    const description = shared.project_name
-      ? `Check out "${shared.project_name}" — a chart I built with Prompt2Chart by typing what I wanted to see from my data.`
-      : 'Check out this chart I built with Prompt2Chart — just described what I wanted to see from my data and AI built it instantly.'
-
-    setMeta('description', description)
-    setMeta('og:type', 'website', true)
-    setMeta('og:title', title, true)
-    setMeta('og:description', description, true)
-    setMeta('og:url', window.location.href, true)
-    setMeta('og:site_name', 'Prompt2Chart', true)
-    setMeta('twitter:title', title)
-    setMeta('twitter:description', description)
-
-    const imgAlt = 'AI-generated data visualization from Prompt2Chart'
-    setMeta('twitter:card', 'summary_large_image')
-    setMeta('og:image:alt', imgAlt, true)
-    setMeta('twitter:image:alt', imgAlt)
-
-    if (shared.og_image_url) {
-      setMeta('og:image', shared.og_image_url, true)
-      setMeta('twitter:image', shared.og_image_url)
-    }
-    // When no chart PNG, static index.html og:image/twitter:image tags act as fallback
-  }, [shared])
-
-  useEffect(() => {
-    if (!shareId) return
-    let cancelled = false
-
-    async function load() {
-      const { data, error } = await supabase
-        .from('shared_charts')
-        .select('*')
-        .eq('id', shareId)
-        .single()
-
-      if (cancelled) return
-
-      if (error || !data) {
-        setNotFound(true)
-      } else {
-        setShared(data as SharedChart)
-        track('share-viewed', { library: (data as SharedChart).chart_library })
-      }
-      setLoading(false)
-    }
-
-    load()
-    return () => { cancelled = true }
-  }, [shareId])
+    track('share-viewed', { library: shared.chart_library })
+  }, [shared.chart_library])
 
   // Close export dropdown on outside click
   useEffect(() => {
@@ -158,7 +82,6 @@ export function SharedChartPage() {
   }, [exportToast])
 
   async function handleExport(action: 'png' | 'svg' | 'html') {
-    if (!shared) return
     setExportOpen(false)
     track('share-export-click', { format: action, library: shared.chart_library })
     const data = (shared.data_snapshot as unknown[]) ?? []
@@ -220,7 +143,6 @@ export function SharedChartPage() {
   }
 
   function handleCodePen() {
-    if (!shared) return
     const data = (shared.data_snapshot as unknown[]) ?? []
     if (shared.chart_library === 'd3' && shared.d3_code) {
       openD3InCodePen(shared.d3_code, data, shared.prompt)
@@ -234,39 +156,16 @@ export function SharedChartPage() {
     track('share-codepen-click', { library: shared.chart_library })
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-bg flex items-center justify-center">
-        <Spinner size="lg" />
-      </div>
-    )
-  }
-
-  if (notFound || !shared) {
-    return (
-      <div className="min-h-screen bg-bg flex flex-col items-center justify-center gap-4 px-4">
-        <h1 className="text-2xl font-bold text-[var(--text)]">Chart not found</h1>
-        <p className="text-[var(--text-muted)] text-sm">This share link may have expired or been removed.</p>
-        <Link
-          href="/"
-          className="px-4 py-2 text-sm font-medium rounded-[10px] bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)] transition-colors duration-fast"
-        >
-          Go to Prompt2Chart
-        </Link>
-      </div>
-    )
-  }
-
   const data = (shared.data_snapshot as unknown[]) ?? []
   const notes = shared.explanation ? parseNotes(shared.explanation) : null
-  const pageUrl = window.location.href
   const tweetText = encodeURIComponent(`Check out this chart I made with @prompt2chart: "${shared.prompt}"`)
-  const tweetUrl = `https://twitter.com/intent/tweet?text=${tweetText}&url=${encodeURIComponent(pageUrl)}`
-  const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(pageUrl)}`
-  const whatsappText = encodeURIComponent(`Check out this chart: "${shared.prompt}" — ${pageUrl}`)
+  const shareUrl = typeof window !== 'undefined' ? window.location.href : `https://prompt2chart.com/share/${shared.id}`
+  const tweetUrl = `https://twitter.com/intent/tweet?text=${tweetText}&url=${encodeURIComponent(shareUrl)}`
+  const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`
+  const whatsappText = encodeURIComponent(`Check out this chart: "${shared.prompt}" — ${shareUrl}`)
   const whatsappUrl = `https://wa.me/?text=${whatsappText}`
-  const redditUrl = `https://www.reddit.com/submit?url=${encodeURIComponent(pageUrl)}&title=${encodeURIComponent(shared.prompt)}`
-  const blueskyText = encodeURIComponent(`Check out this chart I made with Prompt2Chart: "${shared.prompt}" ${pageUrl}`)
+  const redditUrl = `https://www.reddit.com/submit?url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent(shared.prompt)}`
+  const blueskyText = encodeURIComponent(`Check out this chart I made with Prompt2Chart: "${shared.prompt}" ${shareUrl}`)
   const blueskyUrl = `https://bsky.app/intent/compose?text=${blueskyText}`
 
   const btnBase = 'inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-[10px] bg-[var(--surface-2)] text-[var(--text-muted)] border border-[var(--border-strong)] hover:bg-[var(--surface-3)] transition-colors duration-fast'
