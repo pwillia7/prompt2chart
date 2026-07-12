@@ -25,7 +25,6 @@ import { trackUsage } from '@/lib/usageTracker'
 import { track } from '@/lib/analytics'
 import { sampleData } from '@/lib/dataSampler'
 import { d3SvgToPng, vegaToPng } from '@/lib/chartExporter'
-import { supabase } from '@/lib/supabase'
 import { useBillingStore } from '@/store/billingStore'
 import { Chart, ChartLibrary, Dataset, Project } from '@/types'
 
@@ -296,11 +295,14 @@ export function ProjectPage({ initialProject, initialCharts, initialDatasets }: 
     if (!refundedChartIdsRef.current.has(chart.id)) {
       refundedChartIdsRef.current.add(chart.id)
       try {
-        const { data, error } = await supabase.functions.invoke('refund-credit', {
-          body: { chartId: chart.id },
+        const res = await fetch('/api/refund-credit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chartId: chart.id }),
         })
-        if (error) {
-          console.error('Credit refund error:', error)
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) {
+          console.error('Credit refund error:', data?.error)
         } else if (data?.balance !== undefined) {
           useBillingStore.getState().setCredits(data.balance)
           setCreditRefunded(true)
