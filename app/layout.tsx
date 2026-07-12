@@ -3,6 +3,7 @@ import Script from 'next/script'
 import { Inter, JetBrains_Mono } from 'next/font/google'
 import { Providers } from './providers'
 import { Analytics } from '@vercel/analytics/next'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 import './globals.css'
 
 const inter = Inter({
@@ -93,6 +94,7 @@ export default function RootLayout({
         />
         <Providers>{children}</Providers>
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   )

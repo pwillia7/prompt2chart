@@ -1,19 +1,33 @@
-import { useState } from 'react'
+import { useState, useSyncExternalStore } from 'react'
 import Link from 'next/link'
 import { useAuthStore } from '../../store/authStore'
 import { Button } from '../ui/Button'
 import { CreditsDisplay } from '../billing/CreditsDisplay'
 import { UpgradeModal } from '../billing/UpgradeModal'
-import { getTheme, toggleTheme } from '../../lib/theme'
+import { toggleTheme } from '../../lib/theme'
+
+// Read the current theme from the <html> class (set pre-hydration by the inline
+// preload script in layout). useSyncExternalStore is SSR-safe (server snapshot =
+// false, so no hydration mismatch) and re-renders when the class changes.
+function useIsDark(): boolean {
+  return useSyncExternalStore(
+    (onChange) => {
+      const observer = new MutationObserver(onChange)
+      observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+      return () => observer.disconnect()
+    },
+    () => document.documentElement.classList.contains('dark'),
+    () => false,
+  )
+}
 
 export function Header() {
   const { user, signOut, loading } = useAuthStore()
   const [showUpgrade, setShowUpgrade] = useState(false)
-  const [isDark, setIsDark] = useState(() => getTheme() === 'dark')
+  const isDark = useIsDark()
 
   const handleToggleTheme = () => {
-    const next = toggleTheme()
-    setIsDark(next === 'dark')
+    toggleTheme() // mutates the .dark class; useIsDark re-renders via the observer
   }
 
   return (

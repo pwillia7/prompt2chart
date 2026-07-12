@@ -8,9 +8,21 @@ import { useAuthStore } from '@/store/authStore'
 import { useDocumentTitle } from '@/lib/useDocumentTitle'
 import { track } from '@/lib/analytics'
 import { exampleCharts } from '@/data/exampleCharts'
-import { D3ChartRenderer } from '@/components/charts/D3ChartRenderer'
-import { ChartRenderer } from '@/components/charts/ChartRenderer'
+import dynamic from 'next/dynamic'
 import { VegaLiteSpec } from '@/types'
+
+// Lazy-load the heavy chart renderers (d3 + the full vega stack) so they stay OUT
+// of the landing page's initial JS bundle — they render client-side, below the
+// fold, after LCP. A sized placeholder reserves space to avoid layout shift.
+const chartPlaceholder = () => <div className="h-[420px] bg-white" aria-hidden="true" />
+const D3ChartRenderer = dynamic(
+  () => import('@/components/charts/D3ChartRenderer').then((m) => m.D3ChartRenderer),
+  { ssr: false, loading: chartPlaceholder },
+)
+const ChartRenderer = dynamic(
+  () => import('@/components/charts/ChartRenderer').then((m) => m.ChartRenderer),
+  { ssr: false, loading: chartPlaceholder },
+)
 
 export default function LandingPage() {
   const { session } = useAuthStore()

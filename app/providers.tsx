@@ -3,22 +3,16 @@
 import { useEffect } from 'react'
 import { useAuthStore } from '@/store/authStore'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
-import { Spinner } from '@/components/ui/Spinner'
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  const { initialize, initialized } = useAuthStore()
+  const initialize = useAuthStore((s) => s.initialize)
 
+  // Initialize the auth session in the background. Do NOT block rendering on it:
+  // the prerendered/SSR content must paint immediately (LCP). Auth state fills in
+  // once getSession resolves; authed routes are already gated server-side.
   useEffect(() => {
     initialize()
   }, [initialize])
-
-  if (!initialized) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-bg">
-        <Spinner size="lg" />
-      </div>
-    )
-  }
 
   return <ErrorBoundary>{children}</ErrorBoundary>
 }
